@@ -247,9 +247,9 @@ def build_portal():
   <!-- Bottom Floating Navigation Bar -->
   <footer class="bottom-bar">
     <div class="bottom-left">
-      <button id="prev-page-btn" class="nav-page-btn">
+      <button id="prev-page-btn" class="nav-page-btn" title="上一页 (← / K)">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"></polyline></svg>
-        上一页 (← / K)
+        <span>上一页</span><span class="key-hint"> (← / K)</span>
       </button>
     </div>
 
@@ -259,8 +259,8 @@ def build_portal():
     </div>
 
     <div class="bottom-right">
-      <button id="next-page-btn" class="nav-page-btn">
-        下一页 (→ / J)
+      <button id="next-page-btn" class="nav-page-btn" title="下一页 (→ / J)">
+        <span>下一页</span><span class="key-hint"> (→ / J)</span>
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
       </button>
     </div>
