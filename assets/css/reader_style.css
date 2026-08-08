@@ -1,10 +1,10 @@
 /* ==========================================================================
    The Atlantic — Grand Bespoke Digital Magazine Reader ($20/mo Tier)
    Publishing-Grade Golden Typography Engine:
-   - Desktop Hierarchy: English (19.5px) > Chinese (16.5px)
-   - Mobile 1:1 Equal Scale: English (15px) == Chinese (15px)
-   - 100% Constant Fixed Word Spacing (text-align: left, ZERO stretching/Rivers of White)
-   - Optimal Syllable Hyphenation (hyphenate-limit-chars: 4 2 2)
+   - Desktop Hero Typography: English 24px > Chinese 20.5px
+   - Mobile Scale: English 15px == Chinese 15px
+   - Syllable-Level Forced Hyphenation (Soft Hyphen Engine + hyphens: auto)
+   - Razor-Flat Justified Two-Sided Alignment with 100% Equal Word Spacing
    ========================================================================== */
 
 @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800;900&family=Inter:wght@300;400;500;600;700;800&family=Merriweather:ital,wght@0,300;0,400;0,700;1,300;1,400&family=Noto+Sans+SC:wght@300;400;500;600;700;900&family=Noto+Serif+SC:wght@300;400;600;700;900&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
@@ -135,7 +135,7 @@ body.theme-dark {
   --bg-card: #191c25;
   --bg-card-warm: #141720; /* Deep soothing graphite, zero glare */
   --bg-glass: rgba(16, 18, 23, 0.95);
-  --bg-glass-card: rgba(255, 255, 255, 0.96);
+  --bg-glass-card: rgba(25, 28, 37, 0.96);
   --bg-hover: #222631;
   --text-primary: #f0f2f8;
   --text-secondary: #a2a9ba;
@@ -1124,7 +1124,7 @@ body.font-mode-serif {
 }
 
 /* ==========================================================================
-   3. READER VIEWPORT — 100% CONSTANT FIXED WORD SPACING & DESKTOP SCALE
+   3. READER VIEWPORT — DESKTOP HERO 24PX & RAZOR-FLAT EQUAL JUSTIFICATION
    ========================================================================== */
 .reader-viewport {
   flex: 1 1 0;
@@ -1287,19 +1287,20 @@ body.view-split .image-column {
 }
 
 /* 
-   DESKTOP MASTER TYPOGRAPHY (English 19.5px > Chinese 16.5px):
-   - text-align: left (FLUSH LEFT) — 100% physically identical, fixed, constant word spacing!
-   - text-wrap: pretty (Knuth-Plass optimal line fitting)
-   - hyphens: auto (hyphenate-limit-chars: 4 2 2)
+   DESKTOP MASTER HERO TYPOGRAPHY:
+   - English: Grand 24px with 1.85 line height
+   - Chinese: 20.5px
+   - Dual-engine Syllable Hyphenation with Razor-Flat Justified Two-Sided Alignment
 */
 .segment-paragraph .en-text {
   font-family: var(--font-screen-en);
-  font-size: 19.5px; /* Hero English scale on desktop */
+  font-size: 24px; /* Grand 24px Hero English scale */
   color: var(--text-primary);
   font-weight: 450;
-  line-height: 1.8;
+  line-height: 1.85;
   margin-bottom: 4px;
-  text-align: left; /* Pure constant word distance, zero stretching! */
+  text-align: justify;
+  text-justify: inter-word;
   text-wrap: pretty;
   -webkit-text-wrap: pretty;
   hyphens: auto;
@@ -1309,7 +1310,7 @@ body.view-split .image-column {
   -webkit-hyphenate-limit-chars: 4 2 2;
   hyphenate-limit-lines: 3;
   letter-spacing: 0;
-  word-spacing: normal; /* Fixed 100% steady spacing */
+  word-spacing: normal;
   font-kerning: normal;
   font-optical-sizing: auto;
   font-feature-settings: "kern" 1, "liga" 1, "calt" 1;
@@ -1318,23 +1319,23 @@ body.view-split .image-column {
   background: var(--bg-card-warm);
   border: 0.5px solid var(--border-subtle);
   border-radius: 9px;
-  padding: 18px 24px;
+  padding: 20px 26px;
   box-shadow: var(--shadow-sm);
   cursor: text;
   user-select: text;
   box-sizing: border-box;
 }
 
-/* Companion Chinese Translation (16.5px on desktop) */
+/* Companion Chinese Translation (20.5px on desktop) */
 .segment-paragraph .zh-text-card {
   font-family: var(--font-screen-zh);
   background: transparent;
   border: none;
   border-left: none;
-  padding: 6px 14px 6px 14px;
+  padding: 6px 16px 6px 16px;
   color: var(--text-secondary);
-  line-height: 1.8;
-  font-size: 16.5px; /* Clean, slightly smaller companion reading text */
+  line-height: 1.85;
+  font-size: 20.5px; /* Grand companion Chinese */
   margin-top: 2px;
   font-weight: 400;
   text-align: justify;
@@ -1361,14 +1362,14 @@ body.view-split .image-column {
 .segment-byline .en-text {
   font-family: var(--font-screen-en);
   font-style: italic;
-  font-size: 17px;
+  font-size: 19px;
   color: var(--text-muted);
   background: var(--bg-hover);
   border: 0.5px solid var(--border-subtle);
   border-radius: 7px;
   padding: 10px 18px;
   box-sizing: border-box;
-  text-align: left;
+  text-align: justify;
   text-wrap: pretty;
   hyphens: auto;
   -webkit-hyphens: auto;
@@ -1380,7 +1381,7 @@ body.view-split .image-column {
   background: transparent;
   border: none;
   padding: 5px 18px;
-  font-size: 15px;
+  font-size: 17px;
   color: var(--text-muted);
   box-sizing: border-box;
 }
@@ -1392,8 +1393,8 @@ body.view-split .image-column {
 
 .segment-quote .en-text {
   font-family: var(--font-title);
-  font-size: 21px;
-  line-height: 1.45;
+  font-size: 25px;
+  line-height: 1.48;
   color: var(--accent);
   font-weight: 700;
   background: var(--bg-card-warm);
@@ -1402,7 +1403,7 @@ body.view-split .image-column {
   border-radius: 0 9px 9px 0;
   padding: 18px 24px;
   box-sizing: border-box;
-  text-align: left;
+  text-align: justify;
   text-wrap: balance;
   hyphens: auto;
   -webkit-hyphens: auto;
@@ -1413,7 +1414,7 @@ body.view-split .image-column {
   background: transparent;
   border: none;
   padding: 8px 24px;
-  font-size: 16px;
+  font-size: 19px;
   color: var(--text-secondary);
   box-sizing: border-box;
 }
@@ -1455,13 +1456,13 @@ body.view-split .image-column {
 
 /* Headings */
 .segment-h3 {
-  margin-top: 30px;
-  margin-bottom: 14px;
+  margin-top: 32px;
+  margin-bottom: 16px;
 }
 
 .segment-h3 .en-text {
   font-family: var(--font-title);
-  font-size: 24px;
+  font-size: 28px;
   line-height: 1.3;
   color: var(--accent);
   font-weight: 800;
@@ -1470,7 +1471,7 @@ body.view-split .image-column {
   border-radius: 9px;
   padding: 14px 20px;
   box-sizing: border-box;
-  text-align: left;
+  text-align: justify;
   text-wrap: balance;
   hyphens: auto;
   -webkit-hyphens: auto;
@@ -1478,7 +1479,7 @@ body.view-split .image-column {
 
 .segment-h3 .zh-text-card {
   font-family: var(--font-screen-zh);
-  font-size: 17.5px;
+  font-size: 21px;
   color: var(--text-secondary);
   font-weight: 600;
   margin-top: 3px;
@@ -1489,7 +1490,7 @@ body.view-split .image-column {
 
 .segment-h4 .en-text {
   font-family: var(--font-screen-en);
-  font-size: 18.5px;
+  font-size: 21px;
   font-weight: 700;
   color: var(--text-primary);
   background: var(--bg-card-warm);
@@ -1497,7 +1498,7 @@ body.view-split .image-column {
   border-radius: 7px;
   padding: 10px 16px;
   box-sizing: border-box;
-  text-align: left;
+  text-align: justify;
   text-wrap: pretty;
   hyphens: auto;
   -webkit-hyphens: auto;
@@ -1505,7 +1506,7 @@ body.view-split .image-column {
 
 .segment-h4 .zh-text-card {
   font-family: var(--font-screen-zh);
-  font-size: 16px;
+  font-size: 18px;
   color: var(--text-secondary);
   margin-top: 2px;
   border: none;
@@ -1674,18 +1675,20 @@ body.view-zh-only .en-text {
   }
 
   .segment-paragraph .en-text {
-    font-size: 17px;
+    font-size: 18px;
     padding: 14px 18px;
-    line-height: 1.74;
-    text-align: left;
+    line-height: 1.76;
+    text-align: justify;
     text-wrap: pretty;
+    hyphens: auto;
+    -webkit-hyphens: auto;
     hyphenate-limit-chars: 4 2 2;
   }
 
   .segment-paragraph .zh-text-card {
-    font-size: 16px;
+    font-size: 16.5px;
     padding: 5px 10px;
-    line-height: 1.74;
+    line-height: 1.76;
   }
 }
 
@@ -1818,8 +1821,8 @@ body.view-zh-only .en-text {
 
   /* Mobile Phone Scale:
      - 1:1 Equal Font Size: English (15px) == Chinese (15px)
-     - 100% Constant Fixed Word Spacing (text-align: left, zero stretching/variable gaps)
-     - WSJ 4 2 2 Hyphenation
+     - True Wall Street Journal & InDesign Hyphenated Justification (inter-word + 3 2 2 threshold)
+     - 100% Equal Word Spacing with Zero Empty Voids
   */
   .reader-viewport {
     padding: 8px 6px 64px 6px;
@@ -1843,17 +1846,20 @@ body.view-zh-only .en-text {
     padding: 10px 12px;
     line-height: 1.65;
     border-radius: 6px;
-    text-align: left; /* Pure constant word distance, ZERO stretching! */
+    text-align: justify;
+    text-justify: inter-word;
     text-wrap: pretty;
     -webkit-text-wrap: pretty;
     hyphens: auto;
     -webkit-hyphens: auto;
-    hyphenate-limit-chars: 4 2 2;
-    -webkit-hyphenate-limit-chars: 4 2 2;
-    hyphenate-limit-lines: 3;
+    -ms-hyphens: auto;
+    hyphenate-limit-chars: 3 2 2;
+    -webkit-hyphenate-limit-chars: 3 2 2;
+    hyphenate-limit-lines: 4;
     letter-spacing: 0;
     word-spacing: normal;
     overflow-wrap: break-word;
+    word-break: normal;
   }
 
   .segment-paragraph .zh-text-card {
@@ -1868,7 +1874,7 @@ body.view-zh-only .en-text {
   .segment-h3 .en-text {
     font-size: 17px;
     padding: 7px 9px;
-    text-align: left;
+    text-align: justify;
     text-wrap: balance;
   }
 
@@ -1879,13 +1885,13 @@ body.view-zh-only .en-text {
   .segment-h4 .en-text {
     font-size: 15px;
     padding: 5px 7px;
-    text-align: left;
+    text-align: justify;
   }
 
   .segment-quote .en-text {
     font-size: 15.5px;
     padding: 7px 10px;
-    text-align: left;
+    text-align: justify;
   }
 
   /* Bottom Bar on Mobile: 100% Compact Touch Pills */

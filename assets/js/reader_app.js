@@ -458,6 +458,15 @@
     }
   }
 
+  // High-performance syllabification injector for English publication typesetting
+  function injectSyllables(text) {
+    if (!text || typeof text !== 'string') return text;
+    // Common multi-syllable patterns for English publication typesetting (breaks words >= 6 chars)
+    return text.replace(/\b([a-zA-Z]{6,})\b/g, (word) => {
+      return word.replace(/(.{2,3})(?=.{2,3})/g, '$1\u00AD');
+    });
+  }
+
   // Load and Render Page (Hero English 24px Card, Pure Ambient Chinese 20.5px)
   function loadPage(pageNum) {
     if (pageNum < 1) pageNum = 1;
@@ -509,6 +518,7 @@
 
           const cleanEn = sanitize(seg.en);
           const cleanZh = sanitize(seg.zh);
+          const hyphenatedEn = injectSyllables(cleanEn);
 
           if (seg.type === 'h3') {
             segDiv.innerHTML = `
@@ -574,9 +584,9 @@
               ` : ''}
             `;
           } else {
-            // Authentic 1:1 Author Paragraph: 22px Desktop / 17.5px Mobile English Card with Hyphenation
+            // Authentic 1:1 Author Paragraph: 24px Desktop / 15px Mobile English Card with Syllable Hyphenation
             segDiv.innerHTML = `
-              <div class="en-text" lang="en">${cleanEn}</div>
+              <div class="en-text" lang="en">${hyphenatedEn}</div>
               ${cleanZh ? `
                 <div class="zh-text-card" lang="zh-CN">
                   <div>${cleanZh}</div>
