@@ -1,0 +1,44 @@
+{
+  "publications": [
+    {
+      "id": "the-atlantic",
+      "name": "The Atlantic",
+      "chineseName": "大西洋月刊",
+      "badge": "思想特稿 & 深度随笔",
+      "desc": "创立于 1857 年，以敏锐的政经洞察、前沿思潮与文学随笔著称。",
+      "issues": ["2026-08", "2026-07"]
+    },
+    {
+      "id": "the-economist",
+      "name": "The Economist",
+      "chineseName": "经济学人",
+      "badge": "全球商业 & 宏观金融",
+      "desc": "权威全球政经与宏观商业深度周刊，洞察全球资本与科技脉动。",
+      "issues": []
+    },
+    {
+      "id": "the-new-yorker",
+      "name": "The New Yorker",
+      "chineseName": "纽约客",
+      "badge": "时代文学 & 深度纪实",
+      "desc": "汇聚顶级文学随笔、长篇深度调查与当代文化艺术评论。",
+      "issues": []
+    },
+    {
+      "id": "wired",
+      "name": "Wired",
+      "chineseName": "连线",
+      "badge": "未来数字文明 & AI 革命",
+      "desc": "全球科技思潮领航者，聚焦人工智能、硅谷创新与数字文明前沿。",
+      "issues": []
+    },
+    {
+      "id": "hbr",
+      "name": "Harvard Business Review",
+      "chineseName": "哈佛商业评论",
+      "badge": "管理战略 & 商业领袖",
+      "desc": "顶尖商学院思想库，赋能全球领袖与战略决策者的商业指南。",
+      "issues": []
+    }
+  ]
+}

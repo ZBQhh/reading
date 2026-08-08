@@ -1,0 +1,1458 @@
+/* ==========================================================================
+   The Atlantic — Grand 24px Bespoke Digital Magazine Reader ($20/mo Tier)
+   6 Curated Editorial Themes, Eye-Care Warm English Cards, Subtle Ambient Chinese,
+   Full Multi-Publication Brand Matrix, Keyboard Suite, Shortcuts Help Modal
+   ========================================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800;900&family=Inter:wght@300;400;500;600;700;800&family=Merriweather:ital,wght@0,300;0,400;0,700;1,300;1,400&family=Noto+Sans+SC:wght@300;400;500;600;700;900&family=Noto+Serif+SC:wght@300;400;600;700;900&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+
+:root {
+  /* 1. ☀️ Classic Light Editorial Theme — Eye-Friendly Warm Cream */
+  --bg-primary: #f8f6f0;
+  --bg-secondary: #ede7d8;
+  --bg-card: #ffffff;
+  --bg-card-warm: #f2ece0; /* Soothing warm parchment card tone, non-glaring */
+  --bg-glass: rgba(248, 246, 240, 0.94);
+  --bg-glass-card: rgba(255, 255, 255, 0.95);
+  --bg-hover: #ebe4d3;
+  --text-primary: #121316; /* Crisp deep ink for 24px English */
+  --text-secondary: #484f5e; /* Clear slate for 20.5px Chinese */
+  --text-muted: #7e8594;
+  
+  --accent: #b91c1c; /* Atlantic Crimson */
+  --accent-hover: #991b1b;
+  --accent-gold: #c98a2c;
+  --accent-gold-light: #fef8e8;
+  
+  --border-color: rgba(216, 206, 184, 0.85);
+  --border-subtle: rgba(210, 200, 178, 0.6);
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.03);
+  --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.05);
+  --shadow-lg: 0 16px 44px rgba(0, 0, 0, 0.09);
+
+  /* Typography */
+  --font-screen-en: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --font-screen-zh: 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei UI', 'HarmonyOS Sans SC', 'Noto Sans SC', sans-serif;
+  --font-serif-en: 'Merriweather', Georgia, 'Times New Roman', serif;
+  --font-serif-zh: 'Noto Serif SC', 'Source Han Serif SC', 'Songti SC', SimSun, serif;
+  --font-ui: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-title: 'Cinzel', 'Playfair Display', serif;
+
+  --header-height: 58px;
+  --bottom-bar-height: 56px;
+  --sidebar-width: 320px;
+  --transition-smooth: all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* === 2. 📜 Sepia Vintage Theme (温润复古羊皮纸) === */
+body.theme-sepia {
+  --bg-primary: #f4ecd8;
+  --bg-secondary: #ebe0c7;
+  --bg-card: #fdf8eb;
+  --bg-card-warm: #ece0c6;
+  --bg-glass: rgba(244, 236, 216, 0.94);
+  --bg-glass-card: rgba(253, 248, 235, 0.95);
+  --bg-hover: #e3d5b4;
+  --text-primary: #241c16;
+  --text-secondary: #5a4c3e;
+  --text-muted: #968878;
+  --accent: #9a2b16;
+  --accent-hover: #7c2211;
+  --accent-gold: #b46b1c;
+  --accent-gold-light: #fbeed2;
+  --border-color: #d6c7a4;
+  --border-subtle: #ded1b2;
+}
+
+/* === 3. 🏖️ Summer Beach Theme (清新夏日海滩 · 海风蔚蓝与细沙贝壳) === */
+body.theme-beach {
+  --bg-primary: #f0f7f8;
+  --bg-secondary: #e2eff2;
+  --bg-card: #ffffff;
+  --bg-card-warm: #e6f1f4; /* Refreshing soft ocean spray tint */
+  --bg-glass: rgba(240, 247, 248, 0.94);
+  --bg-glass-card: rgba(255, 255, 255, 0.96);
+  --bg-hover: #d5e9ed;
+  --text-primary: #102a36; /* Deep ocean navy ink */
+  --text-secondary: #3b5f6d; /* Coastal sea mist slate */
+  --text-muted: #7296a4;
+  --accent: #0284c7; /* Vibrant Azure Blue */
+  --accent-hover: #0369a1;
+  --accent-gold: #d97706;
+  --accent-gold-light: #fef3c7;
+  --border-color: #c9e2e9;
+  --border-subtle: #d6ebf1;
+}
+
+/* === 4. 🧊 Academic Calm Theme (学术冷静沉思 · 北欧冰川灰与深邃学术蓝) === */
+body.theme-academic {
+  --bg-primary: #f1f4f8;
+  --bg-secondary: #e2e8f0;
+  --bg-card: #ffffff;
+  --bg-card-warm: #e4e9f1; /* Crisp Nordic glacier tone, highly focusing */
+  --bg-glass: rgba(241, 244, 248, 0.94);
+  --bg-glass-card: rgba(255, 255, 255, 0.96);
+  --bg-hover: #d5deea;
+  --text-primary: #182232; /* Serious Oxford navy */
+  --text-secondary: #475569; /* Academic slate */
+  --text-muted: #64748b;
+  --accent: #2563eb; /* Royal Academic Blue */
+  --accent-hover: #1d4ed8;
+  --accent-gold: #b45309;
+  --accent-gold-light: #ffedd5;
+  --border-color: #cbd5e1;
+  --border-subtle: #d8e1ec;
+}
+
+/* === 5. 🌿 Forest Sage Theme (森林晨雾薄荷 · 抹茶竹青与晨雾草木) === */
+body.theme-forest {
+  --bg-primary: #f2f7f2;
+  --bg-secondary: #e3eee3;
+  --bg-card: #ffffff;
+  --bg-card-warm: #e5eee5; /* Soothing bamboo matcha sage, maximum eye comfort */
+  --bg-glass: rgba(242, 247, 242, 0.94);
+  --bg-glass-card: rgba(255, 255, 255, 0.96);
+  --bg-hover: #d4e5d4;
+  --text-primary: #16291a; /* Forest pine ink */
+  --text-secondary: #3f5e44; /* Botanical moss slate */
+  --text-muted: #6f8c75;
+  --accent: #15803d; /* Botanical Emerald Green */
+  --accent-hover: #166534;
+  --accent-gold: #ca8a04;
+  --accent-gold-light: #fef9c3;
+  --border-color: #c9dec9;
+  --border-subtle: #d7e8d7;
+}
+
+/* === 6. 🌙 Dark Obsidian Theme (极夜深曜石 · 沉浸黑曜石与护眼OLED) === */
+body.theme-dark {
+  --bg-primary: #0c0e12;
+  --bg-secondary: #14171e;
+  --bg-card: #191c25;
+  --bg-card-warm: #141720; /* Deep soothing graphite, zero glare */
+  --bg-glass: rgba(16, 18, 23, 0.94);
+  --bg-glass-card: rgba(25, 28, 37, 0.95);
+  --bg-hover: #222631;
+  --text-primary: #f0f2f8;
+  --text-secondary: #a2a9ba;
+  --text-muted: #62687a;
+  --accent: #ef4444;
+  --accent-hover: #f87171;
+  --accent-gold: #f59e0b;
+  --accent-gold-light: #451a03;
+  --border-color: #242935;
+  --border-subtle: #1c202a;
+  --shadow-sm: 0 2px 10px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 8px 26px rgba(0, 0, 0, 0.6);
+  --shadow-lg: 0 16px 44px rgba(0, 0, 0, 0.75);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-screen-en);
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  overflow: hidden;
+  height: 100vh;
+  width: 100vw;
+  display: flex;
+  flex-direction: column;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  padding-bottom: env(safe-area-inset-bottom, 0);
+  transition: background-color 0.26s ease, color 0.26s ease;
+}
+
+body.font-mode-serif {
+  --font-screen-en: var(--font-serif-en);
+  --font-screen-zh: var(--font-serif-zh);
+}
+
+/* ==========================================================================
+   UNIFIED APPLE LIQUID GLASS BUTTON SYSTEM
+   ========================================================================== */
+.icon-btn, .tiny-btn, .tool-btn, .back-to-library-btn, .nav-page-btn, .text-action-btn, .font-family-toggle, .audio-btn, .audio-speed-btn {
+  height: 32px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  border-radius: 8px;
+  padding: 0 12px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  font-size: 12px;
+  font-weight: 600;
+  transition: var(--transition-smooth);
+  box-shadow: var(--shadow-sm);
+  backdrop-filter: blur(16px);
+  user-select: none;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.icon-btn:hover, .tiny-btn:hover, .tool-btn:hover, .back-to-library-btn:hover, .nav-page-btn:hover, .text-action-btn:hover, .font-family-toggle:hover, .audio-btn:hover, .audio-speed-btn:hover {
+  background-color: var(--accent);
+  color: #ffffff !important;
+  border-color: var(--accent);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(185, 28, 28, 0.2);
+}
+
+.icon-btn svg, .nav-page-btn svg, .back-to-library-btn svg {
+  flex-shrink: 0;
+}
+
+/* HUD Glass Toast */
+.reader-hud-toast {
+  position: fixed;
+  top: 72px;
+  right: 28px;
+  background: rgba(18, 19, 23, 0.92);
+  color: #ffffff;
+  backdrop-filter: blur(20px);
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 12.5px;
+  font-weight: 600;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  z-index: 9999;
+  opacity: 0;
+  transform: translateY(-8px);
+  transition: all 0.24s cubic-bezier(0.4, 0, 0.2, 1);
+  pointer-events: none;
+}
+
+.reader-hud-toast.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Shortcuts Cheat Sheet Modal */
+.shortcuts-modal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(12px);
+  z-index: 10000;
+  align-items: center;
+  justify-content: center;
+}
+
+.shortcuts-modal.active {
+  display: flex;
+}
+
+.shortcuts-card {
+  background: var(--bg-glass-card);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  box-shadow: var(--shadow-lg);
+  width: 90%;
+  max-width: 580px;
+  padding: 24px 28px;
+  color: var(--text-primary);
+}
+
+.shortcuts-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1.5px solid var(--border-color);
+  padding-bottom: 12px;
+  margin-bottom: 16px;
+}
+
+.shortcuts-header h3 {
+  font-family: var(--font-title);
+  font-size: 18px;
+  letter-spacing: 1px;
+  color: var(--accent);
+}
+
+.close-shortcuts-btn {
+  background: transparent;
+  border: none;
+  font-size: 20px;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.shortcuts-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px 20px;
+  font-size: 13px;
+}
+
+.shortcut-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 0;
+  border-bottom: 0.5px solid var(--border-subtle);
+}
+
+.shortcut-key-badge {
+  background: var(--bg-hover);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 2px 7px;
+  font-family: monospace;
+  font-weight: 700;
+  color: var(--accent);
+}
+
+/* ==========================================================================
+   1. LIBRARY SHELF LANDING PORTAL & MULTI-PUBLICATION BRAND MATRIX
+   ========================================================================== */
+.library-portal-view {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  width: 100vw;
+  overflow-y: auto;
+  background: radial-gradient(circle at 50% 20%, var(--bg-secondary) 0%, var(--bg-primary) 70%);
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 200;
+  transition: opacity 0.28s cubic-bezier(0.4, 0, 0.2, 1), transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.library-portal-view.hidden {
+  opacity: 0;
+  pointer-events: none;
+  transform: scale(0.98);
+  display: none !important;
+}
+
+.portal-header {
+  padding: 18px 36px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--border-color);
+  background: var(--bg-glass);
+  backdrop-filter: blur(20px);
+}
+
+.portal-brand h1 {
+  font-family: var(--font-title);
+  font-size: 24px;
+  letter-spacing: 2.8px;
+  color: var(--accent);
+  margin-bottom: 2px;
+}
+
+.portal-brand p {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.portal-hero {
+  max-width: 1100px;
+  margin: 28px auto 20px auto;
+  padding: 0 24px;
+  text-align: center;
+}
+
+.portal-hero-badge {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  color: var(--accent-gold);
+  background: var(--accent-gold-light);
+  padding: 4px 12px;
+  border-radius: 20px;
+  margin-bottom: 12px;
+}
+
+.portal-hero h2 {
+  font-size: 30px;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin-bottom: 8px;
+}
+
+.portal-hero p {
+  font-size: 14.5px;
+  color: var(--text-secondary);
+  max-width: 680px;
+  margin: 0 auto 24px auto;
+  line-height: 1.6;
+}
+
+/* Home Portal Global Search Bar */
+.portal-search-wrap {
+  max-width: 580px;
+  margin: 0 auto 28px auto;
+  position: relative;
+}
+
+.portal-search-input {
+  width: 100%;
+  padding: 14px 20px 14px 44px;
+  background: var(--bg-card);
+  border: 1.5px solid var(--border-color);
+  border-radius: 28px;
+  font-size: 14px;
+  color: var(--text-primary);
+  box-shadow: var(--shadow-md);
+  outline: none;
+  transition: var(--transition-smooth);
+}
+
+.portal-search-input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(185, 28, 28, 0.15);
+}
+
+.portal-search-icon {
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-muted);
+  pointer-events: none;
+}
+
+.portal-search-results-dropdown {
+  position: absolute;
+  top: 54px;
+  left: 0;
+  width: 100%;
+  background: var(--bg-glass-card);
+  backdrop-filter: blur(24px);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  box-shadow: var(--shadow-lg);
+  max-height: 380px;
+  overflow-y: auto;
+  z-index: 300;
+  display: none;
+  text-align: left;
+  padding: 8px;
+}
+
+.portal-search-results-dropdown.active {
+  display: block;
+}
+
+.portal-search-item {
+  padding: 10px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: var(--transition-smooth);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.portal-search-item:last-child {
+  border-bottom: none;
+}
+
+.portal-search-item:hover {
+  background: var(--bg-hover);
+  transform: translateX(3px);
+}
+
+.portal-search-item-header {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--accent);
+  margin-bottom: 3px;
+}
+
+.portal-search-item-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 2px;
+}
+
+.portal-search-item-snippet {
+  font-size: 12px;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+/* Multi-Publication Filter Pills */
+.portal-pub-filters {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 32px;
+  flex-wrap: wrap;
+}
+
+.pub-filter-btn {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  border-radius: 20px;
+  padding: 7px 18px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition-smooth);
+}
+
+.pub-filter-btn:hover, .pub-filter-btn.active {
+  background-color: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+  box-shadow: var(--shadow-sm);
+  transform: translateY(-1px);
+}
+
+.magazine-shelf-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
+  gap: 32px;
+  max-width: 1040px;
+  margin: 0 auto 50px auto;
+  padding: 0 20px;
+}
+
+.shelf-issue-card {
+  background: var(--bg-glass-card);
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: var(--shadow-md);
+  display: flex;
+  gap: 20px;
+  transition: var(--transition-smooth);
+  cursor: pointer;
+}
+
+.shelf-issue-card:hover {
+  transform: translateY(-5px);
+  box-shadow: var(--shadow-lg);
+  border-color: var(--accent);
+}
+
+.shelf-cover-wrap {
+  width: 130px;
+  flex-shrink: 0;
+  perspective: 800px;
+}
+
+.shelf-cover-img {
+  width: 100%;
+  aspect-ratio: 0.74;
+  object-fit: cover;
+  border-radius: 6px;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.22);
+}
+
+.shelf-details {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.shelf-details-top .issue-date-tag {
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  color: var(--accent);
+  text-transform: uppercase;
+}
+
+.shelf-details-top h3 {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 4px 0 6px 0;
+  line-height: 1.3;
+}
+
+.shelf-details-top p {
+  font-size: 12.5px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  margin-bottom: 10px;
+}
+
+.shelf-meta-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 14px;
+}
+
+.meta-tag {
+  font-size: 10.5px;
+  font-weight: 600;
+  background: var(--bg-hover);
+  color: var(--text-muted);
+  padding: 2px 7px;
+  border-radius: 5px;
+}
+
+.shelf-enter-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  padding: 0 18px;
+  height: 34px;
+  border-radius: 8px;
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: var(--transition-smooth);
+}
+
+.shelf-enter-btn:hover {
+  background: var(--accent-hover);
+  transform: translateY(-1px);
+}
+
+/* ==========================================================================
+   2. IMMERSIVE READER ROOM
+   ========================================================================== */
+.app-header {
+  height: var(--header-height);
+  background: var(--bg-glass);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 18px;
+  z-index: 100;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.masthead-logo {
+  font-family: var(--font-title);
+  font-size: 18px;
+  font-weight: 900;
+  letter-spacing: 2px;
+  color: var(--accent);
+  cursor: pointer;
+}
+
+.issue-switcher-pill {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 20px;
+  padding: 0 12px;
+  height: 32px;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  cursor: pointer;
+  transition: var(--transition-smooth);
+}
+
+.issue-switcher-pill:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* View Mode Switcher */
+.view-controls {
+  display: flex;
+  background: var(--bg-primary);
+  padding: 3px;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  gap: 3px;
+}
+
+.view-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 0 12px;
+  height: 28px;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  transition: var(--transition-smooth);
+}
+
+.view-btn.active {
+  background-color: var(--bg-card);
+  color: var(--accent);
+  box-shadow: var(--shadow-sm);
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* TTS Player Widget: Horizontal Flex Row */
+.audio-player-widget {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.search-box {
+  display: flex;
+  align-items: center;
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 0 10px;
+  height: 32px;
+  gap: 6px;
+  color: var(--text-muted);
+}
+
+.search-box input {
+  border: none;
+  outline: none;
+  background: transparent;
+  color: var(--text-primary);
+  font-size: 12px;
+  width: 110px;
+}
+
+/* Theme Selector: 6 Curated Luxury Editorial Palettes */
+.theme-selector {
+  display: flex;
+  background-color: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 2px;
+  height: 32px;
+  align-items: center;
+  gap: 2px;
+}
+
+.theme-btn {
+  border: none;
+  background: transparent;
+  padding: 0 5px;
+  height: 26px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 12.5px;
+  transition: var(--transition-smooth);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.theme-btn:hover {
+  background-color: var(--bg-hover);
+}
+
+.theme-btn.active {
+  background-color: var(--bg-card);
+  box-shadow: var(--shadow-sm);
+  transform: scale(1.08);
+}
+
+/* Shortcuts Help Button */
+.shortcuts-help-trigger {
+  font-weight: 700;
+}
+
+/* === Main Layout (True Symmetrical Architecture) === */
+.main-layout {
+  display: flex;
+  width: 100vw;
+  height: calc(100vh - var(--header-height) - var(--bottom-bar-height));
+  position: relative;
+  overflow: hidden;
+}
+
+/* Sidebar (Clean display:none when collapsed, zero negative-margin flex glitches) */
+.app-sidebar {
+  width: var(--sidebar-width);
+  min-width: var(--sidebar-width);
+  background-color: var(--bg-secondary);
+  border-right: 1px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  height: 100%;
+  overflow: hidden;
+  z-index: 50;
+}
+
+.app-sidebar.collapsed {
+  display: none !important;
+}
+
+.sidebar-tabs {
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid var(--border-color);
+  background-color: var(--bg-secondary);
+  padding: 0 4px;
+}
+
+.tab-btn {
+  flex: 1;
+  padding: 10px 4px;
+  background: none;
+  border: none;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: var(--transition-smooth);
+  text-align: center;
+}
+
+.tab-btn.active {
+  color: var(--accent);
+  border-bottom: 2px solid var(--accent);
+  background-color: var(--bg-card);
+}
+
+.sidebar-close-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  padding: 6px 10px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: var(--transition-smooth);
+}
+
+.sidebar-close-btn:hover {
+  color: var(--accent);
+  background: var(--bg-hover);
+}
+
+.tab-pane {
+  display: none;
+  flex: 1;
+  overflow-y: auto;
+  padding: 14px;
+}
+
+.tab-pane.active {
+  display: block;
+}
+
+.toc-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.toc-item {
+  padding: 8px 12px;
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: var(--transition-smooth);
+}
+
+.toc-item:hover {
+  border-color: var(--accent);
+  background-color: var(--bg-hover);
+  transform: translateX(3px);
+  box-shadow: var(--shadow-sm);
+}
+
+.toc-item.active {
+  border-left: 3.5px solid var(--accent) !important;
+  background-color: var(--bg-card) !important;
+  border-color: var(--accent) !important;
+  box-shadow: var(--shadow-sm);
+}
+
+.toc-item-header {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--accent);
+  margin-bottom: 2px;
+}
+
+.toc-item-title {
+  font-size: 12px;
+  color: var(--text-primary);
+  line-height: 1.4;
+}
+
+/* Pages Grid */
+.page-jump-input-wrap {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.page-jump-input-wrap input {
+  flex: 1;
+  padding: 6px 10px;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  background-color: var(--bg-card);
+  color: var(--text-primary);
+  font-size: 12px;
+}
+
+.page-jump-input-wrap button {
+  padding: 6px 12px;
+  background-color: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.pages-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+}
+
+.page-tile {
+  aspect-ratio: 0.75;
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: var(--transition-smooth);
+}
+
+.page-tile:hover {
+  background-color: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+  transform: scale(1.06);
+  box-shadow: var(--shadow-sm);
+}
+
+.page-tile.active {
+  background-color: var(--accent) !important;
+  color: #ffffff !important;
+  border-color: var(--accent) !important;
+  transform: scale(1.08);
+  box-shadow: 0 4px 12px rgba(185, 28, 28, 0.3);
+}
+
+/* ==========================================================================
+   3. READER VIEWPORT — PERFECT SYMMETRICAL CENTERING
+   ========================================================================== */
+.reader-viewport {
+  flex: 1 1 0;
+  width: 100%;
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  background-color: var(--bg-primary);
+  padding: 24px 32px 100px 32px;
+  display: block;
+}
+
+.reader-container {
+  width: 100%;
+  max-width: 1360px;
+  margin: 0 auto; /* Pure mathematical center */
+  display: flex;
+  align-items: flex-start;
+  gap: 28px;
+  min-height: min-content;
+}
+
+body.view-split .reader-container {
+  max-width: 1720px;
+}
+
+body.view-split .image-column {
+  display: flex;
+}
+
+/* Scan Image Column */
+.image-column {
+  flex: 1 1 48%;
+  min-width: 0;
+  max-width: 50%;
+  display: none;
+  flex-direction: column;
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  box-shadow: var(--shadow-md);
+  position: sticky;
+  top: 0;
+  max-height: calc(100vh - var(--header-height) - var(--bottom-bar-height) - 40px);
+  overflow: hidden;
+}
+
+.image-toolbar {
+  padding: 8px 12px;
+  background-color: var(--bg-card);
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.image-canvas-wrap {
+  flex: 1;
+  overflow: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px;
+  background: rgba(0, 0, 0, 0.03);
+}
+
+.image-canvas-wrap img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 4px;
+  box-shadow: var(--shadow-md);
+  cursor: zoom-in;
+}
+
+/* Article Column */
+.article-column {
+  flex: 1 1 auto;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  height: auto;
+  min-height: fit-content;
+  background-color: transparent;
+  padding: 0 0 64px 0;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.page-meta-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 2px solid var(--accent);
+  padding-bottom: 12px;
+  margin-bottom: 24px;
+  background: var(--bg-card-warm);
+  border-radius: 8px;
+  padding: 12px 18px;
+  border: 0.5px solid var(--border-subtle);
+  border-bottom: 2.5px solid var(--accent);
+}
+
+.page-badge {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1.2px;
+  color: var(--accent);
+  text-transform: uppercase;
+}
+
+.section-title-badge {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-left: 8px;
+}
+
+.page-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.bookmark-btn.active {
+  background-color: var(--accent-gold);
+  color: #fff !important;
+  border-color: var(--accent-gold);
+}
+
+/* === Grand 24px English Warm Parchment Card & 20.5px Pure Chinese === */
+.article-body {
+  width: 100%;
+  max-width: 100%;
+}
+
+.segment-block {
+  margin-bottom: 28px;
+  padding: 0;
+  position: relative;
+}
+
+.segment-block.playing-active .en-text {
+  border-color: var(--accent-gold);
+  box-shadow: 0 0 0 2px var(--accent-gold), 0 8px 24px rgba(201, 138, 44, 0.15);
+  animation: audioPulse 2s infinite ease-in-out;
+}
+
+@keyframes audioPulse {
+  0%, 100% { border-color: var(--accent-gold); }
+  50% { border-color: rgba(201, 138, 44, 0.4); }
+}
+
+/* English Hero Card: Non-glaring, eye-comfort card tint */
+.segment-paragraph .en-text {
+  font-family: var(--font-screen-en);
+  font-size: 24px; /* Grand 24px Hero English */
+  color: var(--text-primary);
+  font-weight: 450;
+  line-height: 1.86;
+  margin-bottom: 6px;
+  text-align: justify;
+  letter-spacing: -0.01em;
+  background: var(--bg-card-warm); /* Warm soothing paper tint, zero eye glare */
+  border: 0.5px solid var(--border-subtle);
+  border-radius: 10px;
+  padding: 20px 28px;
+  box-shadow: var(--shadow-sm);
+  overflow-wrap: break-word;
+  word-break: break-word;
+  cursor: text;
+  user-select: text;
+}
+
+/* Ambient Subtle Chinese Translation (20.5px Pure Text, ZERO Left Line, ZERO Background) */
+.segment-paragraph .zh-text-card {
+  font-family: var(--font-screen-zh);
+  background: transparent; /* Pure text without background */
+  border: none;
+  border-left: none; /* ZERO left line */
+  padding: 8px 16px 8px 16px;
+  color: var(--text-secondary); /* Clear secondary slate */
+  line-height: 1.84;
+  font-size: 20.5px; /* Large 20.5px Chinese, effortless to read */
+  margin-top: 2px;
+  font-weight: 400;
+  transition: var(--transition-smooth);
+  user-select: text;
+}
+
+.zh-card-pill {
+  display: none !important;
+}
+
+/* Author Byline Cards */
+.segment-byline {
+  margin-top: 24px;
+  margin-bottom: 16px;
+}
+
+.segment-byline .en-text {
+  font-family: var(--font-screen-en);
+  font-style: italic;
+  font-size: 19px;
+  color: var(--text-muted);
+  background: var(--bg-hover);
+  border: 0.5px solid var(--border-subtle);
+  border-radius: 8px;
+  padding: 12px 20px;
+}
+
+.segment-byline .zh-text-card {
+  font-family: var(--font-screen-zh);
+  background: transparent;
+  border: none;
+  padding: 6px 20px;
+  font-size: 17px;
+  color: var(--text-muted);
+}
+
+/* Pull Quotes */
+.segment-quote {
+  margin: 26px 0;
+}
+
+.segment-quote .en-text {
+  font-family: var(--font-title);
+  font-size: 26px;
+  line-height: 1.5;
+  color: var(--accent);
+  font-weight: 700;
+  background: var(--bg-card-warm);
+  border: 0.5px solid var(--border-subtle);
+  border-left: 5px solid var(--accent);
+  border-radius: 0 10px 10px 0;
+  padding: 22px 28px;
+}
+
+.segment-quote .zh-text-card {
+  font-family: var(--font-screen-zh);
+  background: transparent;
+  border: none;
+  padding: 10px 28px;
+  font-size: 19px;
+  color: var(--text-secondary);
+}
+
+/* Zero-Collision Action Footer */
+.segment-action-footer {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  margin-top: 4px;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.segment-block:hover .segment-action-footer {
+  opacity: 1;
+}
+
+.para-audio-pill {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  padding: 2px 8px;
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--text-muted);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: var(--transition-smooth);
+}
+
+.para-audio-pill:hover {
+  background-color: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+
+/* Headings */
+.segment-h3 {
+  margin-top: 36px;
+  margin-bottom: 20px;
+}
+
+.segment-h3 .en-text {
+  font-family: var(--font-title);
+  font-size: 32px;
+  line-height: 1.3;
+  color: var(--accent);
+  font-weight: 800;
+  background: var(--bg-card-warm);
+  border: 0.5px solid var(--border-subtle);
+  border-radius: 10px;
+  padding: 16px 24px;
+}
+
+.segment-h3 .zh-text-card {
+  font-family: var(--font-screen-zh);
+  font-size: 21px;
+  color: var(--text-secondary);
+  font-weight: 600;
+  margin-top: 4px;
+  border: none;
+  padding: 6px 14px;
+}
+
+.segment-h4 .en-text {
+  font-family: var(--font-screen-en);
+  font-size: 23px;
+  font-weight: 700;
+  color: var(--text-primary);
+  background: var(--bg-card-warm);
+  border: 0.5px solid var(--border-subtle);
+  border-radius: 8px;
+  padding: 12px 20px;
+}
+
+.segment-h4 .zh-text-card {
+  font-family: var(--font-screen-zh);
+  font-size: 19px;
+  color: var(--text-secondary);
+  margin-top: 2px;
+  border: none;
+  padding: 6px 14px;
+}
+
+/* View Mode Toggles */
+body.view-en-only .zh-text-card {
+  display: none !important;
+}
+
+body.view-zh-only .en-text {
+  display: none !important;
+}
+
+/* Bottom Bar */
+.bottom-bar {
+  height: var(--bottom-bar-height);
+  background-color: var(--bg-secondary);
+  border-top: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  z-index: 100;
+}
+
+.bottom-center {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 0.5;
+}
+
+.page-slider {
+  flex: 1;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+.page-counter-text {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  min-width: 100px;
+  text-align: right;
+}
+
+/* Lightbox Modal */
+.lightbox-modal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.94);
+  z-index: 1000;
+  align-items: center;
+  justify-content: center;
+  cursor: zoom-out;
+}
+
+.lightbox-modal.active {
+  display: flex;
+}
+
+.lightbox-modal img {
+  max-width: 92vw;
+  max-height: 92vh;
+  box-shadow: 0 0 40px rgba(0, 0, 0, 0.9);
+  border-radius: 4px;
+}
+
+.close-lightbox {
+  position: absolute;
+  top: 20px;
+  right: 32px;
+  color: #fff;
+  font-size: 42px;
+  cursor: pointer;
+}
+
+/* ==========================================================================
+   GITHUB PAGES CROSS-DEVICE RESPONSIVE BREAKPOINTS (Mobile / Tablet / iPad / Desktop)
+   ========================================================================== */
+@media (max-width: 960px) {
+  .app-sidebar {
+    position: absolute;
+    height: calc(100vh - var(--header-height) - var(--bottom-bar-height));
+    left: 0;
+    top: 0;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+  }
+  .article-column {
+    padding: 14px 8px 40px 8px;
+  }
+  body.view-split .image-column {
+    display: none;
+  }
+  .magazine-shelf-grid {
+    grid-template-columns: 1fr;
+  }
+  .segment-paragraph .en-text {
+    font-size: 20px;
+    padding: 16px 18px;
+  }
+  .segment-paragraph .zh-text-card {
+    font-size: 18px;
+    padding: 6px 10px;
+  }
+}
+
+@media (max-width: 640px) {
+  .header-right .search-box, .header-right .font-controls {
+    display: none;
+  }
+  .portal-header {
+    padding: 12px 18px;
+  }
+  .portal-hero h2 {
+    font-size: 24px;
+  }
+  .portal-search-wrap {
+    padding: 0 8px;
+  }
+  .shelf-issue-card {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+  .shelf-cover-wrap {
+    width: 140px;
+  }
+  .shelf-meta-tags {
+    justify-content: center;
+  }
+  .bottom-bar {
+    padding: 0 10px;
+  }
+  .shortcuts-grid {
+    grid-template-columns: 1fr;
+  }
+}
