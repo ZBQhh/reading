@@ -584,10 +584,9 @@
                 </div>
               ` : ''}
             `;
-          } else {
-            // Authentic 1:1 Author Paragraph: 100% Zero Extra Buttons & Tap-to-Speak
+            // Authentic 1:1 Author Paragraph: Pure Clean Words & Direct Tap-to-Speak
             segDiv.innerHTML = `
-              <div class="en-text" lang="en" title="轻点原声朗读本段 (再次点击暂停)">${hyphenatedEn}</div>
+              <div class="en-text" lang="en" title="轻点原声朗读本段 (再次点击暂停)">${cleanEn}</div>
               ${cleanZh ? `
                 <div class="zh-text-card" lang="zh-CN">
                   <div>${cleanZh}</div>
@@ -1254,6 +1253,18 @@
 
   // SINGLE LISTENER REGISTRATION (Capture phase for instant priority)
   window.addEventListener('keydown', handleGlobalKeyDown, true);
+
+  // Global Clipboard Sanitizer: Guarantees 100% Pure, Unbroken Words on Copy (Stripping any soft hyphens)
+  document.addEventListener('copy', (e) => {
+    const selection = window.getSelection();
+    if (!selection || selection.isCollapsed) return;
+    const rawText = selection.toString();
+    const cleanText = rawText.replace(/\u00AD/g, '').replace(/[\u200B-\u200D\uFEFF]/g, '');
+    if (e.clipboardData) {
+      e.clipboardData.setData('text/plain', cleanText);
+      e.preventDefault();
+    }
+  });
 
   // Startup Initialization: Ensure sidebar is cleanly collapsed by default
   if (sidebar) {

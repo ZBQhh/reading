@@ -192,7 +192,7 @@ body.font-mode-serif {
   background: var(--bg-card);
   border: 1px solid var(--border-color);
   color: var(--text-primary);
-  border-radius: 7px;
+  border-radius: 10px; /* Apple squircle rounded */
   padding: 0 8px;
   cursor: pointer;
   display: inline-flex;
@@ -1449,7 +1449,7 @@ body.align-mode-justify .segment-h4 .en-text {
   background: var(--bg-card-warm);
   border: 0.5px solid var(--border-subtle);
   border-left: 5px solid var(--accent);
-  border-radius: 0 9px 9px 0;
+  border-radius: 12px; /* Smooth rounded corners on all 4 corners */
   padding: 18px 24px;
   box-sizing: border-box;
   text-align: justify;
