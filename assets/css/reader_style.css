@@ -1454,17 +1454,21 @@ body.align-mode-justify .segment-h4 .en-text {
   box-sizing: border-box;
 }
 
-/* Zero-Collision Action Footer */
+/* Zero-Collision Action Footer: Zero Ghost Height when not hovered */
 .segment-action-footer {
   display: flex;
   justify-content: flex-end;
   align-items: center;
-  margin-top: 3px;
+  margin-top: 0;
+  height: 0;
+  overflow: hidden;
   opacity: 0;
-  transition: opacity 0.2s;
+  transition: opacity 0.2s, height 0.2s, margin-top 0.2s;
 }
 
 .segment-block:hover .segment-action-footer {
+  height: 22px;
+  margin-top: 3px;
   opacity: 1;
 }
 
@@ -1894,8 +1898,15 @@ body.view-zh-only .en-text {
     display: none;
   }
 
+  .segment-action-footer {
+    display: none !important;
+    height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
   .segment-block {
-    margin-bottom: 12px !important; /* Compact mobile rhythm: 60% distance reduction */
+    margin-bottom: 8px !important; /* Tight 8px rhythm: 80% distance reduction */
   }
 
   .segment-paragraph .en-text {
