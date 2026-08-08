@@ -171,8 +171,8 @@ def build_portal():
   </div>
 
   <div class="main-layout">
-    <!-- Left Navigation Sidebar with One-Click Close Button -->
-    <aside class="app-sidebar" id="app-sidebar">
+    <!-- Left Navigation Sidebar with One-Click Close Button (Default Collapsed for pure reading focus) -->
+    <aside class="app-sidebar collapsed" id="app-sidebar">
       <div class="sidebar-tabs">
         <button class="tab-btn active" data-tab="toc">目录导航</button>
         <button class="tab-btn" data-tab="pages">缩略图</button>

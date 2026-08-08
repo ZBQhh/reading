@@ -1114,10 +1114,25 @@
   // SINGLE LISTENER REGISTRATION (Strictly avoids duplicate execution)
   window.addEventListener('keydown', handleGlobalKeyDown, false);
 
-  // Startup Initialization
+  // Startup Initialization: Ensure sidebar is cleanly collapsed by default
+  if (sidebar) {
+    sidebar.classList.add('collapsed');
+  }
+
+  // Click on reader viewport to auto-close drawer on mobile
+  const vpEl = document.querySelector('.reader-viewport');
+  if (vpEl) {
+    vpEl.addEventListener('click', () => {
+      if (window.innerWidth <= 960 && sidebar && !sidebar.classList.contains('collapsed')) {
+        sidebar.classList.add('collapsed');
+      }
+    });
+  }
+
   renderLibraryShelf();
 
   const savedTheme = localStorage.getItem(STORAGE_KEY_THEME) || 'light';
+  document.body.classList.remove('theme-light', 'theme-sepia', 'theme-beach', 'theme-academic', 'theme-forest', 'theme-dark');
   document.body.classList.add(`theme-${savedTheme}`);
   const activeThemeBtn = document.querySelector(`.theme-btn[data-theme="${savedTheme}"]`);
   if (activeThemeBtn) {
