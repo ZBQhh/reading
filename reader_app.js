@@ -512,9 +512,9 @@
 
           if (seg.type === 'h3') {
             segDiv.innerHTML = `
-              <div class="en-text">${cleanEn}</div>
+              <div class="en-text" lang="en">${cleanEn}</div>
               ${cleanZh ? `
-                <div class="zh-text-card">
+                <div class="zh-text-card" lang="zh-CN">
                   <div>${cleanZh}</div>
                 </div>
               ` : ''}
@@ -524,9 +524,9 @@
             `;
           } else if (seg.type === 'h4') {
             segDiv.innerHTML = `
-              <div class="en-text">${cleanEn}</div>
+              <div class="en-text" lang="en">${cleanEn}</div>
               ${cleanZh ? `
-                <div class="zh-text-card">
+                <div class="zh-text-card" lang="zh-CN">
                   <div>${cleanZh}</div>
                 </div>
               ` : ''}
@@ -536,9 +536,9 @@
             `;
           } else if (seg.type === 'caption') {
             segDiv.innerHTML = `
-              <div class="en-text"><em>${cleanEn}</em></div>
+              <div class="en-text" lang="en"><em>${cleanEn}</em></div>
               ${cleanZh ? `
-                <div class="zh-text-card">
+                <div class="zh-text-card" lang="zh-CN">
                   <div><em>${cleanZh}</em></div>
                 </div>
               ` : ''}
@@ -548,37 +548,37 @@
             `;
           } else if (seg.type === 'byline') {
             segDiv.innerHTML = `
-              <div class="en-text">${cleanEn}</div>
+              <div class="en-text" lang="en">${cleanEn}</div>
               ${cleanZh ? `
-                <div class="zh-text-card">
+                <div class="zh-text-card" lang="zh-CN">
                   <div>${cleanZh}</div>
                 </div>
               ` : ''}
             `;
           } else if (seg.type === 'quote') {
             segDiv.innerHTML = `
-              <div class="en-text">${cleanEn}</div>
+              <div class="en-text" lang="en">${cleanEn}</div>
               ${cleanZh ? `
-                <div class="zh-text-card">
+                <div class="zh-text-card" lang="zh-CN">
                   <div>${cleanZh}</div>
                 </div>
               ` : ''}
             `;
           } else if (seg.type === 'ad') {
             segDiv.innerHTML = `
-              <div class="en-text"><strong>[Advertisement]</strong> ${cleanEn}</div>
+              <div class="en-text" lang="en"><strong>[Advertisement]</strong> ${cleanEn}</div>
               ${cleanZh ? `
-                <div class="zh-text-card">
+                <div class="zh-text-card" lang="zh-CN">
                   <div>${cleanZh}</div>
                 </div>
               ` : ''}
             `;
           } else {
-            // Authentic 1:1 Author Paragraph: 24px Hero English Warm Card, 20.5px Pure Subtle Chinese
+            // Authentic 1:1 Author Paragraph: 22px Desktop / 17.5px Mobile English Card with Hyphenation
             segDiv.innerHTML = `
-              <div class="en-text">${cleanEn}</div>
+              <div class="en-text" lang="en">${cleanEn}</div>
               ${cleanZh ? `
-                <div class="zh-text-card">
+                <div class="zh-text-card" lang="zh-CN">
                   <div>${cleanZh}</div>
                 </div>
               ` : ''}
