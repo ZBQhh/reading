@@ -1,7 +1,8 @@
 /* ==========================================================================
    The Atlantic — Grand Bespoke Digital Magazine Reader ($20/mo Tier)
-   Unified Apple Books "More (···)" Drawer Menu & 6 Themes Popover Engine,
-   Publishing-Grade Hyphenation (hyphens: auto), 100% Zero-Overflow Architecture
+   Publishing-Grade Typography Engine: text-wrap: pretty,
+   hyphens: auto (hyphenate-limit-chars: 6 3 3), Zero Line-End Voids,
+   Unified Apple Books "More (···)" Drawer & 100% Zero-Overflow Architecture
    ========================================================================== */
 
 @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800;900&family=Inter:wght@300;400;500;600;700;800&family=Merriweather:ital,wght@0,300;0,400;0,700;1,300;1,400&family=Noto+Sans+SC:wght@300;400;500;600;700;900&family=Noto+Serif+SC:wght@300;400;600;700;900&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
@@ -1121,7 +1122,7 @@ body.font-mode-serif {
 }
 
 /* ==========================================================================
-   3. READER VIEWPORT — PUBLISHING-GRADE TYPOGRAPHY & HYPHENATION
+   3. READER VIEWPORT — PUBLISHING-GRADE KNUTH-PLASS TYPOGRAPHY & HYPHENATION
    ========================================================================== */
 .reader-viewport {
   flex: 1 1 0;
@@ -1285,25 +1286,31 @@ body.view-split .image-column {
 
 /* 
    PUBLISHING-GRADE ENGLISH TYPOGRAPHY:
-   - hyphens: auto (Automatic browser syllable hyphenation, avoids giant whitespace voids)
-   - Desktop: 22px, line-height 1.8, text-align: justify; text-justify: inter-word
-   - Mobile: 17.5px, line-height 1.68, text-align: left
+   - text-wrap: pretty (Advanced Knuth-Plass line fitting, eliminates orphans and large gaps)
+   - hyphens: auto (Automatic browser syllable hyphenation with hyphenate-limit-chars: 6 3 3)
+   - text-align: justify; text-justify: inter-word (Flawless editorial right margin)
 */
 .segment-paragraph .en-text {
   font-family: var(--font-screen-en);
-  font-size: 22px;
+  font-size: 21.5px;
   color: var(--text-primary);
   font-weight: 450;
-  line-height: 1.8;
+  line-height: 1.82;
   margin-bottom: 4px;
   text-align: justify;
   text-justify: inter-word;
+  text-wrap: pretty;
+  -webkit-text-wrap: pretty;
   hyphens: auto;
   -webkit-hyphens: auto;
   -ms-hyphens: auto;
+  hyphenate-limit-chars: 6 3 3;
+  -webkit-hyphenate-limit-chars: 6 3 3;
+  hyphenate-limit-lines: 2;
   word-break: normal;
   overflow-wrap: break-word;
-  letter-spacing: -0.01em;
+  letter-spacing: -0.012em;
+  word-spacing: -0.01em;
   background: var(--bg-card-warm); /* Warm soothing paper tint, zero eye glare */
   border: 0.5px solid var(--border-subtle);
   border-radius: 9px;
@@ -1322,11 +1329,15 @@ body.view-split .image-column {
   border-left: none; /* ZERO left line */
   padding: 6px 14px 6px 14px;
   color: var(--text-secondary); /* Clear secondary slate */
-  line-height: 1.8;
+  line-height: 1.82;
   font-size: 19px; /* Large Chinese */
   margin-top: 2px;
   font-weight: 400;
   text-align: justify;
+  text-justify: inter-ideograph;
+  text-wrap: pretty;
+  -webkit-text-wrap: pretty;
+  letter-spacing: 0.01em;
   transition: var(--transition-smooth);
   user-select: text;
   box-sizing: border-box;
@@ -1352,6 +1363,7 @@ body.view-split .image-column {
   border-radius: 7px;
   padding: 10px 18px;
   box-sizing: border-box;
+  text-wrap: pretty;
   hyphens: auto;
   -webkit-hyphens: auto;
 }
@@ -1383,6 +1395,7 @@ body.view-split .image-column {
   border-radius: 0 9px 9px 0;
   padding: 18px 24px;
   box-sizing: border-box;
+  text-wrap: balance;
   hyphens: auto;
   -webkit-hyphens: auto;
 }
@@ -1449,6 +1462,7 @@ body.view-split .image-column {
   border-radius: 9px;
   padding: 14px 20px;
   box-sizing: border-box;
+  text-wrap: balance;
   hyphens: auto;
   -webkit-hyphens: auto;
 }
@@ -1474,6 +1488,7 @@ body.view-split .image-column {
   border-radius: 7px;
   padding: 10px 16px;
   box-sizing: border-box;
+  text-wrap: pretty;
   hyphens: auto;
   -webkit-hyphens: auto;
 }
@@ -1651,13 +1666,14 @@ body.view-zh-only .en-text {
   .segment-paragraph .en-text {
     font-size: 19px;
     padding: 14px 18px;
-    line-height: 1.74;
+    line-height: 1.76;
+    text-wrap: pretty;
   }
 
   .segment-paragraph .zh-text-card {
     font-size: 17px;
     padding: 5px 10px;
-    line-height: 1.74;
+    line-height: 1.76;
   }
 }
 
@@ -1789,7 +1805,8 @@ body.view-zh-only .en-text {
   }
 
   /* Reader Canvas on Mobile:
-     - 17.5px English with text-align: left & hyphens: auto (ELIMINATES ALL WHITE GAPS)
+     - 17.5px English with text-wrap: pretty, hyphens: auto, text-align: justify
+       (ELIMINATES ALL WHITE GAPS & FLAT RIGHT MARGIN)
      - 15.5px Chinese
   */
   .reader-viewport {
@@ -1811,43 +1828,47 @@ body.view-zh-only .en-text {
 
   .segment-paragraph .en-text {
     font-size: 17.5px;
-    padding: 11px 13px;
-    line-height: 1.68;
+    padding: 12px 14px;
+    line-height: 1.72;
     border-radius: 7px;
-    text-align: left; /* Left-aligned on mobile to eliminate whitespace voids */
-    letter-spacing: -0.01em;
+    text-align: justify;
+    text-justify: inter-word;
+    text-wrap: pretty;
+    -webkit-text-wrap: pretty;
+    letter-spacing: -0.012em;
     hyphens: auto;
     -webkit-hyphens: auto;
+    hyphenate-limit-chars: 6 3 3;
+    -webkit-hyphenate-limit-chars: 6 3 3;
+    overflow-wrap: break-word;
   }
 
   .segment-paragraph .zh-text-card {
     font-size: 15.5px;
     padding: 4px 6px;
-    line-height: 1.68;
-    text-align: left;
+    line-height: 1.72;
+    text-align: justify;
+    text-wrap: pretty;
   }
 
   .segment-h3 .en-text {
     font-size: 20px;
     padding: 8px 10px;
-    text-align: left;
+    text-wrap: balance;
   }
 
   .segment-h3 .zh-text-card {
     font-size: 16px;
-    text-align: left;
   }
 
   .segment-h4 .en-text {
     font-size: 16.5px;
     padding: 6px 8px;
-    text-align: left;
   }
 
   .segment-quote .en-text {
     font-size: 17px;
     padding: 8px 12px;
-    text-align: left;
   }
 
   /* Bottom Bar on Mobile: 100% Compact Touch Pills */
