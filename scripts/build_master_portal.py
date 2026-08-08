@@ -44,7 +44,7 @@ def build_portal():
     <main class="portal-hero">
       <span class="portal-hero-badge">DIGITAL BESPOKE ARCHIVE</span>
       <h2>精选典藏期刊库</h2>
-      <p>依托 1:1 印刷排版首行缩进解析、真实作者段落集与 24px 英文微浮雕卡片，汇聚全球顶级政经、文学与前沿科技思想典籍。</p>
+      <p>依托 1:1 印刷排版首行缩进解析、真实作者段落集与 22px 英文微浮雕卡片，汇聚全球顶级政经、文学与前沿科技思想典籍。</p>
       
       <!-- Home Portal Global Multi-Issue Instant Search -->
       <div class="portal-search-wrap">
@@ -69,7 +69,7 @@ def build_portal():
   </div>
 
   <!-- ==========================================================================
-       2. IMMERSIVE READER ROOM (Apple News+ Dual-Deck Zero-Stacking Architecture)
+       2. IMMERSIVE READER ROOM (Unified Clean Top Bar & More Popover Menu)
        ========================================================================== -->
   <header class="app-header">
     <div class="header-left">
@@ -96,7 +96,7 @@ def build_portal():
 
     <!-- Center Desktop View Mode Switcher -->
     <div class="view-controls">
-      <button class="view-btn active" data-view="interlinear" title="1:1 逐段对照，24px 英文卡片主显，20.5px 中文纯字辅读 (快捷键 1)">
+      <button class="view-btn active" data-view="interlinear" title="1:1 逐段对照，22px 英文卡片主显，19px 中文纯字辅读 (快捷键 1)">
         <span>📖 逐段对照</span>
       </button>
       <button class="view-btn" data-view="split" title="左侧原版 150 DPI 高清扫描图 + 右侧精校排版 (快捷键 2)">
@@ -110,49 +110,94 @@ def build_portal():
       </button>
     </div>
 
-    <!-- Header Right Controls -->
+    <!-- Header Right Controls: Clean Audio + Expandable More Menu -->
     <div class="header-right">
-      <!-- Font Switcher -->
-      <button id="font-family-toggle" class="font-family-toggle" title="切换屏幕现代黑体 / 经典衬线体">🔤 现代黑体</button>
-
-      <!-- TTS Speech Widget: Strictly horizontal flex row -->
+      <!-- TTS Speech Widget -->
       <div class="audio-player-widget">
-        <button id="play-page-audio-btn" class="audio-btn" title="原声朗读本页英文 (P)">▶ 朗读本页</button>
-        <button id="audio-speed-btn" class="audio-speed-btn" title="调节语速">1.0x</button>
+        <button id="play-page-audio-btn" class="audio-btn" title="原声朗读本页英文 (P)">▶ 朗读</button>
       </div>
 
-      <!-- Search Input -->
-      <div class="search-box">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-        <input type="text" id="global-search" placeholder="全书检索...">
-      </div>
-
-      <!-- Theme Selector: 6 Curated Luxury Editorial Palettes -->
-      <div class="theme-selector" title="选择阅读主题色系">
-        <button class="theme-btn active" data-theme="light" title="☀️ 晨曦象牙白">☀️</button>
-        <button class="theme-btn" data-theme="sepia" title="📜 复古羊皮纸">📜</button>
-        <button class="theme-btn" data-theme="beach" title="🏖️ 清新夏日海滩">🏖️</button>
-        <button class="theme-btn" data-theme="academic" title="🧊 学术冷静冰川">🧊</button>
-        <button class="theme-btn" data-theme="forest" title="🌿 森林晨雾薄荷">🌿</button>
-        <button class="theme-btn" data-theme="dark" title="🌙 极夜深曜石">🌙</button>
-      </div>
-
-      <!-- English Font Resizer -->
-      <div class="font-controls">
-        <button id="font-dec-btn" class="tool-btn" title="减小英文主字号">A-</button>
-        <button id="font-inc-btn" class="tool-btn" title="增大英文主字号">A+</button>
-      </div>
-
-      <!-- Shortcuts Help Button -->
-      <button class="icon-btn shortcuts-help-trigger" onclick="window.toggleShortcutsModal()" title="查看全站快捷键 (? / Shift+/)">
-        <span>⌨️ 快捷键</span>
-      </button>
-
-      <button id="fullscreen-btn" class="icon-btn" title="全屏阅读 (F)">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path></svg>
+      <!-- Apple Books Expandable "More (···)" Settings & Themes Trigger -->
+      <button id="more-settings-btn" class="more-menu-btn" title="偏好设置与 6 大主题 (快捷键 ?)">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="1"></circle><circle cx="19" cy="12" r="1"></circle><circle cx="5" cy="12" r="1"></circle></svg>
+        <span>设置 & 6 主题</span>
       </button>
     </div>
   </header>
+
+  <!-- Settings Backdrop & Apple Books Style Drawer Popover -->
+  <div id="settings-backdrop" class="settings-backdrop"></div>
+  <div id="settings-popover-menu" class="settings-popover-menu">
+    <!-- Section 1: 6 Curated Luxury Editorial Themes -->
+    <div class="popover-section">
+      <div class="popover-section-title">🎨 6 大奢华阅读主题</div>
+      <div class="popover-theme-grid">
+        <div class="popover-theme-card active" data-theme="light">
+          <span class="theme-emoji">☀️</span>
+          <span>晨曦白</span>
+        </div>
+        <div class="popover-theme-card" data-theme="sepia">
+          <span class="theme-emoji">📜</span>
+          <span>羊皮纸</span>
+        </div>
+        <div class="popover-theme-card" data-theme="beach">
+          <span class="theme-emoji">🏖️</span>
+          <span>夏日海滩</span>
+        </div>
+        <div class="popover-theme-card" data-theme="academic">
+          <span class="theme-emoji">🧊</span>
+          <span>学术冰川</span>
+        </div>
+        <div class="popover-theme-card" data-theme="forest">
+          <span class="theme-emoji">🌿</span>
+          <span>森林薄荷</span>
+        </div>
+        <div class="popover-theme-card" data-theme="dark">
+          <span class="theme-emoji">🌙</span>
+          <span>极夜黑</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Section 2: Typography & Font Scaling -->
+    <div class="popover-section">
+      <div class="popover-section-title">🔤 字体与英文主字号</div>
+      <div class="popover-controls-row">
+        <button id="font-family-toggle" class="popover-pill-btn" title="切换现代黑体/典雅衬线">🔤 现代黑体</button>
+        <div class="popover-btn-group">
+          <button id="font-dec-btn" class="popover-pill-btn" title="减小英文主字号">A-</button>
+          <button id="font-inc-btn" class="popover-pill-btn" title="增大英文主字号">A+</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Section 3: Speech Speed -->
+    <div class="popover-section">
+      <div class="popover-section-title">🔊 原声朗读语速</div>
+      <div class="popover-controls-row">
+        <div class="popover-btn-group">
+          <button id="audio-speed-btn" class="popover-pill-btn" title="调节朗读语速">1.0x 标准</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Section 4: In-Drawer Global Search -->
+    <div class="popover-section">
+      <div class="popover-section-title">🔍 全书检索</div>
+      <div class="search-box" style="width: 100%;">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+        <input type="text" id="global-search" placeholder="输入关键词秒查全刊..." style="width: 100%;">
+      </div>
+    </div>
+
+    <!-- Section 5: Utilities -->
+    <div class="popover-section">
+      <div class="popover-controls-row">
+        <button class="popover-pill-btn" onclick="window.toggleShortcutsModal()" title="查看全站快捷键">⌨️ 快捷键速查</button>
+        <button id="fullscreen-btn" class="popover-pill-btn" title="全屏沉浸阅读 (F)">⛶ 全屏沉浸</button>
+      </div>
+    </div>
+  </div>
 
   <!-- Mobile Sub-Bar: Standalone sticky view segmented pill switcher on mobile -->
   <div class="mobile-view-bar">
@@ -225,7 +270,7 @@ def build_portal():
           </div>
         </div>
 
-        <!-- Text Reader Card Column (Hero English 24px Warm Cards & Pure 20.5px Subtle Chinese) -->
+        <!-- Text Reader Card Column (Hero English Cards & Pure Subtle Chinese) -->
         <div class="article-column" id="article-column">
           <div class="page-meta-header">
             <div>
@@ -345,7 +390,7 @@ def build_portal():
     with open('reader.html', 'w', encoding='utf-8') as f:
         f.write(html_content)
 
-    print("Master portal compiled successfully with Apple News+ Dual-Deck Zero-Stacking layout and 6 luxury themes!")
+    print("Master portal compiled successfully with Apple Books Settings Popover & 6 Luxury Themes!")
 
 if __name__ == '__main__':
     build_portal()

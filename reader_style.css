@@ -1,7 +1,7 @@
 /* ==========================================================================
    The Atlantic — Grand Bespoke Digital Magazine Reader ($20/mo Tier)
-   Publishing-Grade Typography Engine: Hyphenation (hyphens: auto),
-   Zero-Gaps Mobile Layout, 100% Strict Zero-Overflow Touch Architecture
+   Unified Apple Books "More (···)" Drawer Menu & 6 Themes Popover Engine,
+   Publishing-Grade Hyphenation (hyphens: auto), 100% Zero-Overflow Architecture
    ========================================================================== */
 
 @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800;900&family=Inter:wght@300;400;500;600;700;800&family=Merriweather:ital,wght@0,300;0,400;0,700;1,300;1,400&family=Noto+Sans+SC:wght@300;400;500;600;700;900&family=Noto+Serif+SC:wght@300;400;600;700;900&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
@@ -12,8 +12,8 @@
   --bg-secondary: #ede7d8;
   --bg-card: #ffffff;
   --bg-card-warm: #f2ece0; /* Soothing warm parchment card tone, non-glaring */
-  --bg-glass: rgba(248, 246, 240, 0.94);
-  --bg-glass-card: rgba(255, 255, 255, 0.95);
+  --bg-glass: rgba(248, 246, 240, 0.95);
+  --bg-glass-card: rgba(255, 255, 255, 0.96);
   --bg-hover: #ebe4d3;
   --text-primary: #121316; /* Crisp deep ink for English */
   --text-secondary: #484f5e; /* Clear slate for Chinese */
@@ -27,8 +27,8 @@
   --border-color: rgba(216, 206, 184, 0.85);
   --border-subtle: rgba(210, 200, 178, 0.6);
   --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.03);
-  --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.05);
-  --shadow-lg: 0 16px 44px rgba(0, 0, 0, 0.09);
+  --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 16px 44px rgba(0, 0, 0, 0.12);
 
   /* Typography */
   --font-screen-en: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
@@ -51,8 +51,8 @@ body.theme-sepia {
   --bg-secondary: #ebe0c7;
   --bg-card: #fdf8eb;
   --bg-card-warm: #ece0c6;
-  --bg-glass: rgba(244, 236, 216, 0.94);
-  --bg-glass-card: rgba(253, 248, 235, 0.95);
+  --bg-glass: rgba(244, 236, 216, 0.95);
+  --bg-glass-card: rgba(253, 248, 235, 0.96);
   --bg-hover: #e3d5b4;
   --text-primary: #241c16;
   --text-secondary: #5a4c3e;
@@ -71,7 +71,7 @@ body.theme-beach {
   --bg-secondary: #e2eff2;
   --bg-card: #ffffff;
   --bg-card-warm: #e6f1f4; /* Refreshing soft ocean spray tint */
-  --bg-glass: rgba(240, 247, 248, 0.94);
+  --bg-glass: rgba(240, 247, 248, 0.95);
   --bg-glass-card: rgba(255, 255, 255, 0.96);
   --bg-hover: #d5e9ed;
   --text-primary: #102a36; /* Deep ocean navy ink */
@@ -91,7 +91,7 @@ body.theme-academic {
   --bg-secondary: #e2e8f0;
   --bg-card: #ffffff;
   --bg-card-warm: #e4e9f1; /* Crisp Nordic glacier tone, highly focusing */
-  --bg-glass: rgba(241, 244, 248, 0.94);
+  --bg-glass: rgba(241, 244, 248, 0.95);
   --bg-glass-card: rgba(255, 255, 255, 0.96);
   --bg-hover: #d5deea;
   --text-primary: #182232; /* Serious Oxford navy */
@@ -111,7 +111,7 @@ body.theme-forest {
   --bg-secondary: #e3eee3;
   --bg-card: #ffffff;
   --bg-card-warm: #e5eee5; /* Soothing bamboo matcha sage, maximum eye comfort */
-  --bg-glass: rgba(242, 247, 242, 0.94);
+  --bg-glass: rgba(242, 247, 242, 0.95);
   --bg-glass-card: rgba(255, 255, 255, 0.96);
   --bg-hover: #d4e5d4;
   --text-primary: #16291a; /* Forest pine ink */
@@ -131,8 +131,8 @@ body.theme-dark {
   --bg-secondary: #14171e;
   --bg-card: #191c25;
   --bg-card-warm: #141720; /* Deep soothing graphite, zero glare */
-  --bg-glass: rgba(16, 18, 23, 0.94);
-  --bg-glass-card: rgba(25, 28, 37, 0.95);
+  --bg-glass: rgba(16, 18, 23, 0.95);
+  --bg-glass-card: rgba(25, 28, 37, 0.96);
   --bg-hover: #222631;
   --text-primary: #f0f2f8;
   --text-secondary: #a2a9ba;
@@ -183,7 +183,7 @@ body.font-mode-serif {
 /* ==========================================================================
    UNIFIED APPLE LIQUID GLASS BUTTON SYSTEM
    ========================================================================== */
-.icon-btn, .tiny-btn, .tool-btn, .back-to-library-btn, .nav-page-btn, .text-action-btn, .font-family-toggle, .audio-btn, .audio-speed-btn {
+.icon-btn, .tiny-btn, .tool-btn, .back-to-library-btn, .nav-page-btn, .text-action-btn, .font-family-toggle, .audio-btn, .more-menu-btn {
   height: 30px;
   background: var(--bg-card);
   border: 1px solid var(--border-color);
@@ -205,7 +205,7 @@ body.font-mode-serif {
   flex-shrink: 0;
 }
 
-.icon-btn:hover, .tiny-btn:hover, .tool-btn:hover, .back-to-library-btn:hover, .nav-page-btn:hover, .text-action-btn:hover, .font-family-toggle:hover, .audio-btn:hover, .audio-speed-btn:hover {
+.icon-btn:hover, .tiny-btn:hover, .tool-btn:hover, .back-to-library-btn:hover, .nav-page-btn:hover, .text-action-btn:hover, .font-family-toggle:hover, .audio-btn:hover, .more-menu-btn:hover {
   background-color: var(--accent);
   color: #ffffff !important;
   border-color: var(--accent);
@@ -213,8 +213,10 @@ body.font-mode-serif {
   box-shadow: 0 4px 12px rgba(185, 28, 28, 0.2);
 }
 
-.icon-btn svg, .nav-page-btn svg, .back-to-library-btn svg {
-  flex-shrink: 0;
+.more-menu-btn.active {
+  background-color: var(--accent);
+  color: #ffffff !important;
+  border-color: var(--accent);
 }
 
 /* HUD Glass Toast */
@@ -240,6 +242,142 @@ body.font-mode-serif {
 .reader-hud-toast.visible {
   opacity: 1;
   transform: translateY(0);
+}
+
+/* ==========================================================================
+   APPLE BOOKS "MORE (···)" EXPANDABLE SETTINGS & THEMES DRAWER POPOVER
+   ========================================================================== */
+.settings-backdrop {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(4px);
+  z-index: 5000;
+}
+
+.settings-backdrop.active {
+  display: block;
+}
+
+.settings-popover-menu {
+  display: none;
+  position: fixed;
+  top: 56px;
+  right: 14px;
+  width: 320px;
+  max-width: calc(100vw - 28px);
+  background: var(--bg-glass-card);
+  backdrop-filter: blur(30px);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  box-shadow: var(--shadow-lg);
+  padding: 16px;
+  z-index: 5001;
+  color: var(--text-primary);
+  transform: translateY(-10px) scale(0.96);
+  opacity: 0;
+  transition: transform 0.22s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.settings-popover-menu.active {
+  display: block;
+  transform: translateY(0) scale(1);
+  opacity: 1;
+}
+
+.popover-section {
+  margin-bottom: 14px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.popover-section:last-child {
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.popover-section-title {
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+/* 6 Themes Grid in Drawer */
+.popover-theme-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+}
+
+.popover-theme-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 4px;
+  border: 1.5px solid var(--border-color);
+  border-radius: 8px;
+  background: var(--bg-card);
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 600;
+  transition: var(--transition-smooth);
+}
+
+.popover-theme-card:hover {
+  border-color: var(--accent);
+  transform: translateY(-1px);
+}
+
+.popover-theme-card.active {
+  border-color: var(--accent);
+  background: var(--bg-card-warm);
+  color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent);
+}
+
+.popover-theme-card span.theme-emoji {
+  font-size: 18px;
+  margin-bottom: 3px;
+}
+
+/* Typography & Controls Row */
+.popover-controls-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.popover-btn-group {
+  display: flex;
+  gap: 4px;
+}
+
+.popover-pill-btn {
+  padding: 5px 10px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: var(--transition-smooth);
+}
+
+.popover-pill-btn:hover, .popover-pill-btn.active {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
 }
 
 /* Shortcuts Cheat Sheet Modal */
@@ -657,7 +795,7 @@ body.font-mode-serif {
 }
 
 /* ==========================================================================
-   2. IMMERSIVE READER ROOM & ZERO-OVERFLOW DUAL-DECK HEADER
+   2. IMMERSIVE READER ROOM & APPLE BOOKS DUAL-DECK HEADER
    ========================================================================== */
 .app-header {
   height: var(--header-height);
@@ -763,65 +901,6 @@ body.font-mode-serif {
   white-space: nowrap;
 }
 
-.search-box {
-  display: flex;
-  align-items: center;
-  background-color: var(--bg-card);
-  border: 1px solid var(--border-color);
-  border-radius: 7px;
-  padding: 0 6px;
-  height: 28px;
-  gap: 4px;
-  color: var(--text-muted);
-  flex-shrink: 0;
-}
-
-.search-box input {
-  border: none;
-  outline: none;
-  background: transparent;
-  color: var(--text-primary);
-  font-size: 11px;
-  width: 86px;
-}
-
-/* Theme Selector: 6 Curated Luxury Editorial Palettes */
-.theme-selector {
-  display: flex;
-  background-color: var(--bg-primary);
-  border: 1px solid var(--border-color);
-  border-radius: 7px;
-  padding: 1px;
-  height: 28px;
-  align-items: center;
-  gap: 1px;
-  flex-shrink: 0;
-}
-
-.theme-btn {
-  border: none;
-  background: transparent;
-  padding: 0 3px;
-  height: 22px;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 11px;
-  transition: var(--transition-smooth);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.theme-btn:hover {
-  background-color: var(--bg-hover);
-}
-
-.theme-btn.active {
-  background-color: var(--bg-card);
-  box-shadow: var(--shadow-sm);
-  transform: scale(1.08);
-}
-
 /* Mobile Sub-Bar: Standalone sticky view segmented pill switcher on mobile */
 .mobile-view-bar {
   display: none;
@@ -844,11 +923,6 @@ body.font-mode-serif {
   font-size: 10.5px;
   padding: 0 2px;
   height: 26px;
-}
-
-/* Shortcuts Help Button */
-.shortcuts-help-trigger {
-  font-weight: 700;
 }
 
 /* === Main Layout (True Symmetrical Architecture) === */
@@ -1505,12 +1579,6 @@ body.view-zh-only .en-text {
 /* ==========================================================================
    APPLE NEWS+ 100% STRICT ZERO-OVERFLOW RESPONSIVE ENGINE (Tablet & Mobile)
    ========================================================================== */
-@media (max-width: 1100px) {
-  .header-right .search-box {
-    display: none;
-  }
-}
-
 @media (max-width: 960px) {
   :root {
     --header-height: 46px;
@@ -1545,13 +1613,6 @@ body.view-zh-only .en-text {
   /* Show dual-deck sub-bar */
   .mobile-view-bar {
     display: flex;
-  }
-
-  .header-right .font-controls,
-  .header-right .font-family-toggle,
-  .header-right .shortcuts-help-trigger,
-  .header-right #fullscreen-btn {
-    display: none !important;
   }
 
   /* Drawer Sidebar overlay */
@@ -1714,25 +1775,17 @@ body.view-zh-only .en-text {
     height: 26px;
   }
 
-  .audio-player-widget .audio-speed-btn {
-    display: none;
-  }
-
-  .theme-selector {
+  .more-menu-btn {
+    padding: 0 6px;
+    font-size: 10px;
     height: 26px;
-    padding: 1px;
   }
 
-  .theme-btn {
-    padding: 0 2px;
-    font-size: 9.5px;
-    height: 20px;
-  }
-
-  .theme-btn[data-theme="beach"],
-  .theme-btn[data-theme="academic"],
-  .theme-btn[data-theme="forest"] {
-    display: none; /* Keep ☀️ 📜 🌙 for zero overflow on small mobile */
+  .settings-popover-menu {
+    right: 6px;
+    top: 48px;
+    width: calc(100vw - 12px);
+    padding: 12px;
   }
 
   /* Reader Canvas on Mobile:

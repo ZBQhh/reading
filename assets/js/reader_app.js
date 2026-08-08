@@ -804,23 +804,75 @@
     });
   });
 
-  // Theme Switcher (6 Curated Bespoke Themes)
+  // Settings & More Popover Drawer (Apple Books style)
+  const moreSettingsBtn = document.getElementById('more-settings-btn');
+  const settingsPopover = document.getElementById('settings-popover-menu');
+  const settingsBackdrop = document.getElementById('settings-backdrop');
+
+  function toggleSettingsPopover(force) {
+    if (!settingsPopover) return;
+    const isAct = force !== undefined ? force : !settingsPopover.classList.contains('active');
+    if (isAct) {
+      settingsPopover.classList.add('active');
+      if (settingsBackdrop) settingsBackdrop.classList.add('active');
+      if (moreSettingsBtn) moreSettingsBtn.classList.add('active');
+      // Sync active state on theme cards
+      const curTheme = localStorage.getItem(STORAGE_KEY_THEME) || 'light';
+      document.querySelectorAll('.popover-theme-card').forEach(c => {
+        if (c.dataset.theme === curTheme) c.classList.add('active');
+        else c.classList.remove('active');
+      });
+    } else {
+      settingsPopover.classList.remove('active');
+      if (settingsBackdrop) settingsBackdrop.classList.remove('active');
+      if (moreSettingsBtn) moreSettingsBtn.classList.remove('active');
+    }
+  }
+
+  if (moreSettingsBtn) {
+    moreSettingsBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      toggleSettingsPopover();
+    });
+  }
+
+  if (settingsBackdrop) {
+    settingsBackdrop.addEventListener('click', () => {
+      toggleSettingsPopover(false);
+    });
+  }
+
+  // Theme Switcher (Popover Cards & Top Buttons)
+  function applyTheme(themeName) {
+    document.body.classList.remove('theme-light', 'theme-sepia', 'theme-beach', 'theme-academic', 'theme-forest', 'theme-dark');
+    document.body.classList.add(`theme-${themeName}`);
+    localStorage.setItem(STORAGE_KEY_THEME, themeName);
+
+    document.querySelectorAll('.popover-theme-card').forEach(c => {
+      if (c.dataset.theme === themeName) c.classList.add('active');
+      else c.classList.remove('active');
+    });
+
+    const themeNames = {
+      'light': '☀️ 晨曦象牙白',
+      'sepia': '📜 复古羊皮纸',
+      'beach': '🏖️ 清新夏日海滩',
+      'academic': '🧊 学术冷静冰川',
+      'forest': '🌿 森林晨雾薄荷',
+      'dark': '🌙 极夜深曜石'
+    };
+    showHUDToast(`主题切换：${themeNames[themeName] || themeName}`);
+  }
+
+  document.querySelectorAll('.popover-theme-card').forEach(card => {
+    card.addEventListener('click', () => {
+      applyTheme(card.dataset.theme);
+    });
+  });
+
   document.querySelectorAll('.theme-btn').forEach(btn => {
     btn.addEventListener('click', () => {
-      document.querySelectorAll('.theme-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      document.body.classList.remove('theme-light', 'theme-sepia', 'theme-beach', 'theme-academic', 'theme-forest', 'theme-dark');
-      document.body.classList.add(`theme-${btn.dataset.theme}`);
-      localStorage.setItem(STORAGE_KEY_THEME, btn.dataset.theme);
-      const themeNames = {
-        'light': '☀️ 晨曦象牙白',
-        'sepia': '📜 复古羊皮纸',
-        'beach': '🏖️ 清新夏日海滩',
-        'academic': '🧊 学术冷静冰川',
-        'forest': '🌿 森林晨雾薄荷',
-        'dark': '🌙 极夜深曜石'
-      };
-      showHUDToast(`主题切换：${themeNames[btn.dataset.theme] || btn.dataset.theme}`);
+      applyTheme(btn.dataset.theme);
     });
   });
 
