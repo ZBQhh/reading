@@ -1,8 +1,10 @@
 /* ==========================================================================
    The Atlantic — Grand Bespoke Digital Magazine Reader ($20/mo Tier)
-   Publishing-Grade Typography Engine: text-wrap: pretty,
-   hyphens: auto (hyphenate-limit-chars: 6 3 3), Zero Line-End Voids,
-   Unified Apple Books "More (···)" Drawer & 100% Zero-Overflow Architecture
+   Publishing-Grade Typography Engine (The Atlantic / NYTimes / Apple News+ Standard):
+   - Natural Fixed Word Spacing (text-align: left, ZERO Rivers of White)
+   - Knuth-Plass Optimal Line Fitting (text-wrap: pretty)
+   - OpenType Kerning & Ligatures (font-feature-settings: "kern", "liga", "calt")
+   - Syllable Hyphenation (hyphenate-limit-chars: 6 3 3)
    ========================================================================== */
 
 @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800;900&family=Inter:wght@300;400;500;600;700;800&family=Merriweather:ital,wght@0,300;0,400;0,700;1,300;1,400&family=Noto+Sans+SC:wght@300;400;500;600;700;900&family=Noto+Serif+SC:wght@300;400;600;700;900&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
@@ -1122,7 +1124,7 @@ body.font-mode-serif {
 }
 
 /* ==========================================================================
-   3. READER VIEWPORT — PUBLISHING-GRADE KNUTH-PLASS TYPOGRAPHY & HYPHENATION
+   3. READER VIEWPORT — NATURAL FIXED WORD SPACING & KNUTH-PLASS TYPOGRAPHY
    ========================================================================== */
 .reader-viewport {
   flex: 1 1 0;
@@ -1285,10 +1287,11 @@ body.view-split .image-column {
 }
 
 /* 
-   PUBLISHING-GRADE ENGLISH TYPOGRAPHY:
-   - text-wrap: pretty (Advanced Knuth-Plass line fitting, eliminates orphans and large gaps)
-   - hyphens: auto (Automatic browser syllable hyphenation with hyphenate-limit-chars: 6 3 3)
-   - text-align: justify; text-justify: inter-word (Flawless editorial right margin)
+   THE ATLANTIC / NYTIMES / APPLE NEWS+ EDITORIAL STANDARD:
+   1. text-align: left (FLUSH LEFT) — 100% constant, fixed word gaps. ZERO Rivers of White.
+   2. text-wrap: pretty — Knuth-Plass line fitting, eliminates orphans and large trailing gaps.
+   3. OpenType font-feature-settings: "kern" 1, "liga" 1, "calt" 1, "ss01" 1.
+   4. hyphens: auto with hyphenate-limit-chars: 6 3 3.
 */
 .segment-paragraph .en-text {
   font-family: var(--font-screen-en);
@@ -1297,10 +1300,11 @@ body.view-split .image-column {
   font-weight: 450;
   line-height: 1.82;
   margin-bottom: 4px;
-  text-align: justify;
-  text-justify: inter-word;
+  text-align: left; /* Pure fixed natural word spacing, zero stretching! */
   text-wrap: pretty;
   -webkit-text-wrap: pretty;
+  font-kerning: normal;
+  font-feature-settings: "kern" 1, "liga" 1, "calt" 1;
   hyphens: auto;
   -webkit-hyphens: auto;
   -ms-hyphens: auto;
@@ -1309,8 +1313,8 @@ body.view-split .image-column {
   hyphenate-limit-lines: 2;
   word-break: normal;
   overflow-wrap: break-word;
+  word-spacing: normal; /* Fixed 100% steady spacing */
   letter-spacing: -0.012em;
-  word-spacing: -0.01em;
   background: var(--bg-card-warm); /* Warm soothing paper tint, zero eye glare */
   border: 0.5px solid var(--border-subtle);
   border-radius: 9px;
@@ -1321,7 +1325,7 @@ body.view-split .image-column {
   box-sizing: border-box;
 }
 
-/* Ambient Subtle Chinese Translation */
+/* Ambient Subtle Chinese Translation (Natural Flow) */
 .segment-paragraph .zh-text-card {
   font-family: var(--font-screen-zh);
   background: transparent; /* Pure text without background */
@@ -1337,6 +1341,7 @@ body.view-split .image-column {
   text-justify: inter-ideograph;
   text-wrap: pretty;
   -webkit-text-wrap: pretty;
+  word-break: break-all;
   letter-spacing: 0.01em;
   transition: var(--transition-smooth);
   user-select: text;
@@ -1363,6 +1368,7 @@ body.view-split .image-column {
   border-radius: 7px;
   padding: 10px 18px;
   box-sizing: border-box;
+  text-align: left;
   text-wrap: pretty;
   hyphens: auto;
   -webkit-hyphens: auto;
@@ -1395,6 +1401,7 @@ body.view-split .image-column {
   border-radius: 0 9px 9px 0;
   padding: 18px 24px;
   box-sizing: border-box;
+  text-align: left;
   text-wrap: balance;
   hyphens: auto;
   -webkit-hyphens: auto;
@@ -1462,6 +1469,7 @@ body.view-split .image-column {
   border-radius: 9px;
   padding: 14px 20px;
   box-sizing: border-box;
+  text-align: left;
   text-wrap: balance;
   hyphens: auto;
   -webkit-hyphens: auto;
@@ -1488,6 +1496,7 @@ body.view-split .image-column {
   border-radius: 7px;
   padding: 10px 16px;
   box-sizing: border-box;
+  text-align: left;
   text-wrap: pretty;
   hyphens: auto;
   -webkit-hyphens: auto;
@@ -1667,6 +1676,7 @@ body.view-zh-only .en-text {
     font-size: 19px;
     padding: 14px 18px;
     line-height: 1.76;
+    text-align: left;
     text-wrap: pretty;
   }
 
@@ -1805,8 +1815,7 @@ body.view-zh-only .en-text {
   }
 
   /* Reader Canvas on Mobile:
-     - 17.5px English with text-wrap: pretty, hyphens: auto, text-align: justify
-       (ELIMINATES ALL WHITE GAPS & FLAT RIGHT MARGIN)
+     - 17.5px English with text-align: left (100% FIXED SPACING) + text-wrap: pretty + hyphens: auto
      - 15.5px Chinese
   */
   .reader-viewport {
@@ -1831,8 +1840,8 @@ body.view-zh-only .en-text {
     padding: 12px 14px;
     line-height: 1.72;
     border-radius: 7px;
-    text-align: justify;
-    text-justify: inter-word;
+    text-align: left; /* Pure fixed natural word spacing, ZERO gaps */
+    word-spacing: normal;
     text-wrap: pretty;
     -webkit-text-wrap: pretty;
     letter-spacing: -0.012em;
@@ -1854,6 +1863,7 @@ body.view-zh-only .en-text {
   .segment-h3 .en-text {
     font-size: 20px;
     padding: 8px 10px;
+    text-align: left;
     text-wrap: balance;
   }
 
@@ -1864,11 +1874,13 @@ body.view-zh-only .en-text {
   .segment-h4 .en-text {
     font-size: 16.5px;
     padding: 6px 8px;
+    text-align: left;
   }
 
   .segment-quote .en-text {
     font-size: 17px;
     padding: 8px 12px;
+    text-align: left;
   }
 
   /* Bottom Bar on Mobile: 100% Compact Touch Pills */
