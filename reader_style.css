@@ -1879,7 +1879,8 @@ body.view-zh-only .en-text {
   }
 
   .segment-h3 .zh-text-card {
-    font-size: 16px;
+    font-size: 17px; /* 1:1 equal */
+    padding: 4px 6px;
   }
 
   .segment-h4 .en-text {
@@ -1888,10 +1889,20 @@ body.view-zh-only .en-text {
     text-align: justify;
   }
 
+  .segment-h4 .zh-text-card {
+    font-size: 15px; /* 1:1 equal */
+    padding: 3px 6px;
+  }
+
   .segment-quote .en-text {
     font-size: 15.5px;
     padding: 7px 10px;
     text-align: justify;
+  }
+
+  .segment-quote .zh-text-card {
+    font-size: 15.5px; /* 1:1 equal */
+    padding: 4px 8px;
   }
 
   /* Bottom Bar on Mobile: 100% Compact Touch Pills */

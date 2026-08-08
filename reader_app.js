@@ -366,6 +366,14 @@
     }
   }
 
+  function handleJumpAndCloseSidebarOnMobile(targetPage) {
+    loadPage(targetPage);
+    if (window.innerWidth <= 960) {
+      const sidebar = document.getElementById('app-sidebar');
+      if (sidebar) sidebar.classList.add('collapsed');
+    }
+  }
+
   function renderBookmarksTab() {
     if (!bookmarksList) return;
     const list = getBookmarks();
@@ -386,7 +394,7 @@
         </div>
         <div class="toc-item-title">${sanitize(pageObj.section) || `Page ${p}`}</div>
       `;
-      item.addEventListener('click', () => loadPage(p));
+      item.addEventListener('click', () => handleJumpAndCloseSidebarOnMobile(p));
       bookmarksList.appendChild(item);
     });
   }
@@ -408,7 +416,7 @@
             </div>
             <div class="toc-item-title">${sanitize(pageObj.section)}</div>
           `;
-          li.addEventListener('click', () => loadPage(pNum));
+          li.addEventListener('click', () => handleJumpAndCloseSidebarOnMobile(pNum));
           tocList.appendChild(li);
         }
       });
@@ -421,7 +429,7 @@
         tile.className = 'page-tile' + (p === 1 ? ' active' : '');
         tile.id = `tile-p-${p}`;
         tile.innerHTML = `<span>P${p}</span>`;
-        tile.addEventListener('click', () => loadPage(p));
+        tile.addEventListener('click', () => handleJumpAndCloseSidebarOnMobile(p));
         pagesGrid.appendChild(tile);
       }
     }
@@ -760,7 +768,7 @@
   if (quickJumpBtn) {
     quickJumpBtn.addEventListener('click', () => {
       const val = parseInt(document.getElementById('quick-jump-num').value, 10);
-      if (val >= 1 && val <= currentIssueObj.totalPages) loadPage(val);
+      if (val >= 1 && val <= currentIssueObj.totalPages) handleJumpAndCloseSidebarOnMobile(val);
     });
   }
 
@@ -1034,7 +1042,7 @@
             </div>
             <div class="toc-item-title">${cleanSnippet}...</div>
           `;
-          item.addEventListener('click', () => loadPage(pageNum));
+          item.addEventListener('click', () => handleJumpAndCloseSidebarOnMobile(pageNum));
           searchResultsList.appendChild(item);
         }
       });
