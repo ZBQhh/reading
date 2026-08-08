@@ -1313,13 +1313,14 @@ body.align-mode-justify .segment-h4 .en-text {
 }
 
 /* 
-   DESKTOP MASTER HERO TYPOGRAPHY:
-   - English: Grand 24px with 1.85 line height, font-weight: 400 (Pure Regular, unbolded)
-   - Chinese: 20.5px with font-weight: 400 and crisp deep ink color
+   UNIVERSAL EQUAL TYPOGRAPHY ENGINE (1:1 Strictly Equal across all screens):
+   - Desktop: 22px English == 22px Chinese
+   - Tablet: 17.5px English == 17.5px Chinese
+   - Mobile: 15px English == 15px Chinese
 */
 .segment-paragraph .en-text {
   font-family: var(--font-screen-en);
-  font-size: 24px; /* Grand 24px Hero English scale */
+  font-size: 22px; /* 1:1 Universal Equal Scale */
   color: var(--text-primary);
   font-weight: 400; /* Regular unbolded weight for perfect natural harmony */
   line-height: 1.85;
@@ -1350,7 +1351,7 @@ body.align-mode-justify .segment-h4 .en-text {
   box-sizing: border-box;
 }
 
-/* Companion Chinese Translation (20.5px on desktop, deep ink text-primary) */
+/* Companion Chinese Translation (22px on desktop, 1:1 identical to English) */
 .segment-paragraph .zh-text-card {
   font-family: var(--font-screen-zh);
   background: transparent;
@@ -1359,11 +1360,10 @@ body.align-mode-justify .segment-h4 .en-text {
   padding: 6px 16px 6px 16px;
   color: var(--text-primary); /* Deep ink for 100% optical weight balance */
   line-height: 1.85;
-  font-size: 20.5px;
+  font-size: 22px; /* 1:1 Universal Equal Scale */
   margin-top: 2px;
   font-weight: 400; /* Regular 400 */
-  text-align: justify;
-  text-justify: inter-ideograph;
+  text-align: left;
   text-wrap: pretty;
   -webkit-text-wrap: pretty;
   word-break: break-all;
@@ -1891,7 +1891,7 @@ body.view-zh-only .en-text {
   }
 
   .segment-paragraph .en-text {
-    font-size: 14.5px; /* Optically equal to 15px Chinese */
+    font-size: 15px !important; /* 1:1 Strict Absolute Equality */
     font-weight: 400; /* Regular 400 without bold stroke */
     color: var(--text-primary);
     padding: 10px 12px;
@@ -1913,13 +1913,12 @@ body.view-zh-only .en-text {
   }
 
   .segment-paragraph .zh-text-card {
-    font-size: 15.0px; /* Optically equal to 14.5px English */
+    font-size: 15px !important; /* 1:1 Strict Absolute Equality */
     font-weight: 400; /* Regular 400 */
     color: var(--text-primary); /* Deep crisp ink */
     padding: 4px 6px;
     line-height: 1.68;
-    text-align: justify;
-    text-justify: inter-ideograph;
+    text-align: left;
     text-wrap: pretty;
   }
 

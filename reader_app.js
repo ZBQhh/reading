@@ -11,7 +11,7 @@
   let data = currentIssueObj.pages || [];
   let currentPage = 1;
   let currentZoom = 1.0;
-  let englishFontSize = 24.0; // Grand 24px English Base
+  let globalFontSize = 22.0; // Universal 1:1 Global Base Scale
   let speechSynth = window.speechSynthesis;
   let currentUtterance = null;
   let isPlayingAudio = false;
@@ -631,9 +631,16 @@
     if (vp) vp.scrollTop = 0;
   }
 
-  function applyEnglishFontSize() {
+  function applyGlobalFontSize() {
+    const isDesktop = window.innerWidth > 960;
+    const isTablet = window.innerWidth > 640 && window.innerWidth <= 960;
+    const baseSize = isDesktop ? globalFontSize : (isTablet ? 17.5 : 15.0);
+
     document.querySelectorAll('.segment-paragraph .en-text').forEach(el => {
-      el.style.fontSize = `${englishFontSize}px`;
+      el.style.fontSize = `${baseSize}px`;
+    });
+    document.querySelectorAll('.segment-paragraph .zh-text-card').forEach(el => {
+      el.style.fontSize = `${baseSize}px`;
     });
   }
 
@@ -935,14 +942,14 @@
     });
   }
 
-  // English Font Resizer (Hero English scaling)
+  // Global Equal Font Resizer (1:1 Scaling for both English and Chinese)
   const fontIncBtn = document.getElementById('font-inc-btn');
   if (fontIncBtn) {
     fontIncBtn.addEventListener('click', () => {
-      if (englishFontSize < 36) {
-        englishFontSize += 1.5;
-        applyEnglishFontSize();
-        showHUDToast(`英文字号：${englishFontSize}px`);
+      if (globalFontSize < 36) {
+        globalFontSize += 1.5;
+        applyGlobalFontSize();
+        showHUDToast(`全局中英同号：${globalFontSize}px`);
       }
     });
   }
@@ -950,10 +957,10 @@
   const fontDecBtn = document.getElementById('font-dec-btn');
   if (fontDecBtn) {
     fontDecBtn.addEventListener('click', () => {
-      if (englishFontSize > 16) {
-        englishFontSize -= 1.5;
-        applyEnglishFontSize();
-        showHUDToast(`英文字号：${englishFontSize}px`);
+      if (globalFontSize > 14) {
+        globalFontSize -= 1.5;
+        applyGlobalFontSize();
+        showHUDToast(`全局中英同号：${globalFontSize}px`);
       }
     });
   }
