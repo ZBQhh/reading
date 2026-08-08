@@ -530,43 +530,34 @@
 
           if (seg.type === 'h3') {
             segDiv.innerHTML = `
-              <div class="en-text" lang="en">${cleanEn}</div>
+              <div class="en-text" lang="en" title="轻点原声朗读 (再次点击暂停)">${cleanEn}</div>
               ${cleanZh ? `
                 <div class="zh-text-card" lang="zh-CN">
                   <div>${cleanZh}</div>
                 </div>
               ` : ''}
-              <div class="segment-action-footer">
-                <button class="para-audio-pill" title="原声朗读标题">🔊 朗读</button>
-              </div>
             `;
           } else if (seg.type === 'h4') {
             segDiv.innerHTML = `
-              <div class="en-text" lang="en">${cleanEn}</div>
+              <div class="en-text" lang="en" title="轻点原声朗读 (再次点击暂停)">${cleanEn}</div>
               ${cleanZh ? `
                 <div class="zh-text-card" lang="zh-CN">
                   <div>${cleanZh}</div>
                 </div>
               ` : ''}
-              <div class="segment-action-footer">
-                <button class="para-audio-pill" title="原声朗读副标">🔊 朗读</button>
-              </div>
             `;
           } else if (seg.type === 'caption') {
             segDiv.innerHTML = `
-              <div class="en-text" lang="en"><em>${cleanEn}</em></div>
+              <div class="en-text" lang="en" title="轻点原声朗读 (再次点击暂停)"><em>${cleanEn}</em></div>
               ${cleanZh ? `
                 <div class="zh-text-card" lang="zh-CN">
                   <div><em>${cleanZh}</em></div>
                 </div>
               ` : ''}
-              <div class="segment-action-footer">
-                <button class="para-audio-pill" title="原声朗读图注">🔊 朗读</button>
-              </div>
             `;
           } else if (seg.type === 'byline') {
             segDiv.innerHTML = `
-              <div class="en-text" lang="en">${cleanEn}</div>
+              <div class="en-text" lang="en" title="轻点原声朗读 (再次点击暂停)">${cleanEn}</div>
               ${cleanZh ? `
                 <div class="zh-text-card" lang="zh-CN">
                   <div>${cleanZh}</div>
@@ -575,7 +566,7 @@
             `;
           } else if (seg.type === 'quote') {
             segDiv.innerHTML = `
-              <div class="en-text" lang="en">${cleanEn}</div>
+              <div class="en-text" lang="en" title="轻点原声朗读 (再次点击暂停)">${cleanEn}</div>
               ${cleanZh ? `
                 <div class="zh-text-card" lang="zh-CN">
                   <div>${cleanZh}</div>
@@ -592,26 +583,27 @@
               ` : ''}
             `;
           } else {
-            // Authentic 1:1 Author Paragraph: 24px Desktop / 15px Mobile English Card with Syllable Hyphenation
+            // Authentic 1:1 Author Paragraph: 100% Zero Extra Buttons & Tap-to-Speak
             segDiv.innerHTML = `
-              <div class="en-text" lang="en">${hyphenatedEn}</div>
+              <div class="en-text" lang="en" title="轻点原声朗读本段 (再次点击暂停)">${hyphenatedEn}</div>
               ${cleanZh ? `
                 <div class="zh-text-card" lang="zh-CN">
                   <div>${cleanZh}</div>
                 </div>
               ` : ''}
-              <div class="segment-action-footer">
-                <button class="para-audio-pill" title="原声朗读整段 (TTS)">🔊 朗读整段</button>
-              </div>
             `;
           }
 
-          // Paragraph audio trigger
-          const trig = segDiv.querySelector('.para-audio-pill');
-          if (trig) {
-            trig.addEventListener('click', (e) => {
-              e.stopPropagation();
-              playParagraphSpeech(cleanEn, segDiv);
+          // Direct Tap-to-Speak on the English text card
+          const enCard = segDiv.querySelector('.en-text');
+          if (enCard) {
+            enCard.addEventListener('click', (e) => {
+              if (segDiv.classList.contains('playing-active') && isPlayingAudio) {
+                stopSpeech();
+                showHUDToast('⏸ 朗读已暂停');
+              } else {
+                playParagraphSpeech(cleanEn, segDiv);
+              }
             });
           }
 
@@ -620,8 +612,8 @@
       }
     }
 
-    // Apply current English font size
-    applyEnglishFontSize();
+    // Apply current global equal font size
+    applyGlobalFontSize();
 
     // Trigger Smart Bidirectional TOC & Thumbnail Active Follower with Vertical Golden Centering
     syncSidebarActiveState(pageNum);

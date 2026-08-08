@@ -1454,43 +1454,14 @@ body.align-mode-justify .segment-h4 .en-text {
   box-sizing: border-box;
 }
 
-/* Zero-Collision Action Footer: Zero Ghost Height when not hovered */
-.segment-action-footer {
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
-  margin-top: 0;
-  height: 0;
-  overflow: hidden;
-  opacity: 0;
-  transition: opacity 0.2s, height 0.2s, margin-top 0.2s;
-}
-
-.segment-block:hover .segment-action-footer {
-  height: 22px;
-  margin-top: 3px;
-  opacity: 1;
-}
-
-.para-audio-pill {
-  background: var(--bg-card);
-  border: 1px solid var(--border-color);
-  border-radius: 14px;
-  padding: 2px 7px;
-  font-size: 10px;
-  font-weight: 600;
-  color: var(--text-muted);
+/* Direct Tap-to-Speak Interactive Polish: Zero Extra Height, Pure Card */
+.en-text {
   cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  gap: 3px;
-  transition: var(--transition-smooth);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.15s ease;
 }
 
-.para-audio-pill:hover {
-  background-color: var(--accent);
-  color: #fff;
-  border-color: var(--accent);
+.en-text:hover {
+  border-color: var(--accent-gold);
 }
 
 /* Headings */
