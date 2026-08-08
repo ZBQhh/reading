@@ -1085,35 +1085,49 @@
     });
   }
 
-  // GLOBAL EXTENDED KEYBOARD SHORTCUT SUITE (Single Listener, Strict 1:1 Page Turn Precision)
+  // GLOBAL EXTENDED KEYBOARD SHORTCUT SUITE (IME-Penetrating Dual-Track Physical Engine)
   function handleGlobalKeyDown(e) {
-    if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) {
-      if (e.key === 'Escape') {
-        e.target.blur();
+    // Only bypass if the user is actively typing inside an input or textarea
+    const activeEl = document.activeElement;
+    const isTyping = activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA');
+    if (isTyping) {
+      if (e.key === 'Escape' || e.code === 'Escape') {
+        activeEl.blur();
+        e.preventDefault();
       }
       return;
     }
 
-    const key = e.key ? e.key.toLowerCase() : '';
+    const key = (e.key || '').toLowerCase();
     const code = e.code || '';
+
+    // If library shelf is open, J / K / Enter / Space automatically enters reader room
+    const isShelfOpen = libraryPortal && !libraryPortal.classList.contains('hidden');
+    if (isShelfOpen) {
+      if (code === 'KeyJ' || key === 'j' || code === 'ArrowRight' || key === 'arrowright' || code === 'Enter' || code === 'Space') {
+        e.preventDefault();
+        enterReaderRoom(currentIssueId, 1);
+        return;
+      }
+    }
 
     // 1. Smooth Scrolling with W, S, Space, Up, Down
     if (code === 'Space' || key === ' ') {
       e.preventDefault();
       const scrollDelta = window.innerHeight * 0.6;
       scrollPage(e.shiftKey ? -scrollDelta : scrollDelta);
-    } else if (key === 'w' || code === 'KeyW' || (key === 'arrowup' && !e.altKey)) {
+    } else if (code === 'KeyW' || key === 'w' || code === 'ArrowUp' || key === 'arrowup') {
       e.preventDefault();
       scrollPage(-260);
-    } else if (key === 's' || code === 'KeyS' || (key === 'arrowdown' && !e.altKey)) {
+    } else if (code === 'KeyS' || key === 's' || code === 'ArrowDown' || key === 'arrowdown') {
       e.preventDefault();
       scrollPage(260);
-    } else if (key === 'g' && !e.shiftKey) {
+    } else if ((code === 'KeyG' || key === 'g') && !e.shiftKey) {
       e.preventDefault();
       const vp = document.querySelector('.reader-viewport');
       if (vp) vp.scrollTop = 0;
       window.scrollTo(0, 0);
-    } else if (key === 'g' && e.shiftKey) {
+    } else if ((code === 'KeyG' || key === 'g') && e.shiftKey) {
       e.preventDefault();
       const vp = document.querySelector('.reader-viewport');
       if (vp) vp.scrollTop = vp.scrollHeight;
@@ -1121,58 +1135,58 @@
     }
 
     // 2. View Mode Direct Numbers 1, 2, 3, 4
-    else if (key === '1' || code === 'Digit1') {
+    else if (code === 'Digit1' || code === 'Numpad1' || key === '1') {
       e.preventDefault();
       setViewMode('interlinear');
-    } else if (key === '2' || code === 'Digit2') {
+    } else if (code === 'Digit2' || code === 'Numpad2' || key === '2') {
       e.preventDefault();
       setViewMode('split');
-    } else if (key === '3' || code === 'Digit3') {
+    } else if (code === 'Digit3' || code === 'Numpad3' || key === '3') {
       e.preventDefault();
       setViewMode('en-only');
-    } else if (key === '4' || code === 'Digit4') {
+    } else if (code === 'Digit4' || code === 'Numpad4' || key === '4') {
       e.preventDefault();
       setViewMode('zh-only');
     }
 
     // 3. Issue Quick Switch
-    else if (key === 'm' || code === 'KeyM') {
+    else if (code === 'KeyM' || key === 'm') {
       e.preventDefault();
       const nextId = currentIssueId === '2026-08' ? '2026-07' : '2026-08';
       switchIssue(nextId);
     }
 
     // 4. Strict 1:1 Sequential Page Navigation (J / K / → / ← / PageDown / PageUp)
-    else if (key === 'arrowright' || code === 'ArrowRight' || key === 'j' || key === 'pagedown') {
+    else if (code === 'KeyJ' || key === 'j' || code === 'ArrowRight' || key === 'arrowright' || code === 'PageDown' || key === 'pagedown') {
       e.preventDefault();
       if (!isNavigating) {
         isNavigating = true;
         loadPage(currentPage + 1);
-        setTimeout(() => { isNavigating = false; }, 80);
+        setTimeout(() => { isNavigating = false; }, 60);
       }
-    } else if (key === 'arrowleft' || code === 'ArrowLeft' || key === 'k' || key === 'pageup') {
+    } else if (code === 'KeyK' || key === 'k' || code === 'ArrowLeft' || key === 'arrowleft' || code === 'PageUp' || key === 'pageup') {
       e.preventDefault();
       if (!isNavigating) {
         isNavigating = true;
         loadPage(currentPage - 1);
-        setTimeout(() => { isNavigating = false; }, 80);
+        setTimeout(() => { isNavigating = false; }, 60);
       }
     }
 
     // 5. Sidebar Toggle
-    else if (key === 't' || code === 'KeyT') {
+    else if (code === 'KeyT' || key === 't') {
       e.preventDefault();
       window.toggleSidebar(e);
     }
 
     // 6. Shortcuts Cheat Sheet
-    else if (e.key === '?' || (e.shiftKey && key === '/')) {
+    else if (e.key === '?' || (e.shiftKey && (code === 'Slash' || key === '/'))) {
       e.preventDefault();
       toggleShortcutsModal();
     }
 
     // 7. Escape Navigation
-    else if (key === 'escape' || code === 'Escape') {
+    else if (code === 'Escape' || key === 'escape') {
       e.preventDefault();
       if (shortcutsModal && shortcutsModal.classList.contains('active')) {
         shortcutsModal.classList.remove('active');
@@ -1192,29 +1206,29 @@
     }
 
     // 8. Bookmark
-    else if (key === 'b' || code === 'KeyB') {
+    else if (code === 'KeyB' || key === 'b') {
       e.preventDefault();
       toggleBookmark(currentPage);
     }
 
     // 9. Speech Audio
-    else if (key === 'p' || code === 'KeyP') {
+    else if (code === 'KeyP' || key === 'p') {
       e.preventDefault();
       playPageSpeech();
     }
 
     // 10. Fullscreen & Home
-    else if (key === 'f' || code === 'KeyF') {
+    else if (code === 'KeyF' || key === 'f') {
       e.preventDefault();
       if (fullscreenBtn) fullscreenBtn.click();
-    } else if (key === 'h' || code === 'KeyH') {
+    } else if (code === 'KeyH' || key === 'h') {
       e.preventDefault();
       openLibraryShelf();
     }
   }
 
-  // SINGLE LISTENER REGISTRATION (Strictly avoids duplicate execution)
-  window.addEventListener('keydown', handleGlobalKeyDown, false);
+  // SINGLE LISTENER REGISTRATION (Capture phase for instant priority)
+  window.addEventListener('keydown', handleGlobalKeyDown, true);
 
   // Startup Initialization: Ensure sidebar is cleanly collapsed by default
   if (sidebar) {
