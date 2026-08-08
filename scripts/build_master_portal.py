@@ -69,14 +69,14 @@ def build_portal():
   </div>
 
   <!-- ==========================================================================
-       2. IMMERSIVE READER ROOM (沉浸阅读室)
+       2. IMMERSIVE READER ROOM (Apple News+ Dual-Deck Zero-Stacking Architecture)
        ========================================================================== -->
   <header class="app-header">
     <div class="header-left">
       <!-- Back to Library Portal Button -->
       <button id="open-portal-btn" class="back-to-library-btn" title="返回期刊馆主页 (H / Esc)">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
-        <span>🏛️ 期刊馆</span>
+        <span>🏛️ 馆</span>
       </button>
 
       <button id="toggle-sidebar-btn" class="icon-btn" onclick="window.toggleSidebar(event)" title="展开/收起目录 (T)">
@@ -90,11 +90,11 @@ def build_portal():
 
       <!-- Quick Issue Switcher Pill Button -->
       <div class="issue-switcher-pill" id="issue-switcher-pill" title="点击一键切换 8月刊 / 7月刊 (M)">
-        📅 2026年8月刊 &bull; 104P
+        📅 8月刊 &bull; 104P
       </div>
     </div>
 
-    <!-- Center Compact View Mode Switcher -->
+    <!-- Center Desktop View Mode Switcher -->
     <div class="view-controls">
       <button class="view-btn active" data-view="interlinear" title="1:1 逐段对照，24px 英文卡片主显，20.5px 中文纯字辅读 (快捷键 1)">
         <span>📖 逐段对照</span>
@@ -127,7 +127,7 @@ def build_portal():
         <input type="text" id="global-search" placeholder="全书检索...">
       </div>
 
-      <!-- Theme Switcher: 6 Curated Luxury Editorial Palettes -->
+      <!-- Theme Selector: 6 Curated Luxury Editorial Palettes -->
       <div class="theme-selector" title="选择阅读主题色系">
         <button class="theme-btn active" data-theme="light" title="☀️ 晨曦象牙白">☀️</button>
         <button class="theme-btn" data-theme="sepia" title="📜 复古羊皮纸">📜</button>
@@ -153,6 +153,22 @@ def build_portal():
       </button>
     </div>
   </header>
+
+  <!-- Mobile Sub-Bar: Standalone sticky view segmented pill switcher on mobile -->
+  <div class="mobile-view-bar">
+    <button class="view-btn active" data-view="interlinear" title="1:1 逐段对照 (快捷键 1)">
+      <span>📖 逐段</span>
+    </button>
+    <button class="view-btn" data-view="split" title="原图分栏 (快捷键 2)">
+      <span>🪟 原图</span>
+    </button>
+    <button class="view-btn" data-view="en-only" title="纯英文 (快捷键 3)">
+      <span>🇺🇸 英文</span>
+    </button>
+    <button class="view-btn" data-view="zh-only" title="纯中文 (快捷键 4)">
+      <span>🇨🇳 中文</span>
+    </button>
+  </div>
 
   <div class="main-layout">
     <!-- Left Navigation Sidebar with One-Click Close Button -->
@@ -329,7 +345,7 @@ def build_portal():
     with open('reader.html', 'w', encoding='utf-8') as f:
         f.write(html_content)
 
-    print("Master portal compiled successfully with Multi-Publication Brand Matrix and full automated ingestion pipeline!")
+    print("Master portal compiled successfully with Apple News+ Dual-Deck Zero-Stacking layout and 6 luxury themes!")
 
 if __name__ == '__main__':
     build_portal()
