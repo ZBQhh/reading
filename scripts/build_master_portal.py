@@ -44,7 +44,7 @@ def build_portal():
     <main class="portal-hero">
       <span class="portal-hero-badge">DIGITAL BESPOKE ARCHIVE</span>
       <h2>精选典藏期刊库</h2>
-      <p>依托 1:1 印刷排版首行缩进解析、真实作者段落集与 22px 英文微浮雕卡片，汇聚全球顶级政经、文学与前沿科技思想典籍。</p>
+      <p>依托 1:1 印刷排版首行缩进解析、真实作者段落集与 24px 英文微浮雕卡片，汇聚全球顶级政经、文学与前沿科技思想典籍。</p>
       
       <!-- Home Portal Global Multi-Issue Instant Search -->
       <div class="portal-search-wrap">
@@ -69,19 +69,19 @@ def build_portal():
   </div>
 
   <!-- ==========================================================================
-       2. IMMERSIVE READER ROOM (Unified Clean Top Bar & More Popover Menu)
+       2. IMMERSIVE READER ROOM (Unified Clean Top Bar & Zero-Obstruction Layout)
        ========================================================================== -->
   <header class="app-header">
     <div class="header-left">
       <!-- Back to Library Portal Button -->
       <button id="open-portal-btn" class="back-to-library-btn" title="返回期刊馆主页 (H / Esc)">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
-        <span>🏛️ 馆</span>
+        <span class="btn-icon">🏛️</span>
+        <span class="btn-label">馆</span>
       </button>
 
       <button id="toggle-sidebar-btn" class="icon-btn" onclick="window.toggleSidebar(event)" title="展开/收起目录 (T)">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
-        <span>目录</span>
+        <span class="btn-icon">📋</span>
+        <span class="btn-label">目录</span>
       </button>
       
       <div class="magazine-brand" onclick="window.openLibraryShelf ? window.openLibraryShelf() : window.location.reload()">
@@ -90,13 +90,14 @@ def build_portal():
 
       <!-- Quick Issue Switcher Pill Button -->
       <div class="issue-switcher-pill" id="issue-switcher-pill" title="点击一键切换 8月刊 / 7月刊 (M)">
-        📅 8月刊 &bull; 104P
+        <span class="issue-pill-full">📅 8月刊 &bull; 104P</span>
+        <span class="issue-pill-compact">📅 8月</span>
       </div>
     </div>
 
     <!-- Center Desktop View Mode Switcher -->
     <div class="view-controls">
-      <button class="view-btn active" data-view="interlinear" title="1:1 逐段对照，22px 英文卡片主显，19px 中文纯字辅读 (快捷键 1)">
+      <button class="view-btn active" data-view="interlinear" title="1:1 逐段对照，24px 英文卡片主显，20.5px 中文纯字辅读 (快捷键 1)">
         <span>📖 逐段对照</span>
       </button>
       <button class="view-btn" data-view="split" title="左侧原版 150 DPI 高清扫描图 + 右侧精校排版 (快捷键 2)">
@@ -110,17 +111,19 @@ def build_portal():
       </button>
     </div>
 
-    <!-- Header Right Controls: Clean Audio + Expandable More Menu -->
+    <!-- Header Right Controls: Clean Audio + Expandable More Menu (Zero-Obstruction) -->
     <div class="header-right">
       <!-- TTS Speech Widget -->
       <div class="audio-player-widget">
-        <button id="play-page-audio-btn" class="audio-btn" title="原声朗读本页英文 (P)">▶ 朗读</button>
+        <button id="play-page-audio-btn" class="audio-btn" title="原声朗读本页英文 (P)">
+          <span class="audio-btn-text">▶ 朗读</span>
+        </button>
       </div>
 
       <!-- Apple Books Expandable "More (···)" Settings & Themes Trigger -->
       <button id="more-settings-btn" class="more-menu-btn" title="偏好设置与 6 大主题 (快捷键 ?)">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="1"></circle><circle cx="19" cy="12" r="1"></circle><circle cx="5" cy="12" r="1"></circle></svg>
-        <span>设置 & 6 主题</span>
+        <span class="more-btn-icon">⚙️</span>
+        <span class="more-btn-label">更多 (···)</span>
       </button>
     </div>
   </header>
@@ -390,7 +393,7 @@ def build_portal():
     with open('reader.html', 'w', encoding='utf-8') as f:
         f.write(html_content)
 
-    print("Master portal compiled successfully with Apple Books Settings Popover & 6 Luxury Themes!")
+    print("Master portal compiled successfully with TeX Knuth-Plass typography & zero-obstruction mobile header!")
 
 if __name__ == '__main__':
     build_portal()

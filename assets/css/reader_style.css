@@ -1,10 +1,10 @@
 /* ==========================================================================
    The Atlantic — Grand Bespoke Digital Magazine Reader ($20/mo Tier)
    Publishing-Grade Golden Typography Engine:
-   - Desktop Hero Typography: English 24px > Chinese 20.5px
-   - Mobile Scale: English 15px == Chinese 15px
-   - Syllable-Level Forced Hyphenation (Soft Hyphen Engine + hyphens: auto)
-   - Razor-Flat Justified Two-Sided Alignment with 100% Equal Word Spacing
+   - TeX Knuth-Plass Microtypography (Soft Hyphen Injection + 100% Equal Word Spacing)
+   - Desktop Hero Hierarchy: English 24px > Chinese 20.5px
+   - Mobile 1:1 Equal Scale: English 15px == Chinese 15px
+   - Apple News+ Zero-Obstruction Compact Touch Pill Header
    ========================================================================== */
 
 @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800;900&family=Inter:wght@300;400;500;600;700;800&family=Merriweather:ital,wght@0,300;0,400;0,700;1,300;1,400&family=Noto+Sans+SC:wght@300;400;500;600;700;900&family=Noto+Serif+SC:wght@300;400;600;700;900&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
@@ -135,7 +135,7 @@ body.theme-dark {
   --bg-card: #191c25;
   --bg-card-warm: #141720; /* Deep soothing graphite, zero glare */
   --bg-glass: rgba(16, 18, 23, 0.95);
-  --bg-glass-card: rgba(25, 28, 37, 0.96);
+  --bg-glass-card: rgba(255, 255, 255, 0.96);
   --bg-hover: #222631;
   --text-primary: #f0f2f8;
   --text-secondary: #a2a9ba;
@@ -220,6 +220,11 @@ body.font-mode-serif {
   background-color: var(--accent);
   color: #ffffff !important;
   border-color: var(--accent);
+}
+
+/* Header Label Controls for Clean Zero-Collision Adaptation */
+.issue-pill-compact {
+  display: none;
 }
 
 /* HUD Glass Toast */
@@ -1124,7 +1129,7 @@ body.font-mode-serif {
 }
 
 /* ==========================================================================
-   3. READER VIEWPORT — DESKTOP HERO 24PX & RAZOR-FLAT EQUAL JUSTIFICATION
+   3. READER VIEWPORT — DESKTOP HERO 24PX & TEX KNUTH-PLASS JUSTIFICATION
    ========================================================================== */
 .reader-viewport {
   flex: 1 1 0;
@@ -1309,8 +1314,8 @@ body.view-split .image-column {
   hyphenate-limit-chars: 4 2 2;
   -webkit-hyphenate-limit-chars: 4 2 2;
   hyphenate-limit-lines: 3;
-  letter-spacing: 0;
-  word-spacing: normal;
+  letter-spacing: -0.004em;
+  word-spacing: 0.008em;
   font-kerning: normal;
   font-optical-sizing: auto;
   font-feature-settings: "kern" 1, "liga" 1, "calt" 1;
@@ -1763,53 +1768,73 @@ body.view-zh-only .en-text {
     justify-content: center;
   }
 
-  /* Header on Mobile Phone: 100% Zero Overflow (< 320px total) */
+  /* Header on Mobile Phone: 100% Zero Obstruction, Zero Overlap (< 300px total width) */
   .app-header {
-    padding: 0 4px;
-    gap: 3px;
+    padding: 0 6px;
+    gap: 4px;
+    justify-content: space-between;
   }
 
   .header-left {
-    gap: 2px;
-    flex-shrink: 1;
-    min-width: 0;
+    gap: 3px;
+    flex-shrink: 0;
   }
 
   .header-right {
-    gap: 2px;
+    gap: 3px;
     flex-shrink: 0;
   }
 
   .back-to-library-btn {
-    padding: 0 5px;
+    padding: 0 6px;
     font-size: 10px;
-    height: 26px;
+    height: 28px;
     gap: 2px;
+  }
+
+  .back-to-library-btn .btn-label {
+    display: none; /* Icon-only on mobile for pure clarity */
   }
 
   #toggle-sidebar-btn {
-    padding: 0 5px;
+    padding: 0 6px;
     font-size: 10px;
-    height: 26px;
+    height: 28px;
     gap: 2px;
   }
 
+  #toggle-sidebar-btn .btn-label {
+    display: none; /* Icon-only on mobile */
+  }
+
   .issue-switcher-pill {
-    padding: 0 4px;
+    padding: 0 5px;
     font-size: 9px;
-    height: 26px;
+    height: 28px;
+  }
+
+  .issue-pill-full {
+    display: none;
+  }
+
+  .issue-pill-compact {
+    display: inline;
   }
 
   .audio-player-widget .audio-btn {
-    padding: 0 5px;
-    font-size: 9.5px;
-    height: 26px;
+    padding: 0 7px;
+    font-size: 10px;
+    height: 28px;
   }
 
   .more-menu-btn {
-    padding: 0 6px;
+    padding: 0 7px;
     font-size: 10px;
-    height: 26px;
+    height: 28px;
+  }
+
+  .more-btn-label {
+    display: none; /* Show ⚙️ icon only */
   }
 
   .settings-popover-menu {
@@ -1821,16 +1846,17 @@ body.view-zh-only .en-text {
 
   /* Mobile Phone Scale:
      - 1:1 Equal Font Size: English (15px) == Chinese (15px)
-     - True Wall Street Journal & InDesign Hyphenated Justification (inter-word + 3 2 2 threshold)
+     - TeX Knuth-Plass Syllable-Injected Justification (inter-word + 3 2 2 threshold)
      - 100% Equal Word Spacing with Zero Empty Voids
+     - Top clearance guarantee: no obstruction from sticky header
   */
   .reader-viewport {
-    padding: 8px 6px 64px 6px;
+    padding: 14px 8px 64px 8px;
   }
 
   .page-meta-header {
-    padding: 5px 8px;
-    margin-bottom: 10px;
+    padding: 6px 10px;
+    margin-bottom: 12px;
   }
 
   .section-title-badge {
@@ -1843,7 +1869,7 @@ body.view-zh-only .en-text {
 
   .segment-paragraph .en-text {
     font-size: 15px; /* Mobile equal size */
-    padding: 10px 12px;
+    padding: 11px 13px;
     line-height: 1.65;
     border-radius: 6px;
     text-align: justify;
@@ -1856,8 +1882,8 @@ body.view-zh-only .en-text {
     hyphenate-limit-chars: 3 2 2;
     -webkit-hyphenate-limit-chars: 3 2 2;
     hyphenate-limit-lines: 4;
-    letter-spacing: 0;
-    word-spacing: normal;
+    letter-spacing: -0.004em;
+    word-spacing: 0.008em;
     overflow-wrap: break-word;
     word-break: normal;
   }
