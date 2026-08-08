@@ -823,11 +823,14 @@ body.font-mode-serif {
   box-sizing: border-box;
 }
 
+/* Flex Symmetrical Phantom Spacer: Left Wing */
 .header-left {
+  flex: 1 1 0;
+  min-width: 0;
   display: flex;
   align-items: center;
+  justify-content: flex-start;
   gap: 5px;
-  flex-shrink: 0;
 }
 
 .masthead-logo {
@@ -861,15 +864,17 @@ body.font-mode-serif {
   color: var(--accent);
 }
 
-/* Center Desktop View Mode Switcher */
+/* Center Desktop View Mode Switcher: Perfectly Balanced by Symmetrical Left/Right Wings */
 .view-controls {
+  flex: 0 0 auto;
   display: flex;
+  align-items: center;
+  justify-content: center;
   background: var(--bg-primary);
   padding: 2px;
   border-radius: 7px;
   border: 1px solid var(--border-color);
   gap: 2px;
-  flex-shrink: 0;
 }
 
 .view-btn {
@@ -894,11 +899,14 @@ body.font-mode-serif {
   box-shadow: var(--shadow-sm);
 }
 
+/* Flex Symmetrical Phantom Spacer: Right Wing */
 .header-right {
+  flex: 1 1 0;
+  min-width: 0;
   display: flex;
   align-items: center;
+  justify-content: flex-end;
   gap: 5px;
-  flex-shrink: 0;
 }
 
 /* TTS Player Widget: Horizontal Flex Row */
