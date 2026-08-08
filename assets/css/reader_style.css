@@ -1,10 +1,9 @@
 /* ==========================================================================
    The Atlantic — Grand Bespoke Digital Magazine Reader ($20/mo Tier)
    Publishing-Grade Golden Typography Engine:
-   - Golden Syllable Hyphenation: hyphens: auto (hyphenate-limit-chars: 5 2 2)
-   - Zero Line-End Hollow Voids & Balanced Justification (text-justify: inter-word)
-   - Relaxed Natural Word Spacing (word-spacing: 0.03em / letter-spacing: 0)
-   - Mobile Ergonomics: 16px English & 14.5px Chinese
+   - Wall Street Journal Narrow Column Standard: hyphens: auto (hyphenate-limit-chars: 4 2 2)
+   - Locked Fixed Word Spacing (word-spacing: 0.01em) + Crisp Justification (inter-word)
+   - Mobile Ergonomics Scale: 14.5px English & 13.5px Chinese (Paperback density)
    ========================================================================== */
 
 @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800;900&family=Inter:wght@300;400;500;600;700;800&family=Merriweather:ital,wght@0,300;0,400;0,700;1,300;1,400&family=Noto+Sans+SC:wght@300;400;500;600;700;900&family=Noto+Serif+SC:wght@300;400;600;700;900&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
@@ -135,7 +134,7 @@ body.theme-dark {
   --bg-card: #191c25;
   --bg-card-warm: #141720; /* Deep soothing graphite, zero glare */
   --bg-glass: rgba(16, 18, 23, 0.95);
-  --bg-glass-card: rgba(25, 28, 37, 0.96);
+  --bg-glass-card: rgba(255, 255, 255, 0.96);
   --bg-hover: #222631;
   --text-primary: #f0f2f8;
   --text-secondary: #a2a9ba;
@@ -1124,7 +1123,7 @@ body.font-mode-serif {
 }
 
 /* ==========================================================================
-   3. READER VIEWPORT — GOLDEN SYLLABLE HYPHENATION & BALANCED JUSTIFICATION
+   3. READER VIEWPORT — WALL STREET JOURNAL FORCED HYPHENATION & LOCKED DISTANCE
    ========================================================================== */
 .reader-viewport {
   flex: 1 1 0;
@@ -1287,18 +1286,18 @@ body.view-split .image-column {
 }
 
 /* 
-   GOLDEN EDITORIAL TYPOGRAPHY:
-   - text-align: justify; text-justify: inter-word (Flawless flat right margin, zero hollow voids)
-   - hyphens: auto (hyphenate-limit-chars: 5 2 2 allows 5-letter+ words to break, preventing gaps)
-   - word-spacing: 0.03em; letter-spacing: 0 (Relaxed, steady, never squished!)
+   WALL STREET JOURNAL & THE ATLANTIC EDITORIAL TYPOGRAPHY:
+   - hyphens: auto (hyphenate-limit-chars: 4 2 2 forces hyphenation on almost all words, locking the line)
+   - text-align: justify; text-justify: inter-word (Flawless flat right margin, zero hollow gaps)
+   - word-spacing: 0.01em; letter-spacing: 0 (Locked, constant, uniform word distance)
    - text-wrap: pretty (Knuth-Plass optimal line fitting)
 */
 .segment-paragraph .en-text {
   font-family: var(--font-screen-en);
-  font-size: 20.5px;
+  font-size: 20px;
   color: var(--text-primary);
   font-weight: 450;
-  line-height: 1.82;
+  line-height: 1.8;
   margin-bottom: 4px;
   text-align: justify;
   text-justify: inter-word;
@@ -1307,11 +1306,11 @@ body.view-split .image-column {
   hyphens: auto;
   -webkit-hyphens: auto;
   -ms-hyphens: auto;
-  hyphenate-limit-chars: 5 2 2;
-  -webkit-hyphenate-limit-chars: 5 2 2;
-  hyphenate-limit-lines: 2;
+  hyphenate-limit-chars: 4 2 2;
+  -webkit-hyphenate-limit-chars: 4 2 2;
+  hyphenate-limit-lines: 3;
   letter-spacing: 0;
-  word-spacing: 0.03em;
+  word-spacing: 0.01em; /* Locked steady word distance */
   font-kerning: normal;
   font-optical-sizing: auto;
   font-feature-settings: "kern" 1, "liga" 1, "calt" 1;
@@ -1335,8 +1334,8 @@ body.view-split .image-column {
   border-left: none;
   padding: 6px 14px 6px 14px;
   color: var(--text-secondary);
-  line-height: 1.82;
-  font-size: 18.5px;
+  line-height: 1.8;
+  font-size: 18px;
   margin-top: 2px;
   font-weight: 400;
   text-align: justify;
@@ -1363,7 +1362,7 @@ body.view-split .image-column {
 .segment-byline .en-text {
   font-family: var(--font-screen-en);
   font-style: italic;
-  font-size: 17.5px;
+  font-size: 17px;
   color: var(--text-muted);
   background: var(--bg-hover);
   border: 0.5px solid var(--border-subtle);
@@ -1374,8 +1373,8 @@ body.view-split .image-column {
   text-wrap: pretty;
   hyphens: auto;
   -webkit-hyphens: auto;
-  hyphenate-limit-chars: 5 2 2;
-  word-spacing: 0.03em;
+  hyphenate-limit-chars: 4 2 2;
+  word-spacing: 0.01em;
 }
 
 .segment-byline .zh-text-card {
@@ -1383,7 +1382,7 @@ body.view-split .image-column {
   background: transparent;
   border: none;
   padding: 5px 18px;
-  font-size: 15.5px;
+  font-size: 15px;
   color: var(--text-muted);
   box-sizing: border-box;
 }
@@ -1395,8 +1394,8 @@ body.view-split .image-column {
 
 .segment-quote .en-text {
   font-family: var(--font-title);
-  font-size: 23px;
-  line-height: 1.48;
+  font-size: 22px;
+  line-height: 1.45;
   color: var(--accent);
   font-weight: 700;
   background: var(--bg-card-warm);
@@ -1409,7 +1408,7 @@ body.view-split .image-column {
   text-wrap: balance;
   hyphens: auto;
   -webkit-hyphens: auto;
-  word-spacing: 0.03em;
+  word-spacing: 0.01em;
 }
 
 .segment-quote .zh-text-card {
@@ -1417,7 +1416,7 @@ body.view-split .image-column {
   background: transparent;
   border: none;
   padding: 8px 24px;
-  font-size: 17.5px;
+  font-size: 17px;
   color: var(--text-secondary);
   box-sizing: border-box;
 }
@@ -1459,13 +1458,13 @@ body.view-split .image-column {
 
 /* Headings */
 .segment-h3 {
-  margin-top: 32px;
-  margin-bottom: 16px;
+  margin-top: 30px;
+  margin-bottom: 14px;
 }
 
 .segment-h3 .en-text {
   font-family: var(--font-title);
-  font-size: 26px;
+  font-size: 24px;
   line-height: 1.3;
   color: var(--accent);
   font-weight: 800;
@@ -1482,7 +1481,7 @@ body.view-split .image-column {
 
 .segment-h3 .zh-text-card {
   font-family: var(--font-screen-zh);
-  font-size: 19px;
+  font-size: 18px;
   color: var(--text-secondary);
   font-weight: 600;
   margin-top: 3px;
@@ -1493,7 +1492,7 @@ body.view-split .image-column {
 
 .segment-h4 .en-text {
   font-family: var(--font-screen-en);
-  font-size: 20px;
+  font-size: 19px;
   font-weight: 700;
   color: var(--text-primary);
   background: var(--bg-card-warm);
@@ -1505,12 +1504,12 @@ body.view-split .image-column {
   text-wrap: pretty;
   hyphens: auto;
   -webkit-hyphens: auto;
-  word-spacing: 0.03em;
+  word-spacing: 0.01em;
 }
 
 .segment-h4 .zh-text-card {
   font-family: var(--font-screen-zh);
-  font-size: 17.5px;
+  font-size: 16.5px;
   color: var(--text-secondary);
   margin-top: 2px;
   border: none;
@@ -1679,19 +1678,19 @@ body.view-zh-only .en-text {
   }
 
   .segment-paragraph .en-text {
-    font-size: 18px;
+    font-size: 17px;
     padding: 14px 18px;
-    line-height: 1.76;
+    line-height: 1.74;
     text-align: justify;
     text-wrap: pretty;
-    hyphenate-limit-chars: 5 2 2;
-    word-spacing: 0.025em;
+    hyphenate-limit-chars: 4 2 2;
+    word-spacing: 0.01em;
   }
 
   .segment-paragraph .zh-text-card {
-    font-size: 16px;
+    font-size: 15.5px;
     padding: 5px 10px;
-    line-height: 1.76;
+    line-height: 1.74;
   }
 }
 
@@ -1822,10 +1821,10 @@ body.view-zh-only .en-text {
     padding: 12px;
   }
 
-  /* Mobile Phone Typography:
-     - 16px English with 5 2 2 Hyphenation & Justification for Flat Right Margin without voids
-     - 14.5px Chinese
-     - word-spacing: 0.02em (Relaxed, steady, never cramped)
+  /* Mobile Phone Paperback Scale:
+     - 14.5px English with WSJ 4 2 2 Forced Hyphenation & Justification for Flat Right Margin without voids
+     - 13.5px Chinese Companion
+     - word-spacing: 0.01em (Locked, strictly uniform word distance)
   */
   .reader-viewport {
     padding: 8px 6px 64px 6px;
@@ -1845,52 +1844,53 @@ body.view-zh-only .en-text {
   }
 
   .segment-paragraph .en-text {
-    font-size: 16px; /* Optimized phone scale */
-    padding: 12px 14px;
-    line-height: 1.68;
-    border-radius: 7px;
+    font-size: 14.5px; /* Compact paperback reading scale */
+    padding: 10px 12px;
+    line-height: 1.65;
+    border-radius: 6px;
     text-align: justify;
     text-justify: inter-word;
     text-wrap: pretty;
     -webkit-text-wrap: pretty;
     hyphens: auto;
     -webkit-hyphens: auto;
-    hyphenate-limit-chars: 5 2 2;
-    -webkit-hyphenate-limit-chars: 5 2 2;
+    hyphenate-limit-chars: 4 2 2;
+    -webkit-hyphenate-limit-chars: 4 2 2;
+    hyphenate-limit-lines: 3;
     letter-spacing: 0;
-    word-spacing: 0.02em; /* Relaxed breathing room between words */
+    word-spacing: 0.01em; /* Strictly locked word distance */
     overflow-wrap: break-word;
   }
 
   .segment-paragraph .zh-text-card {
-    font-size: 14.5px; /* Clean companion Chinese */
+    font-size: 13.5px; /* High information density companion Chinese */
     padding: 4px 6px;
-    line-height: 1.68;
+    line-height: 1.65;
     text-align: justify;
     text-justify: inter-ideograph;
     text-wrap: pretty;
   }
 
   .segment-h3 .en-text {
-    font-size: 19px;
-    padding: 8px 10px;
+    font-size: 17px;
+    padding: 7px 9px;
     text-align: justify;
     text-wrap: balance;
   }
 
   .segment-h3 .zh-text-card {
-    font-size: 15px;
+    font-size: 14px;
   }
 
   .segment-h4 .en-text {
-    font-size: 15.5px;
-    padding: 6px 8px;
+    font-size: 14.5px;
+    padding: 5px 7px;
     text-align: justify;
   }
 
   .segment-quote .en-text {
-    font-size: 16px;
-    padding: 8px 12px;
+    font-size: 15px;
+    padding: 7px 10px;
     text-align: justify;
   }
 
