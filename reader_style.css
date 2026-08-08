@@ -1276,7 +1276,7 @@ body.view-split .image-column {
 }
 
 .segment-block {
-  margin-bottom: 24px;
+  margin-bottom: 16px; /* Compact desktop rhythm */
   padding: 0;
   position: relative;
 }
@@ -1324,7 +1324,7 @@ body.align-mode-justify .segment-h4 .en-text {
   color: var(--text-primary);
   font-weight: 400; /* Regular unbolded weight for perfect natural harmony */
   line-height: 1.85;
-  margin-bottom: 4px;
+  margin-bottom: 3px;
   text-align: left;
   text-wrap: pretty;
   -webkit-text-wrap: pretty;
@@ -1344,7 +1344,7 @@ body.align-mode-justify .segment-h4 .en-text {
   background: var(--bg-card-warm);
   border: 0.5px solid var(--border-subtle);
   border-radius: 9px;
-  padding: 20px 26px;
+  padding: 16px 22px;
   box-shadow: var(--shadow-sm);
   cursor: text;
   user-select: text;
@@ -1357,7 +1357,7 @@ body.align-mode-justify .segment-h4 .en-text {
   background: transparent;
   border: none;
   border-left: none;
-  padding: 6px 16px 6px 16px;
+  padding: 4px 14px 4px 14px;
   color: var(--text-primary); /* Deep ink for 100% optical weight balance */
   line-height: 1.85;
   font-size: 22px; /* 1:1 Universal Equal Scale */
@@ -1886,15 +1886,16 @@ body.view-zh-only .en-text {
     display: none;
   }
 
-  #copy-page-btn {
-    display: none;
+  .segment-block {
+    margin-bottom: 12px !important; /* Compact mobile rhythm: 60% distance reduction */
   }
 
   .segment-paragraph .en-text {
     font-size: 15px !important; /* 1:1 Strict Absolute Equality */
     font-weight: 400; /* Regular 400 without bold stroke */
     color: var(--text-primary);
-    padding: 10px 12px;
+    padding: 8px 10px;
+    margin-bottom: 2px;
     line-height: 1.68;
     border-radius: 6px;
     text-align: left;
@@ -1916,7 +1917,8 @@ body.view-zh-only .en-text {
     font-size: 15px !important; /* 1:1 Strict Absolute Equality */
     font-weight: 400; /* Regular 400 */
     color: var(--text-primary); /* Deep crisp ink */
-    padding: 4px 6px;
+    padding: 2px 4px;
+    margin-top: 1px;
     line-height: 1.68;
     text-align: left;
     text-wrap: pretty;
