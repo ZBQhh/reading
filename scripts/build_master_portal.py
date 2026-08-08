@@ -22,7 +22,7 @@ def build_portal():
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800;900&family=Inter:wght@300;400;500;600;700;800&family=Merriweather:ital,wght@0,300;0,400;0,700;1,300;1,400&family=Noto+Sans+SC:wght@300;400;500;600;700;900&family=Noto+Serif+SC:wght@300;400;600;700;900&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="assets/css/reader_style.css">
 </head>
-<body class="theme-light view-interlinear">
+<body class="theme-light view-interlinear align-mode-flush">
 
   <!-- ==========================================================================
        1. APPLE NEWS+ DIGITAL MAGAZINE LIBRARY PORTAL (全刊库首页 + 矩阵筛选 + 全库检索)
@@ -162,7 +162,17 @@ def build_portal():
       </div>
     </div>
 
-    <!-- Section 2: Typography & Font Scaling -->
+    <!-- Section 2: Alignment & Typographic Modes (User-Customizable) -->
+    <div class="popover-section">
+      <div class="popover-section-title">📐 对齐与排版模式</div>
+      <div class="popover-controls-row">
+        <button id="align-mode-toggle" class="popover-pill-btn active" style="flex: 1; text-align: center;" title="一键切换自然恒定均距与纸刊两端对齐">
+          <span id="align-mode-text">📖 自然恒定均距 (零拉伸)</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Section 3: Typography & Font Scaling -->
     <div class="popover-section">
       <div class="popover-section-title">🔤 字体与英文主字号</div>
       <div class="popover-controls-row">
@@ -174,7 +184,7 @@ def build_portal():
       </div>
     </div>
 
-    <!-- Section 3: Speech Speed -->
+    <!-- Section 4: Speech Speed -->
     <div class="popover-section">
       <div class="popover-section-title">🔊 原声朗读语速</div>
       <div class="popover-controls-row">
@@ -184,7 +194,7 @@ def build_portal():
       </div>
     </div>
 
-    <!-- Section 4: In-Drawer Global Search -->
+    <!-- Section 5: In-Drawer Global Search -->
     <div class="popover-section">
       <div class="popover-section-title">🔍 全书检索</div>
       <div class="search-box" style="width: 100%;">
@@ -193,7 +203,7 @@ def build_portal():
       </div>
     </div>
 
-    <!-- Section 5: Utilities -->
+    <!-- Section 6: Utilities -->
     <div class="popover-section">
       <div class="popover-controls-row">
         <button class="popover-pill-btn" onclick="window.toggleShortcutsModal()" title="查看全站快捷键">⌨️ 快捷键速查</button>
@@ -393,7 +403,7 @@ def build_portal():
     with open('reader.html', 'w', encoding='utf-8') as f:
         f.write(html_content)
 
-    print("Master portal compiled successfully with TeX Knuth-Plass typography & zero-obstruction mobile header!")
+    print("Master portal compiled successfully with Alignment Mode Toggle Drawer & TeX Engine!")
 
 if __name__ == '__main__':
     build_portal()

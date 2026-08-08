@@ -1297,6 +1297,26 @@ body.view-split .image-column {
    - Chinese: 20.5px
    - Dual-engine Syllable Hyphenation with Razor-Flat Justified Two-Sided Alignment
 */
+/* === Alignment & Typographic Modes === */
+body.align-mode-flush .segment-paragraph .en-text,
+body.align-mode-flush .segment-byline .en-text,
+body.align-mode-flush .segment-quote .en-text,
+body.align-mode-flush .segment-h3 .en-text,
+body.align-mode-flush .segment-h4 .en-text {
+  text-align: left !important;
+  word-spacing: normal !important;
+  letter-spacing: 0 !important;
+}
+
+body.align-mode-justify .segment-paragraph .en-text,
+body.align-mode-justify .segment-byline .en-text,
+body.align-mode-justify .segment-quote .en-text,
+body.align-mode-justify .segment-h3 .en-text,
+body.align-mode-justify .segment-h4 .en-text {
+  text-align: justify !important;
+  text-justify: inter-word !important;
+}
+
 .segment-paragraph .en-text {
   font-family: var(--font-screen-en);
   font-size: 24px; /* Grand 24px Hero English scale */
@@ -1304,8 +1324,7 @@ body.view-split .image-column {
   font-weight: 450;
   line-height: 1.85;
   margin-bottom: 4px;
-  text-align: justify;
-  text-justify: inter-word;
+  text-align: left;
   text-wrap: pretty;
   -webkit-text-wrap: pretty;
   hyphens: auto;
@@ -1314,8 +1333,8 @@ body.view-split .image-column {
   hyphenate-limit-chars: 4 2 2;
   -webkit-hyphenate-limit-chars: 4 2 2;
   hyphenate-limit-lines: 3;
-  letter-spacing: -0.004em;
-  word-spacing: 0.008em;
+  letter-spacing: 0;
+  word-spacing: normal;
   font-kerning: normal;
   font-optical-sizing: auto;
   font-feature-settings: "kern" 1, "liga" 1, "calt" 1;

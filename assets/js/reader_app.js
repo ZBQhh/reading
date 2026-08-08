@@ -894,6 +894,31 @@
     });
   });
 
+  // Alignment & Typographic Modes (Flush Left Fixed Spacing vs Justified Two-Sided Alignment)
+  const STORAGE_KEY_ALIGN = 'atlantic_reader_align_mode';
+  let currentAlignMode = localStorage.getItem(STORAGE_KEY_ALIGN) || 'flush';
+  const alignModeToggle = document.getElementById('align-mode-toggle');
+  const alignModeText = document.getElementById('align-mode-text');
+
+  function applyAlignMode(mode) {
+    currentAlignMode = mode;
+    document.body.classList.remove('align-mode-flush', 'align-mode-justify');
+    document.body.classList.add(`align-mode-${mode}`);
+    localStorage.setItem(STORAGE_KEY_ALIGN, mode);
+    if (alignModeText) {
+      alignModeText.textContent = mode === 'flush' ? '📖 自然恒定均距 (零拉伸)' : '📐 纸刊两端平齐 (Justified)';
+    }
+  }
+
+  if (alignModeToggle) {
+    alignModeToggle.addEventListener('click', () => {
+      const nextMode = currentAlignMode === 'flush' ? 'justify' : 'flush';
+      applyAlignMode(nextMode);
+      showHUDToast(`排版模式：${nextMode === 'flush' ? '📖 自然恒定均距 (每个空格绝对等宽)' : '📐 纸刊两端平齐'}`);
+    });
+  }
+  applyAlignMode(currentAlignMode);
+
   // Font Family Switcher (Modern Sans vs Classic Serif)
   if (fontToggleBtn) {
     fontToggleBtn.addEventListener('click', () => {
