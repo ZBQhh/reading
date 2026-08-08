@@ -15,7 +15,9 @@
   let speechSynth = window.speechSynthesis;
   let currentUtterance = null;
   let isPlayingAudio = false;
-  let audioSpeed = 1.0;
+  const STORAGE_KEY_SPEED = 'atlantic_reader_audio_speed';
+  let audioSpeed = parseFloat(localStorage.getItem(STORAGE_KEY_SPEED)) || 1.0;
+  let currentPlayingSegmentDiv = null;
   let isSerifMode = false;
   let currentViewMode = localStorage.getItem('atlantic_reader_view') || 'interlinear';
   let isNavigating = false; // Lock to guarantee strict 1:1 page turns without double-firing jumps
@@ -636,13 +638,15 @@
     });
   }
 
-  // Web Speech TTS Engine with Synchronized Golden Glow Pulse
+  // Web Speech TTS Engine with Synchronized Golden Glow Pulse & Strict Stop Lock
   function stopSpeech() {
     if (speechSynth) {
-      speechSynth.cancel();
+      if (speechSynth.pause) speechSynth.pause();
+      if (speechSynth.cancel) speechSynth.cancel();
     }
     isPlayingAudio = false;
-    if (playPageAudioBtn) playPageAudioBtn.innerHTML = '▶ 朗读本页';
+    currentPlayingSegmentDiv = null;
+    if (playPageAudioBtn) playPageAudioBtn.innerHTML = '▶ 朗读';
     document.querySelectorAll('.segment-block').forEach(b => b.classList.remove('playing-active'));
   }
 
@@ -655,15 +659,21 @@
 
     currentUtterance = new SpeechSynthesisUtterance(text);
     currentUtterance.lang = 'en-US';
-    currentUtterance.rate = audioSpeed;
+    currentUtterance.rate = audioSpeed; // Always applies remembered speed
 
+    isPlayingAudio = true;
+    currentPlayingSegmentDiv = targetBlock;
     targetBlock.classList.add('playing-active');
-    showHUDToast('🔊 正在朗读选定段落');
+    showHUDToast(`🔊 正在以 ${audioSpeed}x 朗读段落 (轻点可暂停)`);
 
     currentUtterance.onend = () => {
+      isPlayingAudio = false;
+      currentPlayingSegmentDiv = null;
       targetBlock.classList.remove('playing-active');
     };
     currentUtterance.onerror = () => {
+      isPlayingAudio = false;
+      currentPlayingSegmentDiv = null;
       targetBlock.classList.remove('playing-active');
     };
 
@@ -673,10 +683,12 @@
   function playPageSpeech() {
     if (!speechSynth) return;
 
-    if (isPlayingAudio) {
+    if (isPlayingAudio && !currentPlayingSegmentDiv) {
       stopSpeech();
+      showHUDToast('⏸ 整页朗读已暂停');
       return;
     }
+    stopSpeech();
 
     const pageObj = data[currentPage - 1];
     if (!pageObj || !pageObj.segments || pageObj.segments.length === 0) return;
@@ -687,15 +699,19 @@
     const fullPageEn = enTexts.join('. ');
     currentUtterance = new SpeechSynthesisUtterance(fullPageEn);
     currentUtterance.lang = 'en-US';
-    currentUtterance.rate = audioSpeed;
+    currentUtterance.rate = audioSpeed; // Always applies remembered speed
 
     isPlayingAudio = true;
     if (playPageAudioBtn) playPageAudioBtn.innerHTML = '⏸ 暂停朗读';
-    showHUDToast('🔊 正在原声朗读整页');
+    showHUDToast(`🔊 正在以 ${audioSpeed}x 原声朗读整页`);
 
     currentUtterance.onend = () => {
       isPlayingAudio = false;
-      if (playPageAudioBtn) playPageAudioBtn.innerHTML = '▶ 朗读本页';
+      if (playPageAudioBtn) playPageAudioBtn.innerHTML = '▶ 朗读';
+    };
+    currentUtterance.onerror = () => {
+      isPlayingAudio = false;
+      if (playPageAudioBtn) playPageAudioBtn.innerHTML = '▶ 朗读';
     };
 
     speechSynth.speak(currentUtterance);
@@ -995,17 +1011,34 @@
     playPageAudioBtn.addEventListener('click', playPageSpeech);
   }
 
-  // Audio Speed
-  if (audioSpeedBtn) {
-    audioSpeedBtn.addEventListener('click', () => {
-      if (audioSpeed === 1.0) audioSpeed = 1.25;
-      else if (audioSpeed === 1.25) audioSpeed = 1.5;
-      else audioSpeed = 1.0;
-      audioSpeedBtn.textContent = `${audioSpeed}x`;
-      showHUDToast(`语速调节：${audioSpeed}x`);
-      if (isPlayingAudio) playPageSpeech();
-    });
+  // Persistent Audio Speed Synchronizer (Header Pill + Popover Drawer + Memory)
+  const topAudioSpeedBtn = document.getElementById('audio-speed-btn-top');
+  const drawerAudioSpeedBtn = document.getElementById('audio-speed-btn');
+
+  function updateSpeedDisplays() {
+    const txt = `${audioSpeed}x`;
+    if (topAudioSpeedBtn) topAudioSpeedBtn.textContent = txt;
+    if (drawerAudioSpeedBtn) drawerAudioSpeedBtn.textContent = `${txt} 标准`;
   }
+
+  function cycleAudioSpeed() {
+    if (audioSpeed === 1.0) audioSpeed = 1.25;
+    else if (audioSpeed === 1.25) audioSpeed = 1.5;
+    else if (audioSpeed === 1.5) audioSpeed = 0.75;
+    else audioSpeed = 1.0;
+
+    localStorage.setItem(STORAGE_KEY_SPEED, audioSpeed);
+    updateSpeedDisplays();
+    showHUDToast(`朗读倍速已设为：${audioSpeed}x (整段与整页均已同步记忆)`);
+  }
+
+  if (topAudioSpeedBtn) {
+    topAudioSpeedBtn.addEventListener('click', cycleAudioSpeed);
+  }
+  if (drawerAudioSpeedBtn) {
+    drawerAudioSpeedBtn.addEventListener('click', cycleAudioSpeed);
+  }
+  updateSpeedDisplays();
 
   // Shortcuts Help Modal Toggle
   function toggleShortcutsModal() {

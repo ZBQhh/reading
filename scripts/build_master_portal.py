@@ -44,7 +44,7 @@ def build_portal():
     <main class="portal-hero">
       <span class="portal-hero-badge">DIGITAL BESPOKE ARCHIVE</span>
       <h2>精选典藏期刊库</h2>
-      <p>依托 1:1 印刷排版首行缩进解析、真实作者段落集与 24px 英文微浮雕卡片，汇聚全球顶级政经、文学与前沿科技思想典籍。</p>
+      <p>依托 1:1 印刷排版首行缩进解析、真实作者段落集与 22px 英文微浮雕卡片，汇聚全球顶级政经、文学与前沿科技思想典籍。</p>
       
       <!-- Home Portal Global Multi-Issue Instant Search -->
       <div class="portal-search-wrap">
@@ -97,7 +97,7 @@ def build_portal():
 
     <!-- Center Desktop View Mode Switcher -->
     <div class="view-controls">
-      <button class="view-btn active" data-view="interlinear" title="1:1 逐段对照，24px 英文卡片主显，20.5px 中文纯字辅读 (快捷键 1)">
+      <button class="view-btn active" data-view="interlinear" title="1:1 逐段对照，22px 英文卡片主显，22px 中文纯字辅读 (快捷键 1)">
         <span>📖 逐段对照</span>
       </button>
       <button class="view-btn" data-view="split" title="左侧原版 150 DPI 高清扫描图 + 右侧精校排版 (快捷键 2)">
@@ -111,9 +111,12 @@ def build_portal():
       </button>
     </div>
 
-    <!-- Header Right Controls: Clean Audio + Expandable More Menu (Zero-Obstruction) -->
+    <!-- Header Right Controls: Desktop Speed Pill Outside + Clean Audio + Expandable More Menu -->
     <div class="header-right">
-      <!-- TTS Speech Widget -->
+      <!-- Desktop Audio Speed Button Placed Outside -->
+      <button id="audio-speed-btn-top" class="audio-btn speed-btn" title="点击调节朗读语速 (1.0x / 1.25x / 1.5x / 0.75x)">1.0x</button>
+
+      <!-- Full Page Audio Widget -->
       <div class="audio-player-widget">
         <button id="play-page-audio-btn" class="audio-btn" title="原声朗读本页英文 (P)">
           <span class="audio-btn-text">▶ 朗读</span>
@@ -174,17 +177,17 @@ def build_portal():
 
     <!-- Section 3: Typography & Font Scaling -->
     <div class="popover-section">
-      <div class="popover-section-title">🔤 字体与英文主字号</div>
+      <div class="popover-section-title">🔤 字体与全局 1:1 同步字号</div>
       <div class="popover-controls-row">
         <button id="font-family-toggle" class="popover-pill-btn" title="切换现代黑体/典雅衬线">🔤 现代黑体</button>
         <div class="popover-btn-group">
-          <button id="font-dec-btn" class="popover-pill-btn" title="减小英文主字号">A-</button>
-          <button id="font-inc-btn" class="popover-pill-btn" title="增大英文主字号">A+</button>
+          <button id="font-dec-btn" class="popover-pill-btn" title="减小全局中英字号">A-</button>
+          <button id="font-inc-btn" class="popover-pill-btn" title="增大全局中英字号">A+</button>
         </div>
       </div>
     </div>
 
-    <!-- Section 4: Speech Speed -->
+    <!-- Section 4: Speech Speed (Synced with Header Speed Pill) -->
     <div class="popover-section">
       <div class="popover-section-title">🔊 原声朗读语速</div>
       <div class="popover-controls-row">
@@ -371,7 +374,7 @@ def build_portal():
           <span class="shortcut-key-badge">1 / 2 / 3 / 4</span>
         </div>
         <div class="shortcut-row">
-          <span>原声朗读 (TTS)</span>
+          <span>原声朗读整页 (TTS)</span>
           <span class="shortcut-key-badge">P</span>
         </div>
         <div class="shortcut-row">
@@ -403,7 +406,7 @@ def build_portal():
     with open('reader.html', 'w', encoding='utf-8') as f:
         f.write(html_content)
 
-    print("Master portal compiled successfully with Alignment Mode Toggle Drawer & TeX Engine!")
+    print("Master portal compiled successfully with Desktop Audio Speed Pill Outside & Memory Engine!")
 
 if __name__ == '__main__':
     build_portal()

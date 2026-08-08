@@ -909,6 +909,21 @@ body.font-mode-serif {
   gap: 5px;
 }
 
+/* Header Right Audio Speed Button Outside */
+.speed-btn {
+  font-family: monospace;
+  font-weight: 700;
+  color: var(--accent-gold);
+  border-color: var(--border-color);
+  padding: 0 8px;
+}
+
+.speed-btn:hover {
+  background: var(--accent-gold);
+  color: #ffffff !important;
+  border-color: var(--accent-gold);
+}
+
 /* TTS Player Widget: Horizontal Flex Row */
 .audio-player-widget {
   display: inline-flex;
