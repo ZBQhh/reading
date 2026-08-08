@@ -1,4 +1,18 @@
+# PDF and Raw Assets (To keep GitHub repo lightweight and under limits)
 *.pdf
+raw_pdf/
+
+# Python Cache & Virtual Environments
 *.pyc
 __pycache__/
-raw_pdf/
+.venv/
+venv/
+env/
+
+# OS and System Temporary Files
+.DS_Store
+Thumbs.db
+*.log
+*.tmp
+.idea/
+.vscode/

@@ -1,13 +1,13 @@
 /* ==========================================================================
    The Atlantic — Grand 24px Bespoke Digital Magazine Reader ($20/mo Tier)
-   Eye-Care Warm Parchment English Cards, Subtle Ambient Chinese,
+   6 Curated Editorial Themes, Apple News+ Mobile Ergonomics,
    Full Multi-Publication Brand Matrix, Keyboard Suite, Shortcuts Help Modal
    ========================================================================== */
 
 @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800;900&family=Inter:wght@300;400;500;600;700;800&family=Merriweather:ital,wght@0,300;0,400;0,700;1,300;1,400&family=Noto+Sans+SC:wght@300;400;500;600;700;900&family=Noto+Serif+SC:wght@300;400;600;700;900&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
 
 :root {
-  /* Liquid Light Editorial Theme — Eye-Friendly Warm Cream */
+  /* 1. ☀️ Classic Light Editorial Theme — Eye-Friendly Warm Cream */
   --bg-primary: #f8f6f0;
   --bg-secondary: #ede7d8;
   --bg-card: #ffffff;
@@ -44,7 +44,7 @@
   --transition-smooth: all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* === Sepia Vintage Theme === */
+/* === 2. 📜 Sepia Vintage Theme (温润复古羊皮纸) === */
 body.theme-sepia {
   --bg-primary: #f4ecd8;
   --bg-secondary: #ebe0c7;
@@ -57,19 +57,81 @@ body.theme-sepia {
   --text-secondary: #5a4c3e;
   --text-muted: #968878;
   --accent: #9a2b16;
+  --accent-hover: #7c2211;
   --accent-gold: #b46b1c;
+  --accent-gold-light: #fbeed2;
   --border-color: #d6c7a4;
   --border-subtle: #ded1b2;
 }
 
-/* === Dark Obsidian Theme === */
+/* === 3. 🏖️ Summer Beach Theme (清新夏日海滩 · 海风蔚蓝与细沙贝壳) === */
+body.theme-beach {
+  --bg-primary: #f0f7f8;
+  --bg-secondary: #e2eff2;
+  --bg-card: #ffffff;
+  --bg-card-warm: #e6f1f4; /* Refreshing soft ocean spray tint */
+  --bg-glass: rgba(240, 247, 248, 0.94);
+  --bg-glass-card: rgba(255, 255, 255, 0.96);
+  --bg-hover: #d5e9ed;
+  --text-primary: #102a36; /* Deep ocean navy ink */
+  --text-secondary: #3b5f6d; /* Coastal sea mist slate */
+  --text-muted: #7296a4;
+  --accent: #0284c7; /* Vibrant Azure Blue */
+  --accent-hover: #0369a1;
+  --accent-gold: #d97706;
+  --accent-gold-light: #fef3c7;
+  --border-color: #c9e2e9;
+  --border-subtle: #d6ebf1;
+}
+
+/* === 4. 🧊 Academic Calm Theme (学术冷静沉思 · 北欧冰川灰与深邃学术蓝) === */
+body.theme-academic {
+  --bg-primary: #f1f4f8;
+  --bg-secondary: #e2e8f0;
+  --bg-card: #ffffff;
+  --bg-card-warm: #e4e9f1; /* Crisp Nordic glacier tone, highly focusing */
+  --bg-glass: rgba(241, 244, 248, 0.94);
+  --bg-glass-card: rgba(255, 255, 255, 0.96);
+  --bg-hover: #d5deea;
+  --text-primary: #182232; /* Serious Oxford navy */
+  --text-secondary: #475569; /* Academic slate */
+  --text-muted: #64748b;
+  --accent: #2563eb; /* Royal Academic Blue */
+  --accent-hover: #1d4ed8;
+  --accent-gold: #b45309;
+  --accent-gold-light: #ffedd5;
+  --border-color: #cbd5e1;
+  --border-subtle: #d8e1ec;
+}
+
+/* === 5. 🌿 Forest Sage Theme (森林晨雾薄荷 · 抹茶竹青与晨雾草木) === */
+body.theme-forest {
+  --bg-primary: #f2f7f2;
+  --bg-secondary: #e3eee3;
+  --bg-card: #ffffff;
+  --bg-card-warm: #e5eee5; /* Soothing bamboo matcha sage, maximum eye comfort */
+  --bg-glass: rgba(242, 247, 242, 0.94);
+  --bg-glass-card: rgba(255, 255, 255, 0.96);
+  --bg-hover: #d4e5d4;
+  --text-primary: #16291a; /* Forest pine ink */
+  --text-secondary: #3f5e44; /* Botanical moss slate */
+  --text-muted: #6f8c75;
+  --accent: #15803d; /* Botanical Emerald Green */
+  --accent-hover: #166534;
+  --accent-gold: #ca8a04;
+  --accent-gold-light: #fef9c3;
+  --border-color: #c9dec9;
+  --border-subtle: #d7e8d7;
+}
+
+/* === 6. 🌙 Dark Obsidian Theme (极夜深曜石 · 沉浸黑曜石与护眼OLED) === */
 body.theme-dark {
   --bg-primary: #0c0e12;
   --bg-secondary: #14171e;
   --bg-card: #191c25;
   --bg-card-warm: #141720; /* Deep soothing graphite, zero glare */
   --bg-glass: rgba(16, 18, 23, 0.94);
-  --bg-glass-card: rgba(25, 28, 37, 0.95);
+  --bg-glass-card: rgba(255, 255, 255, 0.08);
   --bg-hover: #222631;
   --text-primary: #f0f2f8;
   --text-secondary: #a2a9ba;
@@ -103,6 +165,7 @@ body {
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
   padding-bottom: env(safe-area-inset-bottom, 0);
+  transition: background-color 0.26s ease, color 0.26s ease;
 }
 
 body.font-mode-serif {
@@ -685,6 +748,7 @@ body.font-mode-serif {
   width: 110px;
 }
 
+/* Theme Selector: 6 Curated Luxury Editorial Palettes */
 .theme-selector {
   display: flex;
   background-color: var(--bg-primary);
@@ -693,22 +757,31 @@ body.font-mode-serif {
   padding: 2px;
   height: 32px;
   align-items: center;
+  gap: 2px;
 }
 
 .theme-btn {
   border: none;
   background: transparent;
-  padding: 0 6px;
+  padding: 0 5px;
   height: 26px;
   border-radius: 6px;
   cursor: pointer;
-  font-size: 13px;
+  font-size: 12.5px;
   transition: var(--transition-smooth);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.theme-btn:hover {
+  background-color: var(--bg-hover);
 }
 
 .theme-btn.active {
   background-color: var(--bg-card);
   box-shadow: var(--shadow-sm);
+  transform: scale(1.08);
 }
 
 /* Shortcuts Help Button */
@@ -737,6 +810,7 @@ body.font-mode-serif {
   height: 100%;
   overflow: hidden;
   z-index: 50;
+  transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .app-sidebar.collapsed {
@@ -814,7 +888,7 @@ body.font-mode-serif {
   transition: var(--transition-smooth);
 }
 
-.toc-item:hover, .toc-item.active {
+.toc-item:hover {
   border-color: var(--accent);
   background-color: var(--bg-hover);
   transform: translateX(3px);
@@ -824,6 +898,8 @@ body.font-mode-serif {
 .toc-item.active {
   border-left: 3.5px solid var(--accent) !important;
   background-color: var(--bg-card) !important;
+  border-color: var(--accent) !important;
+  box-shadow: var(--shadow-sm);
 }
 
 .toc-item-header {
@@ -890,12 +966,20 @@ body.font-mode-serif {
   transition: var(--transition-smooth);
 }
 
-.page-tile:hover, .page-tile.active {
+.page-tile:hover {
   background-color: var(--accent);
   color: #fff;
   border-color: var(--accent);
   transform: scale(1.06);
   box-shadow: var(--shadow-sm);
+}
+
+.page-tile.active {
+  background-color: var(--accent) !important;
+  color: #ffffff !important;
+  border-color: var(--accent) !important;
+  transform: scale(1.08);
+  box-shadow: 0 4px 12px rgba(185, 28, 28, 0.3);
 }
 
 /* ==========================================================================
@@ -1058,7 +1142,7 @@ body.view-split .image-column {
   50% { border-color: rgba(201, 138, 44, 0.4); }
 }
 
-/* English Hero Card: Eye-Friendly Warm Parchment Tint (Non-glaring, no pure white) */
+/* English Hero Card: Non-glaring, eye-comfort card tint */
 .segment-paragraph .en-text {
   font-family: var(--font-screen-en);
   font-size: 24px; /* Grand 24px Hero English */
@@ -1313,63 +1397,261 @@ body.view-zh-only .en-text {
 }
 
 /* ==========================================================================
-   GITHUB PAGES CROSS-DEVICE RESPONSIVE BREAKPOINTS (Mobile / Tablet / iPad / Desktop)
+   APPLE NEWS+ NATIVE MOBILE RESPONSIVE ENGINE (iPhone / iPad / Android)
    ========================================================================== */
 @media (max-width: 960px) {
+  :root {
+    --header-height: 52px;
+    --bottom-bar-height: 54px;
+  }
+  
+  .app-header {
+    padding: 0 10px;
+    gap: 6px;
+  }
+
+  .header-left {
+    gap: 4px;
+  }
+
+  .masthead-logo {
+    font-size: 15px;
+    letter-spacing: 1px;
+  }
+
+  .issue-switcher-pill {
+    font-size: 10px;
+    padding: 0 8px;
+    height: 28px;
+  }
+
+  /* View Switcher on Tablet: compact horizontal pill */
+  .view-controls {
+    overflow-x: auto;
+    max-width: 260px;
+    padding: 2px;
+  }
+
+  .view-btn {
+    font-size: 11px;
+    padding: 0 8px;
+    height: 26px;
+  }
+
+  /* Drawer Sidebar overlay */
   .app-sidebar {
-    position: absolute;
+    position: fixed;
     height: calc(100vh - var(--header-height) - var(--bottom-bar-height));
     left: 0;
-    top: 0;
+    top: var(--header-height);
+    width: 280px;
     box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+    z-index: 1000;
   }
+
+  .reader-viewport {
+    padding: 16px 16px 80px 16px;
+  }
+
+  .reader-container {
+    gap: 16px;
+  }
+
   .article-column {
-    padding: 14px 8px 40px 8px;
+    padding: 0 0 40px 0;
   }
+
   body.view-split .image-column {
     display: none;
   }
+
   .magazine-shelf-grid {
     grid-template-columns: 1fr;
+    gap: 20px;
+    padding: 0 12px;
   }
+
   .segment-paragraph .en-text {
     font-size: 20px;
-    padding: 16px 18px;
+    padding: 16px 20px;
+    line-height: 1.76;
   }
+
   .segment-paragraph .zh-text-card {
     font-size: 18px;
-    padding: 6px 10px;
+    padding: 6px 12px;
+    line-height: 1.76;
   }
 }
 
 @media (max-width: 640px) {
-  .header-right .search-box, .header-right .theme-selector, .header-right .font-controls {
-    display: none;
+  :root {
+    --header-height: 50px;
+    --bottom-bar-height: 52px;
   }
-  .portal-header {
-    padding: 12px 18px;
-  }
-  .portal-hero h2 {
-    font-size: 24px;
-  }
-  .portal-search-wrap {
+
+  /* Header on Mobile Phone: Touch-optimized Apple News+ Bar */
+  .app-header {
     padding: 0 8px;
   }
+
+  .header-right .search-box, 
+  .header-right .font-controls,
+  .header-right .font-family-toggle,
+  .header-right .shortcuts-help-trigger,
+  .header-right #fullscreen-btn {
+    display: none !important;
+  }
+
+  .masthead-logo {
+    display: none; /* Keep clean space for issue badge and portal button */
+  }
+
+  .view-controls {
+    max-width: 190px;
+  }
+
+  .view-btn {
+    font-size: 10.5px;
+    padding: 0 6px;
+    height: 24px;
+  }
+
+  .audio-player-widget .audio-btn {
+    padding: 0 8px;
+    font-size: 11px;
+  }
+
+  .audio-player-widget .audio-speed-btn {
+    padding: 0 6px;
+    font-size: 10px;
+  }
+
+  .theme-selector {
+    height: 28px;
+  }
+
+  .theme-btn {
+    padding: 0 3px;
+    font-size: 11px;
+    height: 22px;
+  }
+
+  /* Portal on Mobile */
+  .portal-header {
+    padding: 12px 16px;
+  }
+
+  .portal-hero {
+    padding: 0 14px;
+    margin: 18px auto 14px auto;
+  }
+
+  .portal-hero h2 {
+    font-size: 22px;
+  }
+
+  .portal-hero p {
+    font-size: 13px;
+  }
+
+  .portal-search-wrap {
+    padding: 0 6px;
+  }
+
+  .portal-pub-filters {
+    gap: 6px;
+    margin-bottom: 20px;
+  }
+
+  .pub-filter-btn {
+    padding: 5px 12px;
+    font-size: 11.5px;
+  }
+
   .shelf-issue-card {
     flex-direction: column;
     align-items: center;
     text-align: center;
+    padding: 16px;
   }
+
   .shelf-cover-wrap {
     width: 140px;
   }
+
   .shelf-meta-tags {
     justify-content: center;
   }
-  .bottom-bar {
-    padding: 0 10px;
+
+  /* Reader Canvas on Mobile: High-Comfort 19px English & 17px Chinese */
+  .reader-viewport {
+    padding: 12px 10px 76px 10px;
   }
+
+  .page-meta-header {
+    padding: 8px 12px;
+    margin-bottom: 16px;
+  }
+
+  .section-title-badge {
+    display: none; /* Keep page badge clean */
+  }
+
+  .segment-paragraph .en-text {
+    font-size: 19px;
+    padding: 14px 16px;
+    line-height: 1.74;
+    border-radius: 8px;
+  }
+
+  .segment-paragraph .zh-text-card {
+    font-size: 17px;
+    padding: 6px 10px;
+    line-height: 1.74;
+  }
+
+  .segment-h3 .en-text {
+    font-size: 24px;
+    padding: 12px 16px;
+  }
+
+  .segment-h3 .zh-text-card {
+    font-size: 18px;
+  }
+
+  .segment-h4 .en-text {
+    font-size: 19px;
+    padding: 10px 14px;
+  }
+
+  .segment-quote .en-text {
+    font-size: 20px;
+    padding: 14px 18px;
+  }
+
+  .bottom-bar {
+    padding: 0 8px;
+  }
+
+  .nav-page-btn {
+    padding: 0 8px;
+    font-size: 11px;
+    height: 34px;
+  }
+
+  .page-counter-text {
+    font-size: 11px;
+    min-width: 60px;
+  }
+
+  .shortcuts-card {
+    width: 95%;
+    padding: 18px 16px;
+  }
+
   .shortcuts-grid {
     grid-template-columns: 1fr;
+    gap: 8px;
   }
 }

@@ -804,14 +804,23 @@
     });
   });
 
-  // Theme Switcher
+  // Theme Switcher (6 Curated Bespoke Themes)
   document.querySelectorAll('.theme-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       document.querySelectorAll('.theme-btn').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
-      document.body.classList.remove('theme-light', 'theme-sepia', 'theme-dark');
+      document.body.classList.remove('theme-light', 'theme-sepia', 'theme-beach', 'theme-academic', 'theme-forest', 'theme-dark');
       document.body.classList.add(`theme-${btn.dataset.theme}`);
       localStorage.setItem(STORAGE_KEY_THEME, btn.dataset.theme);
+      const themeNames = {
+        'light': '☀️ 晨曦象牙白',
+        'sepia': '📜 复古羊皮纸',
+        'beach': '🏖️ 清新夏日海滩',
+        'academic': '🧊 学术冷静冰川',
+        'forest': '🌿 森林晨雾薄荷',
+        'dark': '🌙 极夜深曜石'
+      };
+      showHUDToast(`主题切换：${themeNames[btn.dataset.theme] || btn.dataset.theme}`);
     });
   });
 
