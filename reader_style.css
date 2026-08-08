@@ -1,10 +1,11 @@
 /* ==========================================================================
    The Atlantic — Grand Bespoke Digital Magazine Reader ($20/mo Tier)
    Publishing-Grade Golden Typography Engine:
-   - TeX Knuth-Plass Microtypography (Soft Hyphen Injection + 100% Equal Word Spacing)
+   - Optical Weight Harmony: English font-weight: 400 == Chinese font-weight: 400
+   - Mobile Optical Equality: English 14.5px == Chinese 15.0px (Deep Ink Alignment)
    - Desktop Hero Hierarchy: English 24px > Chinese 20.5px
-   - Mobile 1:1 Equal Scale: English 15px == Chinese 15px
-   - Apple News+ Zero-Obstruction Compact Touch Pill Header
+   - Dual-Mode Alignment (Flush-Left Fixed Spacing vs Justified)
+   - Apple News+ Zero-Obstruction Header Architecture
    ========================================================================== */
 
 @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800;900&family=Inter:wght@300;400;500;600;700;800&family=Merriweather:ital,wght@0,300;0,400;0,700;1,300;1,400&family=Noto+Sans+SC:wght@300;400;500;600;700;900&family=Noto+Serif+SC:wght@300;400;600;700;900&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
@@ -18,8 +19,8 @@
   --bg-glass: rgba(248, 246, 240, 0.95);
   --bg-glass-card: rgba(255, 255, 255, 0.96);
   --bg-hover: #ebe4d3;
-  --text-primary: #121316; /* Crisp deep ink for English */
-  --text-secondary: #484f5e; /* Clear slate for Chinese */
+  --text-primary: #121316; /* Crisp deep ink for English & Chinese */
+  --text-secondary: #2b303c; /* Deep focused slate */
   --text-muted: #7e8594;
   
   --accent: #b91c1c; /* Atlantic Crimson */
@@ -58,7 +59,7 @@ body.theme-sepia {
   --bg-glass-card: rgba(253, 248, 235, 0.96);
   --bg-hover: #e3d5b4;
   --text-primary: #241c16;
-  --text-secondary: #5a4c3e;
+  --text-secondary: #3e3226;
   --text-muted: #968878;
   --accent: #9a2b16;
   --accent-hover: #7c2211;
@@ -78,7 +79,7 @@ body.theme-beach {
   --bg-glass-card: rgba(255, 255, 255, 0.96);
   --bg-hover: #d5e9ed;
   --text-primary: #102a36; /* Deep ocean navy ink */
-  --text-secondary: #3b5f6d; /* Coastal sea mist slate */
+  --text-secondary: #244654; /* Coastal sea mist slate */
   --text-muted: #7296a4;
   --accent: #0284c7; /* Vibrant Azure Blue */
   --accent-hover: #0369a1;
@@ -98,7 +99,7 @@ body.theme-academic {
   --bg-glass-card: rgba(255, 255, 255, 0.96);
   --bg-hover: #d5deea;
   --text-primary: #182232; /* Serious Oxford navy */
-  --text-secondary: #475569; /* Academic slate */
+  --text-secondary: #334155; /* Academic slate */
   --text-muted: #64748b;
   --accent: #2563eb; /* Royal Academic Blue */
   --accent-hover: #1d4ed8;
@@ -118,7 +119,7 @@ body.theme-forest {
   --bg-glass-card: rgba(255, 255, 255, 0.96);
   --bg-hover: #d4e5d4;
   --text-primary: #16291a; /* Forest pine ink */
-  --text-secondary: #3f5e44; /* Botanical moss slate */
+  --text-secondary: #29442e; /* Botanical moss slate */
   --text-muted: #6f8c75;
   --accent: #15803d; /* Botanical Emerald Green */
   --accent-hover: #166534;
@@ -135,11 +136,11 @@ body.theme-dark {
   --bg-card: #191c25;
   --bg-card-warm: #141720; /* Deep soothing graphite, zero glare */
   --bg-glass: rgba(16, 18, 23, 0.95);
-  --bg-glass-card: rgba(255, 255, 255, 0.96);
+  --bg-glass-card: rgba(25, 28, 37, 0.96);
   --bg-hover: #222631;
   --text-primary: #f0f2f8;
-  --text-secondary: #a2a9ba;
-  --text-muted: #62687a;
+  --text-secondary: #cbd5e1;
+  --text-muted: #788296;
   --accent: #ef4444;
   --accent-hover: #f87171;
   --accent-gold: #f59e0b;
@@ -1129,7 +1130,7 @@ body.font-mode-serif {
 }
 
 /* ==========================================================================
-   3. READER VIEWPORT — DESKTOP HERO 24PX & TEX KNUTH-PLASS JUSTIFICATION
+   3. READER VIEWPORT — OPTICAL WEIGHT HARMONY & DUAL ALIGNMENT MODES
    ========================================================================== */
 .reader-viewport {
   flex: 1 1 0;
@@ -1291,12 +1292,6 @@ body.view-split .image-column {
   50% { border-color: rgba(201, 138, 44, 0.4); }
 }
 
-/* 
-   DESKTOP MASTER HERO TYPOGRAPHY:
-   - English: Grand 24px with 1.85 line height
-   - Chinese: 20.5px
-   - Dual-engine Syllable Hyphenation with Razor-Flat Justified Two-Sided Alignment
-*/
 /* === Alignment & Typographic Modes === */
 body.align-mode-flush .segment-paragraph .en-text,
 body.align-mode-flush .segment-byline .en-text,
@@ -1317,11 +1312,16 @@ body.align-mode-justify .segment-h4 .en-text {
   text-justify: inter-word !important;
 }
 
+/* 
+   DESKTOP MASTER HERO TYPOGRAPHY:
+   - English: Grand 24px with 1.85 line height, font-weight: 400 (Pure Regular, unbolded)
+   - Chinese: 20.5px with font-weight: 400 and crisp deep ink color
+*/
 .segment-paragraph .en-text {
   font-family: var(--font-screen-en);
   font-size: 24px; /* Grand 24px Hero English scale */
   color: var(--text-primary);
-  font-weight: 450;
+  font-weight: 400; /* Regular unbolded weight for perfect natural harmony */
   line-height: 1.85;
   margin-bottom: 4px;
   text-align: left;
@@ -1350,18 +1350,18 @@ body.align-mode-justify .segment-h4 .en-text {
   box-sizing: border-box;
 }
 
-/* Companion Chinese Translation (20.5px on desktop) */
+/* Companion Chinese Translation (20.5px on desktop, deep ink text-primary) */
 .segment-paragraph .zh-text-card {
   font-family: var(--font-screen-zh);
   background: transparent;
   border: none;
   border-left: none;
   padding: 6px 16px 6px 16px;
-  color: var(--text-secondary);
+  color: var(--text-primary); /* Deep ink for 100% optical weight balance */
   line-height: 1.85;
-  font-size: 20.5px; /* Grand companion Chinese */
+  font-size: 20.5px;
   margin-top: 2px;
-  font-weight: 400;
+  font-weight: 400; /* Regular 400 */
   text-align: justify;
   text-justify: inter-ideograph;
   text-wrap: pretty;
@@ -1387,13 +1387,14 @@ body.align-mode-justify .segment-h4 .en-text {
   font-family: var(--font-screen-en);
   font-style: italic;
   font-size: 19px;
+  font-weight: 400;
   color: var(--text-muted);
   background: var(--bg-hover);
   border: 0.5px solid var(--border-subtle);
   border-radius: 7px;
   padding: 10px 18px;
   box-sizing: border-box;
-  text-align: justify;
+  text-align: left;
   text-wrap: pretty;
   hyphens: auto;
   -webkit-hyphens: auto;
@@ -1406,6 +1407,7 @@ body.align-mode-justify .segment-h4 .en-text {
   border: none;
   padding: 5px 18px;
   font-size: 17px;
+  font-weight: 400;
   color: var(--text-muted);
   box-sizing: border-box;
 }
@@ -1439,7 +1441,8 @@ body.align-mode-justify .segment-h4 .en-text {
   border: none;
   padding: 8px 24px;
   font-size: 19px;
-  color: var(--text-secondary);
+  font-weight: 400;
+  color: var(--text-primary);
   box-sizing: border-box;
 }
 
@@ -1504,7 +1507,7 @@ body.align-mode-justify .segment-h4 .en-text {
 .segment-h3 .zh-text-card {
   font-family: var(--font-screen-zh);
   font-size: 21px;
-  color: var(--text-secondary);
+  color: var(--text-primary);
   font-weight: 600;
   margin-top: 3px;
   border: none;
@@ -1531,7 +1534,7 @@ body.align-mode-justify .segment-h4 .en-text {
 .segment-h4 .zh-text-card {
   font-family: var(--font-screen-zh);
   font-size: 18px;
-  color: var(--text-secondary);
+  color: var(--text-primary);
   margin-top: 2px;
   border: none;
   padding: 5px 12px;
@@ -1699,18 +1702,19 @@ body.view-zh-only .en-text {
   }
 
   .segment-paragraph .en-text {
-    font-size: 18px;
+    font-size: 17.5px;
+    font-weight: 400;
     padding: 14px 18px;
     line-height: 1.76;
-    text-align: justify;
+    text-align: left;
     text-wrap: pretty;
-    hyphens: auto;
-    -webkit-hyphens: auto;
     hyphenate-limit-chars: 4 2 2;
   }
 
   .segment-paragraph .zh-text-card {
     font-size: 16.5px;
+    font-weight: 400;
+    color: var(--text-primary);
     padding: 5px 10px;
     line-height: 1.76;
   }
@@ -1864,7 +1868,7 @@ body.view-zh-only .en-text {
   }
 
   /* Mobile Phone Scale:
-     - 1:1 Equal Font Size: English (15px) == Chinese (15px)
+     - Optical Equality: English 14.5px (font-weight: 400) == Chinese 15.0px (font-weight: 400, deep ink)
      - TeX Knuth-Plass Syllable-Injected Justification (inter-word + 3 2 2 threshold)
      - 100% Equal Word Spacing with Zero Empty Voids
      - Top clearance guarantee: no obstruction from sticky header
@@ -1887,12 +1891,13 @@ body.view-zh-only .en-text {
   }
 
   .segment-paragraph .en-text {
-    font-size: 15px; /* Mobile equal size */
-    padding: 11px 13px;
-    line-height: 1.65;
+    font-size: 14.5px; /* Optically equal to 15px Chinese */
+    font-weight: 400; /* Regular 400 without bold stroke */
+    color: var(--text-primary);
+    padding: 10px 12px;
+    line-height: 1.68;
     border-radius: 6px;
-    text-align: justify;
-    text-justify: inter-word;
+    text-align: left;
     text-wrap: pretty;
     -webkit-text-wrap: pretty;
     hyphens: auto;
@@ -1901,52 +1906,61 @@ body.view-zh-only .en-text {
     hyphenate-limit-chars: 3 2 2;
     -webkit-hyphenate-limit-chars: 3 2 2;
     hyphenate-limit-lines: 4;
-    letter-spacing: -0.004em;
-    word-spacing: 0.008em;
+    letter-spacing: 0;
+    word-spacing: normal;
     overflow-wrap: break-word;
     word-break: normal;
   }
 
   .segment-paragraph .zh-text-card {
-    font-size: 15px; /* Mobile equal size */
+    font-size: 15.0px; /* Optically equal to 14.5px English */
+    font-weight: 400; /* Regular 400 */
+    color: var(--text-primary); /* Deep crisp ink */
     padding: 4px 6px;
-    line-height: 1.65;
+    line-height: 1.68;
     text-align: justify;
     text-justify: inter-ideograph;
     text-wrap: pretty;
   }
 
   .segment-h3 .en-text {
-    font-size: 17px;
+    font-size: 16.5px;
+    font-weight: 700;
     padding: 7px 9px;
     text-align: justify;
     text-wrap: balance;
   }
 
   .segment-h3 .zh-text-card {
-    font-size: 17px; /* 1:1 equal */
+    font-size: 16.5px; /* 1:1 equal */
+    font-weight: 600;
+    color: var(--text-primary);
     padding: 4px 6px;
   }
 
   .segment-h4 .en-text {
-    font-size: 15px;
+    font-size: 14.5px;
+    font-weight: 600;
     padding: 5px 7px;
     text-align: justify;
   }
 
   .segment-h4 .zh-text-card {
-    font-size: 15px; /* 1:1 equal */
+    font-size: 14.5px; /* 1:1 equal */
+    font-weight: 400;
+    color: var(--text-primary);
     padding: 3px 6px;
   }
 
   .segment-quote .en-text {
-    font-size: 15.5px;
+    font-size: 15.0px;
     padding: 7px 10px;
     text-align: justify;
   }
 
   .segment-quote .zh-text-card {
-    font-size: 15.5px; /* 1:1 equal */
+    font-size: 15.0px; /* 1:1 equal */
+    color: var(--text-primary);
     padding: 4px 8px;
   }
 
