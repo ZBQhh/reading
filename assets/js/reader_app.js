@@ -1143,6 +1143,79 @@
   }
 
   // ==================================================================
+  // 我的高亮（全局回顾清单——毒舌 7.2「读完留不住」补完：读数 ≠ 摆设）
+  // ==================================================================
+  function renderHighlightsList() {
+    const listEl = els.highlightsList;
+    const countEl = els.highlightsCount;
+    if (!listEl) return;
+    const list = loadHighlights();
+    if (countEl) countEl.textContent = list.length + ' 条';
+    listEl.innerHTML = '';
+    if (list.length === 0) {
+      listEl.innerHTML = '<div class="wordbook-empty-hint">🔖 阅读中选中英文文本 → 点「🔖 高亮」即可收藏；高亮会在这里回顾</div>';
+      return;
+    }
+    const frag = document.createDocumentFragment();
+    list.slice().reverse().forEach(function (h) {
+      const item = document.createElement('div');
+      item.className = 'wordbook-item';
+      item.dataset.i = String(h.ts);
+      item.setAttribute('role', 'button');
+      item.tabIndex = 0;
+      const issueMeta = allIssues[h.issue] || { displayName: h.issue };
+      item.innerHTML =
+        '<div class="wordbook-item-top">' +
+        '<span class="wordbook-word">' + escHtml(h.text.slice(0, 60)) + (h.text.length > 60 ? '…' : '') + '</span>' +
+        '<span class="wordbook-page-badge">' + escHtml((issueMeta.displayName || '').slice(-6)) + ' · P' + h.page + '</span>' +
+        '<button class="wordbook-del-btn" data-del-highlight="' + h.ts + '" title="删除此高亮">✕</button></div>' +
+        '<div class="wordbook-context">' + escHtml(String(h.text || '').slice(0, 160)) + '</div>';
+      item.addEventListener('click', function () {
+        const onPortal = !els.libraryPortal || !els.libraryPortal.classList.contains('hidden');
+        if (onPortal || h.issue !== currentIssueId) enterReaderRoom(h.issue, h.page);
+        else jumpToPage(h.page);
+        if (els.highlightsModal) els.highlightsModal.classList.remove('active');
+      });
+      frag.appendChild(item);
+    });
+    listEl.appendChild(frag);
+  }
+  /** 弹窗内删除高亮（按 ts 定位） */
+  function removeHighlightByTs(ts) {
+    const n = Number(ts);
+    saveHighlights(loadHighlights().filter(function (h) { return h.ts !== n; }));
+    renderAllHighlightsCounts();
+    renderHighlightsList();
+    toast('🗑️ 已删除该高亮');
+  }
+  function clearHighlightsAll() {
+    confirmDialog({
+      title: '清空全部高亮？',
+      message: '将删除全部期刊的 ' + loadHighlights().length + ' 条高亮，此操作不可撤销。',
+      okText: '清空',
+      danger: true,
+    }).then(function (ok) {
+      if (ok) { saveHighlights([]); renderHighlightsList(); toast('🗑️ 高亮已清空'); }
+    });
+  }
+  function toggleHighlightsModal() {
+    if (!els.highlightsModal) return;
+    const active = els.highlightsModal.classList.toggle('active');
+    if (active) { renderHighlightsList(); }
+  }
+  /** 门户首页「我的数据」计数徽标（生词/高亮/书签） */
+  function renderAllHighlightsCounts() {
+    const hls = loadHighlights().length;
+    if (els.portalHighlightsBtn) els.portalHighlightsBtn.innerHTML = '🔖 我的高亮 <span class="portal-count">' + hls + '</span>';
+    if (els.portalWordbookBtn) els.portalWordbookBtn.innerHTML = '📖 生词本 <span class="portal-count">' + loadWordbook().length + '</span>';
+    if (els.portalBookmarksBtn) {
+      let total = 0;
+      Object.keys(allIssues).forEach(function (id) { total += readJson(LS.bookmarks + id, []).length; });
+      els.portalBookmarksBtn.innerHTML = '🔖 我的书签 <span class="portal-count">' + total + '</span>';
+    }
+  }
+
+  // ==================================================================
   // 阅读历史
   // ==================================================================
   function getHistory() { return readJson(LS.history, []); }
@@ -1370,6 +1443,7 @@
       const sb = els.appSidebar;
       if (els.shortcutsModal && els.shortcutsModal.classList.contains('active')) { els.shortcutsModal.classList.remove('active'); return; }
       if (els.wordbookModal && els.wordbookModal.classList.contains('active')) { els.wordbookModal.classList.remove('active'); return; }
+      if (els.highlightsModal && els.highlightsModal.classList.contains('active')) { els.highlightsModal.classList.remove('active'); return; }
       if (els.lightboxModal && els.lightboxModal.classList.contains('active')) { els.lightboxModal.classList.remove('active'); return; }
       if (els.settingsPopover && els.settingsPopover.classList.contains('active')) { toggleSettingsPopover(false); return; }
       if (sb && !sb.classList.contains('collapsed')) { sb.classList.add('collapsed'); toast('📋 目录已收起'); }
@@ -1722,6 +1796,39 @@
       document.body.appendChild(input);
       input.click();
     });
+
+    // 我的高亮弹窗（全局回顾 + 删除 + 导出 + 清空）
+    bindOne('portalHighlightsBtn', toggleHighlightsModal);
+    bindOne('highlightsExportBtn', exportHighlightsMd);
+    bindOne('highlightsClearBtn', clearHighlightsAll);
+    if (els.highlightsCloseBtn) els.highlightsCloseBtn.addEventListener('click', toggleHighlightsModal);
+    if (els.highlightsModal) els.highlightsModal.addEventListener('click', function (e) {
+      if (e.target === els.highlightsModal) els.highlightsModal.classList.remove('active');
+    });
+    if (els.highlightsList) els.highlightsList.addEventListener('click', function (e) {
+      if (e.target.closest('.wordbook-del-btn')) {
+        e.stopPropagation();
+        const ts = e.target.closest('.wordbook-del-btn').dataset.delHighlight;
+        if (ts !== undefined) removeHighlightByTs(ts);
+      }
+    });
+
+    // 门户「我的数据」：生词本 / 高亮 / 书签入口
+    bindOne('portalWordbookBtn', toggleWordbookModal);
+    bindOne('portalHighlightsBtn', toggleHighlightsModal);
+    bindOne('portalBookmarksBtn', function () {
+      const portalVisible = els.libraryPortal && !els.libraryPortal.classList.contains('hidden');
+      if (portalVisible) enterReaderRoom(currentIssueId, currentPage);
+      if (els.appSidebar) els.appSidebar.classList.remove('collapsed');
+      $$('.tab-btn').forEach(function (b) {
+        const on = b.dataset.tab === 'bookmarks';
+        b.classList.toggle('active', on);
+        const pane = $('tab-' + b.dataset.tab);
+        if (pane) pane.classList.toggle('active', on);
+      });
+      renderBookmarksTab();
+    });
+    renderAllHighlightsCounts();
   }
 
   function bindOne(id, fn) {
@@ -1792,6 +1899,14 @@
     wordbookOpenBtn: 'wordbook-open-btn',
     wordbookExportBtn: 'wordbook-export-btn',
     wordbookClearBtn: 'wordbook-clear-btn',
+    highlightsModal: 'highlights-modal',
+    highlightsList: 'highlights-list',
+    highlightsCount: 'highlights-count',
+    highlightsClearBtn: 'highlights-clear-btn',
+    highlightsExportBtn: 'highlights-export-btn',
+    portalWordbookBtn: 'portal-wordbook-btn',
+    portalHighlightsBtn: 'portal-highlights-btn',
+    portalBookmarksBtn: 'portal-bookmarks-btn',
     imageInfoTag: 'image-info-tag',
     quickJumpInput: 'quick-jump-num',
     shortcutsVersion: 'shortcuts-version',
@@ -1800,6 +1915,7 @@
   els.readerViewport = document.querySelector('.reader-viewport');
   els.closeShortcutsBtn = document.querySelector('.close-shortcuts-btn');
   els.wordbookCloseBtn = document.querySelector('.close-wordbook-btn');
+  els.highlightsCloseBtn = document.querySelector('.close-highlights-btn');
 
   // ---------------------------------------------------------------- 数据增强（毒舌 5.1：HTTP 下 fetch 增量刷新，离线 file:// 仍走内联兜底）
   function upgradeOnlineData() {

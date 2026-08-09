@@ -221,6 +221,10 @@ step('7.2-wordbook: add/remove/clear/export/speak wired', src.includes('function
 step('7.2-wordbook: wordbook modal in html', html1.includes('id="wordbook-modal"') && html1.includes('wordbook-open-btn'));
 step('7.2-sync: data export/import wired in JS', src.includes('function exportLocalDataJson') && src.includes('function importLocalData') && src.includes('collectLocalData'));
 step('7.2-sync: backup/restore buttons in html', html1.includes('data-sync-export-btn') && html1.includes('data-sync-import-btn'));
+step('7.3-portal: data entries (wordbook/highlights/bookmarks) on homepage', html1.includes('portal-wordbook-btn') && html1.includes('portal-highlights-btn') && html1.includes('portal-bookmarks-btn'));
+step('7.3-portal: highlights review modal + render', src.includes('function renderHighlightsList') && src.includes('highlights-modal') && src.includes('toggleHighlightsModal'));
+step('7.3-theme: en-card tint per-theme variable', cssSrc.includes('--en-card-tint'));
+step('7.3-theme: en-text gradient uses en-card-tint', cssSrc.includes('var(--en-card-tint)'));
 process.exit(ok ? 0 : 1);
 """
 probe = probe.replace('__JSPATH__', os.path.abspath(js_path).replace('\\', '/'))

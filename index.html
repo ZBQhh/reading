@@ -28,6 +28,9 @@
           <span>从封面开始 (P1)</span>
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
         </button>
+        <button class="shelf-enter-btn portal-data-btn" id="portal-wordbook-btn" title="回顾收藏的生词（双击英文单词即可收藏）"><span>📖 生词本</span></button>
+        <button class="shelf-enter-btn portal-data-btn" id="portal-highlights-btn" title="回顾已收藏的高亮选段"><span>🔖 我的高亮</span></button>
+        <button class="shelf-enter-btn portal-data-btn" id="portal-bookmarks-btn" title="回顾收藏的书签页"><span>🗂️ 书签</span></button>
       </div>
     </header>
 
@@ -446,6 +449,22 @@
       </div>
       <div id="wordbook-list" class="wordbook-list"></div>
       <div class="wordbook-tip">💡 阅读中双击选中的英文单词 → 点「📖 生词」即可收藏；点击词条可跳回原页复习；🔊 可在线发音。</div>
+    </div>
+  </div>
+
+  <!-- 我的高亮弹窗（毒舌 7.2：读完留得住——全局回顾 + 删除 + 导出） -->
+  <div id="highlights-modal" class="shortcuts-modal">
+    <div class="wordbook-card">
+      <div class="shortcuts-header">
+        <h3>🔖 我的高亮 <span id="highlights-count" class="wordbook-count"></span></h3>
+        <button class="close-highlights-btn close-shortcuts-btn">&times;</button>
+      </div>
+      <div class="wordbook-toolbar">
+        <button id="highlights-export-btn" class="wordbook-pill" title="导出全部高亮 Markdown">📤 导出</button>
+        <button id="highlights-clear-btn" class="wordbook-pill danger" title="清空全部高亮">🗑️ 清空</button>
+      </div>
+      <div id="highlights-list" class="wordbook-list"></div>
+      <div class="wordbook-tip">💡 阅读中选中英文文本 → 点「🔖 高亮」即可收藏；点击词条可跳回原页回顾。</div>
     </div>
   </div>
 

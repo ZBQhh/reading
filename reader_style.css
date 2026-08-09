@@ -115,10 +115,12 @@ body.theme-light {
   --accent: #b3802f;
   --accent-gold: #c89a4a;
   --accent-soft: rgba(179, 128, 47, 0.14);
-  --danger: #b3372d;
-  --glass: rgba(255, 255, 255, 0.72);
-  --on-accent: #ffffff;
-}
+--danger: #b3372d;
+   --glass: rgba(255, 255, 255, 0.72);
+   --on-accent: #ffffff;
+   /* 英文主卡专属色调（随主题冷暖自动适配，避免金色渐变单调跳色） */
+   --en-card-tint: #c89a4a;
+ }
 
 /* S — 羊皮纸 */
 body.theme-sepia {
@@ -134,10 +136,12 @@ body.theme-sepia {
   --text-muted: #a2926f;
   --accent: #9c6b2b;
   --accent-gold: #b07f38;
-  --accent-soft: rgba(156, 107, 43, 0.14);
-  --danger: #a44a32;
-  --on-accent: #ffffff;
-}
+--accent-soft: rgba(156, 107, 43, 0.14);
+   --danger: #a44a32;
+   --on-accent: #ffffff;
+   /* 羊皮纸主题：暖棕书写感 */
+   --en-card-tint: #a97f4b;
+ }
 
 /* S — 阳光海滩 */
 body.theme-beach {
@@ -153,10 +157,12 @@ body.theme-beach {
   --text-muted: #7c9aac;
   --accent: #2a7f9e;
   --accent-gold: #d9a34a;
-  --accent-soft: rgba(42, 127, 158, 0.14);
-  --danger: #b23a38;
-  --on-accent: #ffffff;
-}
+--accent-soft: rgba(42, 127, 158, 0.14);
+   --danger: #b23a38;
+   --on-accent: #ffffff;
+   /* 海滩主题：海雾蓝白 */
+   --en-card-tint: #7fb2cc;
+ }
 
 /* A — 学术冰川 */
 body.theme-academic {
@@ -172,10 +178,12 @@ body.theme-academic {
   --text-muted: #7e8ea2;
   --accent: #4263a1;
   --accent-gold: #a88340;
-  --accent-soft: rgba(66, 99, 161, 0.13);
-  --danger: #b0433a;
-  --on-accent: #ffffff;
-}
+--accent-soft: rgba(66, 99, 161, 0.13);
+   --danger: #b0433a;
+   --on-accent: #ffffff;
+   /* 学术主题：冷灰蓝调 */
+   --en-card-tint: #8fa6c8;
+ }
 
 /* F — 森林薄荷 */
 body.theme-forest {
@@ -191,10 +199,12 @@ body.theme-forest {
   --text-muted: #7e9a86;
   --accent: #3d7a4f;
   --accent-gold: #b08a3e;
-  --accent-soft: rgba(61, 122, 79, 0.14);
-  --danger: #b04538;
-  --on-accent: #ffffff;
-}
+--accent-soft: rgba(61, 122, 79, 0.14);
+   --danger: #b04538;
+   --on-accent: #ffffff;
+   /* 森林主题：薄荷绿调 */
+   --en-card-tint: #9dbd9a;
+ }
 
 /* D — 极夜黑 */
 body.theme-dark {
@@ -210,10 +220,12 @@ body.theme-dark {
   --text-muted: #6f6f68;
   --accent: #c9a559;
   --accent-gold: #d9b96f;
-  --accent-soft: rgba(201, 165, 89, 0.16);
-  --danger: #d45a4e;
-  --on-accent: #12130f;
-}
+--accent-soft: rgba(201, 165, 89, 0.16);
+   --danger: #d45a4e;
+   --on-accent: #12130f;
+   /* 极夜主题：暗金微光 */
+   --en-card-tint: #8a7a55;
+ }
 
 /* ==========
    3. 页面框架
@@ -887,7 +899,7 @@ body.view-split .image-column { display: flex; }
 .segment-h4 { border-left: 3px solid var(--accent-soft); padding: 6px 12px; }
 .segment-caption { background: transparent; border: none; box-shadow: none; }
 
-/* 羊皮纸质感英文主卡：暖色浅底渐变 + 高光内描边，与透明中文辅读形成双卡层级 */
+/* 羊皮纸质感英文主卡：随主题冷暖自适应底色 + 高光内描边，与透明中文辅读形成双卡层级 */
 .en-text {
   font-family: var(--font-sans);
   font-size: var(--reader-font-scale);
@@ -907,7 +919,7 @@ body.view-split .image-column { display: flex; }
   border: 1px solid var(--border-soft);
   border-radius: var(--radius-md);
   background:
-    linear-gradient(180deg, color-mix(in srgb, var(--bg-card) 90%, var(--accent-gold) 10%), var(--bg-card) 52%);
+    linear-gradient(180deg, color-mix(in srgb, var(--bg-card) 88%, var(--en-card-tint) 12%), var(--bg-card) 58%);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45), var(--shadow-sm);
   transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
 }
@@ -1076,6 +1088,22 @@ body.font-mode-serif .zh-text-card { font-family: var(--font-serif-zh); }
 }
 .portal-brand p { margin-top: 3px; font-size: 13px; color: var(--text-muted); }
 .portal-controls { display: flex; gap: 8px; flex-wrap: wrap; }
+.shelf-enter-btn.portal-data-btn { border-style: dashed; }
+.portal-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  margin-left: 5px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: var(--on-accent, #fff);
+  font-size: 10.5px;
+  font-weight: 800;
+  line-height: 1;
+}
 
 .shelf-enter-btn {
   display: inline-flex;

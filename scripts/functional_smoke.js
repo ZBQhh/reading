@@ -179,7 +179,44 @@ function check(name, cond, extra) {
   } catch (e) { syncWhy = e.message; }
   check('备份 JSON 结构完整（含书签/高亮/生词）', syncOk, syncWhy);
 
-  // TODO: import test covered by user-level file picker — structural round-trip validated above
+  // --- TEST 7: 首页门户「我的数据」入口——从期刊馆直接打开高亮清单回顾 ---
+  await page.keyboard.press('KeyH'); // 返回期刊馆
+  await page.waitForTimeout(800);
+  const portalEntry = await page.evaluate(() => {
+    const wbBtn = document.getElementById('portal-wordbook-btn');
+    const hlBtn = document.getElementById('portal-highlights-btn');
+    const bmBtn = document.getElementById('portal-bookmarks-btn');
+    const portalVisible = document.getElementById('library-portal-view') && !document.getElementById('library-portal-view').classList.contains('hidden');
+    return {
+      portalVisible,
+      wbVisible: wbBtn && getComputedStyle(wbBtn).display !== 'none',
+      hlVisible: hlBtn && getComputedStyle(hlBtn).display !== 'none',
+      bmVisible: bmBtn && getComputedStyle(bmBtn).display !== 'none',
+    };
+  });
+  check('首页门户显示三个「我的数据」入口', portalEntry.portalVisible && portalEntry.wbVisible && portalEntry.hlVisible && portalEntry.bmVisible,
+    JSON.stringify(portalEntry));
+
+  await page.click('#portal-wordbook-btn');
+  await page.waitForTimeout(400);
+  const wbFromPortal = await page.evaluate(() => {
+    const m = document.getElementById('wordbook-modal');
+    const active = m && m.classList.contains('active');
+    const items = document.querySelectorAll('#wordbook-list .wordbook-item').length;
+    return { active, items };
+  });
+  check('首页点击「📖 生词本」打开弹窗并渲染', wbFromPortal.active === true && wbFromPortal.items > 0, 'active=' + wbFromPortal.active + ' items=' + wbFromPortal.items + '（含此前 TEST 5 收藏的词）');
+  await page.keyboard.press('Escape');
+
+  const hlOpenFromPortal = await page.evaluate(() => {
+    document.getElementById('portal-highlights-btn').click();
+    const m = document.getElementById('highlights-modal');
+    const active = m && m.classList.contains('active');
+    const items = document.querySelectorAll('#highlights-list .wordbook-item').length;
+    return { active, items };
+  });
+  check('首页点击「🔖 我的高亮」打开回顾清单', hlOpenFromPortal.active === true && hlOpenFromPortal.items > 0, 'active=' + hlOpenFromPortal.active + ' items=' + hlOpenFromPortal.items + '（含此前 TEST 4 高亮）');
+  await page.keyboard.press('Escape');
 
   check('浏览器侧无未捕获 JS 异常', errors.length === 0, errors.join(' | ').slice(0, 200));
 
