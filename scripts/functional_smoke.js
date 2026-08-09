@@ -112,6 +112,48 @@ function check(name, cond, extra) {
   });
   check('选区高亮写入 localStorage 并渲染 mark', hlResult.ok === true, hlResult.why);
 
+  // --- TEST 5: 生词本（毒舌 7.2）——模拟双击选中单词 → 📖 生词 → localStorage + 弹窗渲染 ---
+  const wbResult = await page.evaluate(() => {
+    const body = document.getElementById('article-body');
+    if (!body) return { ok: false, why: 'no article-body' };
+    let best = null;
+    let bestLen = 0;
+    body.querySelectorAll('.en-text').forEach((enText) => {
+      enText.childNodes.forEach((tn) => {
+        if (tn.nodeType !== 3) return;
+        const l = (tn.nodeValue || '').length;
+        if (l > bestLen) { bestLen = l; best = tn; }
+      });
+    });
+    if (!best || bestLen < 4) return { ok: false, why: 'no long text node, bestLen=' + bestLen };
+    const text = best.nodeValue;
+    const m = text.match(/[A-Za-z][A-Za-z'-]{2,}/);
+    if (!m || m.index === undefined) return { ok: false, why: 'no word found in text' };
+    const rg = document.createRange();
+    rg.setStart(best, m.index);
+    rg.setEnd(best, m.index + m[0].length);
+    const sel = window.getSelection();
+    sel.removeAllRanges();
+    sel.addRange(rg);
+    document.dispatchEvent(new MouseEvent('mouseup', { bubbles: true }));
+    const wbBtn = document.querySelector('.wb-float-btn');
+    if (wbBtn) wbBtn.click();
+    const saved = JSON.parse(localStorage.getItem('atlantic_reader_wordbook') || '[]');
+    const hits = saved.filter((x) => x.word === m[0].toLowerCase()).length;
+    return { ok: saved.length > 0 && hits > 0, word: m[0], why: 'words=' + saved.length + ' match=' + hits };
+  });
+  check('单选单词点「📖 生词」写入 localStorage', wbResult.ok === true, wbResult.why);
+
+  await page.keyboard.press('KeyL');
+  await page.waitForTimeout(400);
+  const wbOpen = await page.evaluate(() => {
+    const m = document.getElementById('wordbook-modal');
+    const items = document.querySelectorAll('#wordbook-list .wordbook-item').length;
+    return { active: m && m.classList.contains('active'), items };
+  });
+  check('L 键打开生词本弹窗且渲染词条', wbOpen.active === true, 'active=' + wbOpen.active + ' items=' + wbOpen.items);
+  await page.keyboard.press('Escape');
+
   check('浏览器侧无未捕获 JS 异常', errors.length === 0, errors.join(' | ').slice(0, 200));
 
   await browser.close();

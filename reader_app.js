@@ -54,6 +54,7 @@
     align: 'atlantic_reader_align_mode',
     fontScale: 'atlantic_reader_font_scale',
     highlights: 'atlantic_reader_highlights',
+    wordbook: 'atlantic_reader_wordbook',
   };
   const VIEW_MODES = ['interlinear', 'split', 'en-only', 'zh-only'];
   const THEMES = ['light', 'sepia', 'beach', 'academic', 'forest', 'dark'];
@@ -65,6 +66,7 @@
     JUMP_LOCK_MS: 60,
     MIN_SPEECH_SEG_CHARS: 5,
     SWIPE_THRESHOLD_PX: 60,
+    WORDBOOK_MAX: 500,
   };
   const VERSION = '2.1.0';
   const allIssues = window.ALL_ISSUES || {};
@@ -951,6 +953,136 @@
   }
 
   // ==================================================================
+  // 生词本（毒舌 7.2：双语阅读器的天作之合——双击选词 → 收藏 → 回顾）
+  // ==================================================================
+  function loadWordbook() {
+    try { return JSON.parse(localStorage.getItem(LS.wordbook) || '[]'); } catch (e) { return []; }
+  }
+  function saveWordbook(list) {
+    try { localStorage.setItem(LS.wordbook, JSON.stringify(list.slice(0, HELD.WORDBOOK_MAX))); } catch (e) { /* 配额满时静默 */ }
+  }
+  /** 取当前页含该词的 .en-text 片段作为语境（上限 120 字符） */
+  function wordContext(word) {
+    const pageObj = data[currentPage - 1];
+    if (!pageObj || !pageObj.segments) return '';
+    const lower = word.toLowerCase();
+    for (let i = 0; i < pageObj.segments.length; i++) {
+      const en = pageObj.segments[i].en;
+      if (en && en.toLowerCase().indexOf(lower) >= 0) {
+        const idx = en.toLowerCase().indexOf(lower);
+        const start = Math.max(0, idx - 40);
+        return (start > 0 ? '…' : '') + en.slice(start, idx + word.length + 60) + '…';
+      }
+    }
+    return '';
+  }
+  function addWord(word) {
+    const w = String(word || '').trim().replace(/^[^A-Za-z']+|[^A-Za-z']+$/g, '');
+    if (!w || w.length < 2) return;
+    const lower = w.toLowerCase();
+    let list = loadWordbook().filter(function (x) { return x.word !== lower; });
+    const pageObj = data[currentPage - 1];
+    list.unshift({
+      word: lower,
+      display: w,
+      issue: currentIssueId,
+      page: currentPage,
+      section: (pageObj && pageObj.section) || 'Page ' + currentPage,
+      context: wordContext(w),
+      ts: Date.now(),
+    });
+    saveWordbook(list);
+    renderWordbook();
+    toast('📖 已收藏生词：' + w);
+  }
+  function removeWord(word) {
+    saveWordbook(loadWordbook().filter(function (x) { return x.word !== word; }));
+    renderWordbook();
+    toast('🗑️ 已移出生词本');
+  }
+  function clearWordbook() {
+    confirmDialog({
+      title: '清空生词本？',
+      message: '将删除全部 ' + loadWordbook().length + ' 个收藏生词，此操作不可撤销。',
+      okText: '清空',
+      danger: true,
+    }).then(function (ok) {
+      if (ok) { saveWordbook([]); renderWordbook(); toast('🗑️ 生词本已清空'); }
+    });
+  }
+  function speakWord(word) {
+    if (!window.speechSynthesis) { toast('⚠️ 当前浏览器不支持朗读'); return; }
+    const u = new SpeechSynthesisUtterance(word);
+    u.lang = 'en-US';
+    const rate = readFloat(LS.speed, 1);
+    u.rate = rate > 0 ? rate : 1;
+    const v = pickVoice();
+    if (v) u.voice = v;
+    window.speechSynthesis.cancel();
+    window.speechSynthesis.speak(u);
+  }
+  /** 生词本导出 Markdown（词 + 出处页 + 语境句） */
+  function exportWordbookMd() {
+    const list = loadWordbook();
+    const md = '# 我的生词本（' + list.length + ' 词）\n\n' + (list.length === 0 ? '（暂无生词）' : list.map(function (x) {
+      return '- **' + x.display + '** — P' + x.page + ' (' + escHtml(x.section) + ')' + (x.context ? '\n  > ' + escHtml(x.context) : '');
+    }).join('\n'));
+    const blob = new Blob([md], { type: 'text/markdown;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = 'my-wordbook.md';
+    document.body.appendChild(a); a.click();
+    setTimeout(function () { URL.revokeObjectURL(url); a.remove(); }, 1000);
+    toast('📤 已导出生词本（' + list.length + ' 词）');
+  }
+  /** 渲染生词本列表（弹窗内） */
+  function renderWordbook() {
+    const listEl = els.wordbookList;
+    const countEl = els.wordbookCount;
+    if (!listEl) return;
+    const list = loadWordbook();
+    if (countEl) countEl.textContent = list.length + ' 词';
+    listEl.innerHTML = '';
+    if (list.length === 0) {
+      listEl.innerHTML = '<div class="wordbook-empty-hint">📖 阅读中双击选中的英文单词 → 点「📖 生词」即可收藏</div>';
+      return;
+    }
+    const frag = document.createDocumentFragment();
+    list.forEach(function (x) {
+      const item = document.createElement('div');
+      item.className = 'wordbook-item';
+      item.dataset.word = x.word;
+      item.setAttribute('role', 'button');
+      item.tabIndex = 0;
+      item.innerHTML =
+        '<div class="wordbook-item-top">' +
+        '<span class="wordbook-word">' + escHtml(x.display) + '</span>' +
+        '<span class="wordbook-page-badge">P' + x.page + '</span>' +
+        '<button class="wordbook-speak-btn" data-speak="' + escHtml(x.word) + '" title="朗读发音">🔊</button>' +
+        '<button class="wordbook-del-btn" data-del="' + escHtml(x.word) + '" title="移出生词本">✕</button></div>' +
+        (x.context ? '<div class="wordbook-context">' + escHtml(x.context) + '</div>' : '');
+      item.addEventListener('click', function () {
+        if (x.issue !== currentIssueId) { switchIssue(x.issue); }
+        jumpToPage(x.page);
+        if (els.wordbookModal) els.wordbookModal.classList.remove('active');
+      });
+      frag.appendChild(item);
+    });
+    listEl.appendChild(frag);
+  }
+  function renderWordbookByDelegate(e) {
+    const del = e.target.closest('.wordbook-del-btn');
+    if (del) { e.stopPropagation(); removeWord(del.dataset.del); return; }
+    const spk = e.target.closest('.wordbook-speak-btn');
+    if (spk) { e.stopPropagation(); speakWord(spk.dataset.speak); }
+  }
+  function toggleWordbookModal() {
+    if (!els.wordbookModal) return;
+    const active = els.wordbookModal.classList.toggle('active');
+    if (active) { renderWordbook(); }
+  }
+
+  // ==================================================================
   // 阅读历史
   // ==================================================================
   function getHistory() { return readJson(LS.history, []); }
@@ -1177,6 +1309,7 @@
     else if (code === 'Escape' || key === 'escape') {
       const sb = els.appSidebar;
       if (els.shortcutsModal && els.shortcutsModal.classList.contains('active')) { els.shortcutsModal.classList.remove('active'); return; }
+      if (els.wordbookModal && els.wordbookModal.classList.contains('active')) { els.wordbookModal.classList.remove('active'); return; }
       if (els.lightboxModal && els.lightboxModal.classList.contains('active')) { els.lightboxModal.classList.remove('active'); return; }
       if (els.settingsPopover && els.settingsPopover.classList.contains('active')) { toggleSettingsPopover(false); return; }
       if (sb && !sb.classList.contains('collapsed')) { sb.classList.add('collapsed'); toast('📋 目录已收起'); }
@@ -1186,6 +1319,7 @@
     // 毒舌 2.4：F 直接调函数，不绕按钮模拟点击
     else if (code === 'KeyF' || key === 'f') { e.preventDefault(); toggleFullscreen(); }
     else if (code === 'KeyE' || key === 'e') { e.preventDefault(); exportAllMarkdown(); }
+    else if (code === 'KeyL' || key === 'l') { e.preventDefault(); toggleWordbookModal(); }
     else if (code === 'KeyH' || key === 'h') { e.preventDefault(); openLibraryShelf(); }
 
     // 其余按键原样放行（无死语句 —— 毒舌 6.5）
@@ -1454,13 +1588,15 @@
     if (saved > 0) applyFontScale(saved);
     else applyFontScale(globalFontScale);
 
-    // 选文高亮浮动条（毒舌 7.2）：mouseup 时若选中英文文本，浮现「🔖 高亮」按钮
+    // 选文高亮浮动条（毒舌 7.2）：mouseup 时若选中英文文本，浮现「🔖 高亮」按钮；单选一个英文单词时追加「📖 生词」
     document.addEventListener('mouseup', function (e) {
       let floatBtn = els.hlFloatBtn;
       if (floatBtn) { floatBtn.remove(); els.hlFloatBtn = null; }
+      if (els.wbFloatBtn) { els.wbFloatBtn.remove(); els.wbFloatBtn = null; }
       const sel = window.getSelection();
       if (!sel || sel.isCollapsed || sel.rangeCount === 0) return;
       const rg = sel.getRangeAt(0);
+      const selText = sel.toString().trim();
       let el = rg.startContainer;
       if (el.nodeType === Node.TEXT_NODE) el = el.parentElement;
       if (!el || !els.articleBody || !els.articleBody.contains(el)) { sel.removeAllRanges(); return; }
@@ -1476,12 +1612,41 @@
         ev.stopPropagation();
         captureSelectionHighlight();
         if (els.hlFloatBtn) { els.hlFloatBtn.remove(); els.hlFloatBtn = null; }
+        if (els.wbFloatBtn) { els.wbFloatBtn.remove(); els.wbFloatBtn = null; }
       });
       document.body.appendChild(floatBtn);
       els.hlFloatBtn = floatBtn;
+      const wordMatch = /^[A-Za-z][A-Za-z'-]*$/.test(selText);
+      if (wordMatch) {
+        const wordBtn = document.createElement('button');
+        wordBtn.type = 'button';
+        wordBtn.className = 'wb-float-btn';
+        wordBtn.textContent = '📖 生词';
+        wordBtn.setAttribute('aria-label', '收藏生词');
+        wordBtn.style.top = floatBtn.style.top;
+        wordBtn.style.left = Math.min(window.innerWidth - 62, parseFloat(floatBtn.style.left) + 74) + 'px';
+        wordBtn.addEventListener('click', function (ev) {
+          ev.stopPropagation();
+          addWord(selText);
+          sel.removeAllRanges();
+          if (els.hlFloatBtn) { els.hlFloatBtn.remove(); els.hlFloatBtn = null; }
+        });
+        document.body.appendChild(wordBtn);
+        els.wbFloatBtn = wordBtn;
+      } else if (els.wbFloatBtn) { els.wbFloatBtn.remove(); els.wbFloatBtn = null; }
     });
 
     bindOne('exportAllBtn', exportAllMarkdown);
+
+    // 生词本：开关/清空/导出/列表委托（毒舌 7.2）
+    bindOne('wordbookOpenBtn', toggleWordbookModal);
+    if (els.wordbookExportBtn) els.wordbookExportBtn.addEventListener('click', exportWordbookMd);
+    if (els.wordbookClearBtn) els.wordbookClearBtn.addEventListener('click', clearWordbook);
+    if (els.wordbookCloseBtn) els.wordbookCloseBtn.addEventListener('click', toggleWordbookModal);
+    if (els.wordbookList) els.wordbookList.addEventListener('click', renderWordbookByDelegate);
+    if (els.wordbookModal) els.wordbookModal.addEventListener('click', function (e) {
+      if (e.target === els.wordbookModal) els.wordbookModal.classList.remove('active');
+    });
   }
 
   function bindOne(id, fn) {
@@ -1543,6 +1708,13 @@
     shortcutsOpenBtn: 'shortcuts-open-btn',
     exportAllBtn: 'export-all-btn',
     hlFloatBtn: null,
+    wbFloatBtn: null,
+    wordbookModal: 'wordbook-modal',
+    wordbookList: 'wordbook-list',
+    wordbookCount: 'wordbook-count',
+    wordbookOpenBtn: 'wordbook-open-btn',
+    wordbookExportBtn: 'wordbook-export-btn',
+    wordbookClearBtn: 'wordbook-clear-btn',
     imageInfoTag: 'image-info-tag',
     quickJumpInput: 'quick-jump-num',
     shortcutsVersion: 'shortcuts-version',
@@ -1550,6 +1722,7 @@
   Object.keys(ELS_BY_ID).forEach(function (k) { els[k] = $(ELS_BY_ID[k]); });
   els.readerViewport = document.querySelector('.reader-viewport');
   els.closeShortcutsBtn = document.querySelector('.close-shortcuts-btn');
+  els.wordbookCloseBtn = document.querySelector('.close-wordbook-btn');
 
   // ---------------------------------------------------------------- 数据增强（毒舌 5.1：HTTP 下 fetch 增量刷新，离线 file:// 仍走内联兜底）
   function upgradeOnlineData() {

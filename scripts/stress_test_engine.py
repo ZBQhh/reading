@@ -215,6 +215,10 @@ step('7.4: self-hosted fonts via @font-face', cssSrc.includes("@font-face") && c
 step('7.4: font refs point ../fonts/ (CSS-relative)', cssSrc.includes("url('../fonts/"));
 step('7.4: serif default mode', src.includes("lsGet(LS.font, 'serif')"));
 step('R-11: no Google Fonts anywhere', !cssSrc.includes('fonts.googleapis.com') && !cssSrc.includes('fonts.gstatic.com'));
+step('7.2-wordbook: LS.wordbook key + modal + L shortcut', src.includes("wordbook: 'atlantic_reader_wordbook'") && src.includes('wordbook-modal') && src.includes("code === 'KeyL'"));
+step('7.2-wordbook: wb-float-btn on single-word selection', src.includes('wb-float-btn') && src.includes('wordMatch'));
+step('7.2-wordbook: add/remove/clear/export/speak wired', src.includes('function addWord') && src.includes('function removeWord') && src.includes('function clearWordbook') && src.includes('exportWordbookMd') && src.includes('function speakWord'));
+step('7.2-wordbook: wordbook modal in html', html1.includes('id="wordbook-modal"') && html1.includes('wordbook-open-btn'));
 process.exit(ok ? 0 : 1);
 """
 probe = probe.replace('__JSPATH__', os.path.abspath(js_path).replace('\\', '/'))

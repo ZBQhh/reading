@@ -204,7 +204,11 @@
     <div class="popover-section">
       <div class="popover-controls-row">
         <button id="shortcuts-open-btn" class="popover-pill-btn" title="查看全站快捷键">⌨️ 快捷键速查</button>
+        <button id="wordbook-open-btn" class="popover-pill-btn" title="双语阅读生词本 (L)">📖 生词本</button>
+      </div>
+      <div class="popover-controls-row">
         <button id="fullscreen-btn" class="popover-pill-btn" title="全屏沉浸阅读 (F)">⛶ 全屏沉浸</button>
+        <button class="popover-pill-btn" id="data-sync-export-btn" title="导出全部本地数据（书签/高亮/生词/足迹）为 JSON，用于跨设备备份">📦 数据备份</button>
       </div>
     </div>
   </div>
@@ -416,11 +420,31 @@
           <span class="shortcut-key-badge">E</span>
         </div>
         <div class="shortcut-row">
+          <span>生词本（双击英文单词收藏）</span>
+          <span class="shortcut-key-badge">L</span>
+        </div>
+        <div class="shortcut-row">
           <span>返回期刊馆</span>
           <span class="shortcut-key-badge">Esc / H</span>
         </div>
       </div>
       <div id="shortcuts-version" class="shortcuts-version" style="padding:10px 0 2px; font-size:11px; color:var(--text-muted);"></div>
+    </div>
+  </div>
+
+  <!-- 生词本弹窗（毒舌 7.2：双语阅读器的天作之合） -->
+  <div id="wordbook-modal" class="shortcuts-modal">
+    <div class="wordbook-card">
+      <div class="shortcuts-header">
+        <h3>📖 生词本 <span id="wordbook-count" class="wordbook-count"></span></h3>
+        <button class="close-wordbook-btn close-shortcuts-btn">&times;</button>
+      </div>
+      <div class="wordbook-toolbar">
+        <button id="wordbook-export-btn" class="wordbook-pill" title="导出 Markdown 生词表">📤 导出</button>
+        <button id="wordbook-clear-btn" class="wordbook-pill danger" title="清空全部生词">🗑️ 清空</button>
+      </div>
+      <div id="wordbook-list" class="wordbook-list"></div>
+      <div class="wordbook-tip">💡 阅读中双击选中的英文单词 → 点「📖 生词」即可收藏；点击词条可跳回原页复习；🔊 可在线发音。</div>
     </div>
   </div>
 
