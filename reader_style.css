@@ -220,9 +220,10 @@ body.theme-dark {
    ========== */
 .hidden { display: none; }
 
-/* 期刊馆首页不显示阅读器整套 UI（顶栏/目录侧栏+阅读区/底部导航均为阅读室专用） */
+/* 期刊馆首页不显示阅读器整套 UI（顶栏/目录侧栏+阅读区/底部导航/移动端视图切换均为阅读室专用） */
 .library-portal-view:not(.hidden) ~ .bottom-bar,
 .library-portal-view:not(.hidden) ~ .app-header,
+.library-portal-view:not(.hidden) ~ .mobile-view-bar,
 .library-portal-view:not(.hidden) ~ .main-layout { display: none; }
 
 .library-portal-view {
