@@ -1,0 +1,38 @@
+{
+  "root": true,
+  "env": {
+    "browser": true,
+    "es2020": true
+  },
+  "parserOptions": {
+    "ecmaVersion": 2020,
+    "sourceType": "script"
+  },
+  "rules": {
+    "no-const-assign": "error",
+    "no-var": "error",
+    "prefer-const": "warn",
+    "no-unused-vars": "warn",
+    "eqeqeq": "warn",
+    "no-undefined": "off",
+    "no-undef": "error",
+    "no-dupe-keys": "error",
+    "no-dupe-args": "error",
+    "no-duplicate-case": "error",
+    "no-self-assign": "error",
+    "no-unreachable": "error",
+    "no-extra-semi": "warn",
+    "no-redeclare": "error",
+    "valid-typeof": "error",
+    "no-cond-assign": "error",
+    "no-func-assign": "error"
+  },
+  "overrides": [
+    {
+      "files": ["scripts/*.js"],
+      "env": {
+        "node": true
+      }
+    }
+  ]
+}

@@ -9,6 +9,35 @@
      confirm 默认聚焦安全侧、toast 分级时长、搜索键盘导航、hero 委托、
      速度文案、VERSION 可视化
    ============================================================================ */
+
+/**
+ * @typedef {Object} Segment
+ * @property {string} [type]  段落类型（'para' | 'heading' | 'caption' | ...）
+ * @property {string} [en]    英文原文（1:1 同频排版）
+ * @property {string} [zh]    中文精译伴读
+ */
+
+/**
+ * @typedef {Object} Page
+ * @property {number} pageNumber  页码（1 起）
+ * @property {string} image       原版扫描图路径（PNG；runtime 自动换 WebP）
+ * @property {string} [section]   版面区块名（Cover/Article/VisualArt...）
+ * @property {string} [title]     页面标题
+ * @property {Array<Segment>} segments 页内双语段落序列
+ */
+
+/**
+ * @typedef {Object} Issue
+ * @property {string} id           期号 id（如 '2026-08'）
+ * @property {string} name         显示名（'2026年8月刊'）
+ * @property {string} [vol]        卷期名
+ * @property {string} [pubId]      刊物 id
+ * @property {string} [imageRoot]  图片根目录（默认 'issues/{id}'）
+ * @property {string} [coverImage] 封面图路径
+ * @property {number} totalPages   总页数
+ * @property {Array<Page>} pages   全量页面数据
+ */
+
 (function () {
   'use strict';
 
