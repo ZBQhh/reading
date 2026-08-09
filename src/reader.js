@@ -6,21 +6,32 @@
 import {
   state, els, LS, $, $$, allIssues, escHtml, toast, lsGet, lsSet, readInt, readJson,
   webpUrl, webpSrcset, imgWithWebFallback, preloadAdjacentPages, smoothByPref, toDisplayText,
+  applyIssueAccent,
 } from './core.js';
 import { stopSpeech } from './speech.js';
 import { applyPageHighlights } from './highlight.js';
 import { recordReadingHistory } from './history.js';
 import { announce } from './a11y.js';
+import { getManualArticle } from './manual.js';
+
+// 双源解析：优先 shipped 语料，其次手建文库（同入口、不同数据来源）
+export function resolveIssue(id) {
+  return allIssues[id] || getManualArticle(id) || null;
+}
 
 // ==================================================================
 // 阅读室
 // ==================================================================
 export function enterReaderRoom(issueId, targetPage) {
-  if (allIssues[issueId] && issueId !== state.currentIssueId) {
+  const resolved = resolveIssue(issueId);
+  if (!resolved) { toast('未找到该文章', 'error'); return; }
+  // 手建文章编辑后再次进入时 id 不变，但内容已变，需强制重载；新刊照常重载
+  if (issueId !== state.currentIssueId || resolved.source === 'manual') {
     state.currentIssueId = issueId;
-    state.currentIssueObj = allIssues[issueId];
-    state.data = state.currentIssueObj.pages || [];
+    state.currentIssueObj = resolved;
+    state.data = resolved.pages || [];
     lsSet(LS.issue, state.currentIssueId);
+    applyIssueAccent();
     initTOC();
     renderBookmarksTab();
   }
@@ -52,18 +63,20 @@ export function nextIssueId() {
 }
 
 export function switchIssue(newIssueId) {
-  if (!allIssues[newIssueId] || newIssueId === state.currentIssueId) return;
+  const resolved = resolveIssue(newIssueId);
+  if (!resolved || newIssueId === state.currentIssueId) return;
   state.currentIssueId = newIssueId;
-  state.currentIssueObj = allIssues[newIssueId];
-  state.data = state.currentIssueObj.pages || [];
+  state.currentIssueObj = resolved;
+  state.data = resolved.pages || [];
   lsSet(LS.issue, state.currentIssueId);
+  applyIssueAccent();
   refreshPill();
-  if (els.pageSlider) els.pageSlider.max = state.currentIssueObj.totalPages;
+  if (els.pageSlider) els.pageSlider.max = resolved.totalPages;
   initTOC();
   renderBookmarksTab();
   const last = readInt(lsGet(LS.pagePrefix + state.currentIssueId, '1'), 1);
   loadPage(last);
-  toast('切换至：' + state.currentIssueObj.displayName);
+  toast('切换至：' + resolved.displayName);
 }
 
 // ---------------------------------------------------------------- 书签

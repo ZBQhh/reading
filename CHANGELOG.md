@@ -2,6 +2,17 @@
 
 本项目的历次版本变更记录。格式遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)。
 
+## [2.6.1] - 2026-08-09
+
+### 体验（视觉主题关联 + 单篇文章手动录入系统）
+
+- **英文主卡关联主题色**：`.en-text` 底色由固定白卡改为 `color-mix(白卡 78% + 文章主题色 22%)` 渐变，并加 3px 主题色左条；主题色源从 `--en-card-tint`（固定 12%、三主题皆为纯白）切换为 `--issue-accent`，由 `core.js:applyIssueAccent()` 在 `enterReaderRoom`/`switchIssue`/`boot` 时从 `issue.themeColor` 注入——直接解决「背景和主题没有关联、英文全是白底」
+- **中文真正成框**：`.zh-text-card` 由「透灰浮字」改为浅底圆角框（1px 边框 + 3px 主题色左条 + 内距），双语呈现为「英文主角卡 + 中文辅读框」的双卡层级，呼应「翻译也应放在框中」
+- **单篇文章手动录入系统（自建文库）**：`src/manual.js` 独立于 shipped 语料（`window.ALL_ISSUES` 保持纯净），存 `localStorage`（`atlantic_manual_articles`）；每篇归一化为与 PDF 解析完全相同的 `issue/page/segment{en,zh}` 模型，故 TTS / 高亮 / 生词本 / 书签 / 搜索 / 历史「零改动复用」
+  - 数据模型与入口：`resolveIssue(id) = allIssues[id] || getManualArticle(id)` 双源解析，`switchIssue`/`enterReaderRoom`/`nextIssueId` 同源打开；期刊馆 `renderLibraryShelf` 末尾追加「＋ 新建文章」入口卡片 + 「📝 自建文库」分组，与期刊同入口、样式共用、仅数据来源不同
+  - 编辑器（JS 动态生成弹窗，不触碰被 `build_master_portal.py` 重写的 `index.html`）：标题/作者/来源/标签/主题色 + 英文正文（必填，每行一段）+ 可选中文（1:1 配对，支持纯英文单语）；保存/编辑/删除/导入/导出 JSON；编辑态保留 id 使既有书签高亮继续命中
+  - 事件委托：portal 点击优先拦截 `data-act`（new/edit/export/delete），再走「进入阅读」，避免迷你按钮误触翻页
+
 ## [2.6.0] - 2026-08-09
 
 ### 工程（P2 · 源码拆分与构建期打包）

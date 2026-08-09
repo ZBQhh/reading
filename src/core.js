@@ -233,3 +233,12 @@ export function preloadAdjacentPages(pNum) {
   pre(pNum + 1);
   pre(pNum + 2);
 }
+
+// ---------------------------------------------------------------- 主题色注入
+// 每刊/文章的主题色（issue.themeColor）注入到 --issue-accent，驱动英文主卡与中文
+// 辅读框的染色，使阅读背景与主题关联。无主题色时移除内联值，回退 :root 默认(--accent)。
+export function applyIssueAccent() {
+  const c = (state.currentIssueObj && state.currentIssueObj.themeColor) || null;
+  if (c) document.documentElement.style.setProperty('--issue-accent', c);
+  else document.documentElement.style.removeProperty('--issue-accent');
+}

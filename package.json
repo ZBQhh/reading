@@ -1,7 +1,7 @@
 {
   "name": "atlantic-reader",
   "private": true,
-  "version": "2.6.0",
+  "version": "2.6.1",
   "description": "The Atlantic & Global Journals — Private Bespoke Bilingual Digital Reader",
   "scripts": {
     "build:js": "esbuild src/main.js --bundle --format=iife --target=es2018 --charset=utf8 --outfile=assets/js/reader_app.js",

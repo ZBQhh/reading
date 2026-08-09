@@ -204,6 +204,11 @@
     pre(pNum + 1);
     pre(pNum + 2);
   }
+  function applyIssueAccent() {
+    const c = state.currentIssueObj && state.currentIssueObj.themeColor || null;
+    if (c) document.documentElement.style.setProperty("--issue-accent", c);
+    else document.documentElement.style.removeProperty("--issue-accent");
+  }
 
   // src/speech.js
   function pickVoice() {
@@ -640,13 +645,330 @@
     }, 30);
   }
 
+  // src/manual.js
+  var MANUAL_LS = "atlantic_manual_articles";
+  var DEFAULT_THEME = "#b3802f";
+  function loadManualArticles() {
+    const list = readJson(MANUAL_LS, []);
+    const map = {};
+    list.forEach(function(a) {
+      if (a && a.id) map[a.id] = a;
+    });
+    return map;
+  }
+  function saveManualArticles(map) {
+    try {
+      lsSet(MANUAL_LS, JSON.stringify(Object.keys(map).map(function(k) {
+        return map[k];
+      })));
+    } catch (_e) {
+      toast("⚠️ 本地存储已满，无法保存", "error");
+    }
+  }
+  function getManualArticle(id) {
+    return loadManualArticles()[id] || null;
+  }
+  function splitParas(text) {
+    return String(text || "").split(/\r?\n/).map(function(l) {
+      return l.trim();
+    }).filter(function(l) {
+      return l.length > 0;
+    });
+  }
+  function createManualArticle(fields) {
+    const en = splitParas(fields.enText);
+    const zh = splitParas(fields.zhText);
+    const n = Math.max(en.length, zh.length);
+    const segments = [];
+    for (let i = 0; i < n; i++) {
+      segments.push({ type: "paragraph", en: en[i] || "", zh: zh[i] || "" });
+    }
+    const title = (fields.title || "").trim() || "未命名文章";
+    const id = "manual-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 7);
+    const article = {
+      id,
+      name: title,
+      displayName: title,
+      pubId: "manual",
+      source: "manual",
+      pubName: "自建文库",
+      author: (fields.author || "").trim(),
+      sourceUrl: (fields.sourceUrl || "").trim(),
+      tags: splitParas(fields.tags).map(function(t) {
+        return t.replace(/[,，]/g, "").trim();
+      }).filter(Boolean),
+      themeColor: (fields.themeColor || DEFAULT_THEME).trim(),
+      coverImage: "",
+      vol: "MANUAL",
+      leadArticle: en[0] || title,
+      totalPages: 1,
+      imageRoot: "",
+      pages: [{ pageNumber: 1, section: title, image: null, segments, rawMd: "" }]
+    };
+    const map = loadManualArticles();
+    map[id] = article;
+    saveManualArticles(map);
+    return article;
+  }
+  function deleteManualArticle(id) {
+    const map = loadManualArticles();
+    if (!map[id]) return false;
+    delete map[id];
+    saveManualArticles(map);
+    return true;
+  }
+  function exportArticleJson(article) {
+    const blob = new Blob([JSON.stringify(article, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = (article.displayName || "article") + ".json";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(function() {
+      URL.revokeObjectURL(url);
+    }, 1e3);
+  }
+  function importArticleJson(file) {
+    return new Promise(function(resolve, reject) {
+      const reader = new FileReader();
+      reader.onload = function() {
+        try {
+          const obj = JSON.parse(String(reader.result));
+          if (!obj || !Array.isArray(obj.pages) || obj.pages.length === 0) throw new Error("格式不符：缺少 pages");
+          obj.id = obj.id || "manual-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 7);
+          obj.pubId = "manual";
+          obj.source = "manual";
+          obj.displayName = obj.displayName || obj.name || "导入文章";
+          obj.themeColor = obj.themeColor || DEFAULT_THEME;
+          obj.totalPages = obj.pages.length;
+          const map = loadManualArticles();
+          map[obj.id] = obj;
+          saveManualArticles(map);
+          resolve(obj);
+        } catch (e) {
+          reject(e);
+        }
+      };
+      reader.onerror = function() {
+        reject(new Error("读取文件失败"));
+      };
+      reader.readAsText(file);
+    });
+  }
+  var EDIT_FIELDS = [
+    { key: "title", label: "文章标题", type: "text", placeholder: "例如：The Age of Reading Is Over", required: true },
+    { key: "author", label: "作者（可选）", type: "text", placeholder: "Author Name" },
+    { key: "sourceUrl", label: "来源链接（可选）", type: "text", placeholder: "https://..." },
+    { key: "tags", label: "标签（可选，逗号分隔）", type: "text", placeholder: "essay, tech" },
+    { key: "themeColor", label: "主题色", type: "color", value: DEFAULT_THEME }
+  ];
+  var editorNode = null;
+  var editingId = null;
+  function buildEditorDom() {
+    const wrap = document.createElement("div");
+    wrap.className = "manual-editor-modal";
+    wrap.setAttribute("role", "dialog");
+    wrap.setAttribute("aria-modal", "true");
+    wrap.setAttribute("aria-label", "新建 / 编辑单篇文章");
+    let fieldsHtml = "";
+    EDIT_FIELDS.forEach(function(f) {
+      const val = f.value ? ' value="' + escHtml(f.value) + '"' : "";
+      const ph = f.placeholder ? ' placeholder="' + escHtml(f.placeholder) + '"' : "";
+      const req = f.required ? " required" : "";
+      fieldsHtml += '<label class="manual-field"><span>' + escHtml(f.label) + (f.required ? " *" : "") + '</span><input type="' + f.type + '" data-field="' + f.key + '"' + val + ph + req + "></label>";
+    });
+    wrap.innerHTML = '<div class="manual-editor-card" role="document"><div class="manual-editor-head"><h3 id="manual-editor-title">✎ 新建单篇文章</h3><button class="manual-editor-close" aria-label="关闭">✕</button></div><div class="manual-editor-body">' + fieldsHtml + '<label class="manual-field manual-field-col"><span>英文正文（每行一段；必填）</span><textarea data-field="enText" rows="8" placeholder="Paste or type the English text here.&#10;One paragraph per line." required></textarea></label><label class="manual-field manual-field-col"><span>中文翻译（可选；每行一段，与英文 1:1 配对）</span><textarea data-field="zhText" rows="6" placeholder="在此粘贴或输入中文翻译。&#10;留空则仅英文单语阅读。"></textarea></label></div><div class="manual-editor-actions"><button class="manual-btn manual-btn-ghost" data-act="import">📥 导入 JSON</button><button class="manual-btn manual-btn-ghost" data-act="export">⤓ 导出 JSON</button><span class="manual-editor-spacer"></span><button class="manual-btn manual-btn-ghost" data-act="cancel">取消</button><button class="manual-btn manual-btn-primary" data-act="save">💾 保存并阅读</button></div></div>';
+    return wrap;
+  }
+  function getFieldVal(node, key) {
+    const el = node.querySelector('[data-field="' + key + '"]');
+    return el ? el.value : "";
+  }
+  function openManualEditor(article) {
+    closeManualEditor();
+    editingId = article ? article.id : null;
+    editorNode = buildEditorDom();
+    document.body.appendChild(editorNode);
+    const titleEl = editorNode.querySelector("#manual-editor-title");
+    if (titleEl) titleEl.textContent = article ? "✎ 编辑文章" : "✎ 新建单篇文章";
+    if (article) {
+      EDIT_FIELDS.forEach(function(f) {
+        const el = editorNode.querySelector('[data-field="' + f.key + '"]');
+        if (el) el.value = article[f.key] || (f.key === "themeColor" ? DEFAULT_THEME : "");
+      });
+      const enEl = editorNode.querySelector('[data-field="enText"]');
+      if (enEl) enEl.value = (article.pages[0].segments || []).map(function(s) {
+        return s.en;
+      }).join("\n");
+      const zhEl = editorNode.querySelector('[data-field="zhText"]');
+      if (zhEl) zhEl.value = (article.pages[0].segments || []).map(function(s) {
+        return s.zh;
+      }).join("\n");
+    }
+    editorNode.addEventListener("click", function(e) {
+      if (e.target === editorNode) {
+        closeManualEditor();
+        return;
+      }
+      const act = e.target.getAttribute && e.target.getAttribute("data-act");
+      if (!act) return;
+      if (act === "cancel" || e.target.classList.contains("manual-editor-close")) closeManualEditor();
+      else if (act === "save") doSave(editorNode);
+      else if (act === "import") doImport();
+      else if (act === "export") doExportFromEditor(editorNode);
+    });
+    const closeBtn = editorNode.querySelector(".manual-editor-close");
+    if (closeBtn) closeBtn.addEventListener("click", closeManualEditor);
+    const firstInput = editorNode.querySelector('[data-field="title"]');
+    if (firstInput) firstInput.focus();
+  }
+  function closeManualEditor() {
+    if (editorNode) {
+      editorNode.remove();
+      editorNode = null;
+    }
+    editingId = null;
+  }
+  function buildArticleFromForm(node) {
+    const fields = {
+      title: getFieldVal(node, "title"),
+      author: getFieldVal(node, "author"),
+      sourceUrl: getFieldVal(node, "sourceUrl"),
+      tags: getFieldVal(node, "tags"),
+      themeColor: getFieldVal(node, "themeColor") || DEFAULT_THEME,
+      enText: getFieldVal(node, "enText"),
+      zhText: getFieldVal(node, "zhText")
+    };
+    return fields;
+  }
+  function doSave(node) {
+    const fields = buildArticleFromForm(node);
+    if (!fields.title.trim()) {
+      toast("请填写文章标题", "warn");
+      return;
+    }
+    if (!fields.enText.trim()) {
+      toast("请填写英文正文", "warn");
+      return;
+    }
+    if (editingId) {
+      const article2 = createManualArticle(fields);
+      const map = loadManualArticles();
+      delete map[editingId];
+      article2.id = editingId;
+      map[editingId] = article2;
+      saveManualArticles(map);
+      closeManualEditor();
+      toast("✅ 已更新文章");
+      if (els.magazineShelfGrid) renderManualShelfSection();
+      enterReaderRoom(editingId, 1);
+      return;
+    }
+    const article = createManualArticle(fields);
+    closeManualEditor();
+    toast("✅ 已保存文章");
+    if (els.magazineShelfGrid) renderManualShelfSection();
+    enterReaderRoom(article.id, 1);
+  }
+  function doImport() {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = ".json,application/json";
+    input.style.display = "none";
+    input.addEventListener("change", function() {
+      if (input.files && input.files[0]) {
+        importArticleJson(input.files[0]).then(function(a) {
+          closeManualEditor();
+          toast("✅ 已导入：" + a.displayName);
+          if (els.magazineShelfGrid) renderManualShelfSection();
+        }).catch(function(e) {
+          toast("⚠️ 导入失败：" + e.message, "error");
+        });
+      }
+      input.remove();
+    });
+    document.body.appendChild(input);
+    input.click();
+  }
+  function doExportFromEditor(node) {
+    const fields = buildArticleFromForm(node);
+    if (!fields.title.trim() || !fields.enText.trim()) {
+      toast("请先填写标题与英文正文再导出", "warn");
+      return;
+    }
+    const article = createManualArticle(fields);
+    exportArticleJson(article);
+    const map = loadManualArticles();
+    delete map[article.id];
+    saveManualArticles(map);
+    toast("⤓ 已导出 JSON");
+  }
+  function renderManualShelfSection() {
+    const grid = els.magazineShelfGrid;
+    if (!grid) return;
+    const map = loadManualArticles();
+    const ids = Object.keys(map);
+    let section = grid.querySelector("#manual-shelf-section");
+    if (ids.length === 0) {
+      if (section) section.remove();
+      return;
+    }
+    if (!section) {
+      section = document.createElement("div");
+      section.id = "manual-shelf-section";
+      section.className = "shelf-section";
+      grid.parentNode.insertBefore(section, grid.nextSibling);
+    }
+    section.innerHTML = '<div class="shelf-section-title">📝 自建文库（' + ids.length + "）</div>";
+    const frag = document.createDocumentFragment();
+    ids.forEach(function(id) {
+      const a = map[id];
+      const card = document.createElement("div");
+      card.className = "shelf-issue-card shelf-manual-card";
+      card.setAttribute("role", "button");
+      card.setAttribute("tabindex", "0");
+      card.dataset.issue = id;
+      const segs = a.pages[0] && a.pages[0].segments || [];
+      const color = a.themeColor || DEFAULT_THEME;
+      card.innerHTML = '<div class="shelf-cover-wrap shelf-manual-cover" style="background:' + escHtml(color) + ';"><span class="shelf-manual-monogram">✎</span></div><div class="shelf-details"><div class="shelf-details-top"><span class="issue-date-tag">自建 · ' + segs.length + " 段</span><h3>" + escHtml(a.displayName) + "</h3><p>" + escHtml(a.author ? "作者：" + a.author : "手动录入文章") + '</p><div class="shelf-meta-tags"><span class="meta-tag">🔤 单语/双语</span>' + (a.sourceUrl ? '<span class="meta-tag">🔗 来源</span>' : "") + '</div></div><div class="shelf-manual-actions"><button class="shelf-enter-btn" data-issue="' + escHtml(id) + '"><span>开始阅读</span></button><button class="manual-mini-btn" data-act="edit" data-issue="' + escHtml(id) + '" aria-label="编辑">✎</button><button class="manual-mini-btn" data-act="export" data-issue="' + escHtml(id) + '" aria-label="导出">⤓</button><button class="manual-mini-btn manual-mini-danger" data-act="delete" data-issue="' + escHtml(id) + '" aria-label="删除">🗑</button></div></div>';
+      frag.appendChild(card);
+    });
+    section.appendChild(frag);
+  }
+  function handleManualCardAction(act, id) {
+    const a = getManualArticle(id);
+    if (!a) return;
+    if (act === "edit") openManualEditor(a);
+    else if (act === "export") exportArticleJson(a);
+    else if (act === "delete") {
+      confirmDialog({ title: "删除这篇文章？", message: "《" + a.displayName + "》将被永久删除，不可撤销。", okText: "删除", danger: true }).then(function(ok) {
+        if (ok) {
+          deleteManualArticle(id);
+          toast("🗑 已删除");
+          if (els.magazineShelfGrid) renderManualShelfSection();
+        }
+      });
+    }
+  }
+
   // src/reader.js
+  function resolveIssue(id) {
+    return allIssues[id] || getManualArticle(id) || null;
+  }
   function enterReaderRoom(issueId, targetPage) {
-    if (allIssues[issueId] && issueId !== state.currentIssueId) {
+    const resolved = resolveIssue(issueId);
+    if (!resolved) {
+      toast("未找到该文章", "error");
+      return;
+    }
+    if (issueId !== state.currentIssueId || resolved.source === "manual") {
       state.currentIssueId = issueId;
-      state.currentIssueObj = allIssues[issueId];
-      state.data = state.currentIssueObj.pages || [];
+      state.currentIssueObj = resolved;
+      state.data = resolved.pages || [];
       lsSet(LS.issue, state.currentIssueId);
+      applyIssueAccent();
       initTOC();
       renderBookmarksTab();
     }
@@ -674,18 +996,20 @@
     return ids.length > 1 ? ids[(ids.indexOf(state.currentIssueId) + 1) % ids.length] : state.currentIssueId;
   }
   function switchIssue(newIssueId) {
-    if (!allIssues[newIssueId] || newIssueId === state.currentIssueId) return;
+    const resolved = resolveIssue(newIssueId);
+    if (!resolved || newIssueId === state.currentIssueId) return;
     state.currentIssueId = newIssueId;
-    state.currentIssueObj = allIssues[newIssueId];
-    state.data = state.currentIssueObj.pages || [];
+    state.currentIssueObj = resolved;
+    state.data = resolved.pages || [];
     lsSet(LS.issue, state.currentIssueId);
+    applyIssueAccent();
     refreshPill();
-    if (els.pageSlider) els.pageSlider.max = state.currentIssueObj.totalPages;
+    if (els.pageSlider) els.pageSlider.max = resolved.totalPages;
     initTOC();
     renderBookmarksTab();
     const last = readInt(lsGet(LS.pagePrefix + state.currentIssueId, "1"), 1);
     loadPage(last);
-    toast("切换至：" + state.currentIssueObj.displayName);
+    toast("切换至：" + resolved.displayName);
   }
   function getBookmarks() {
     return readJson(LS.bookmarks + state.currentIssueId, []);
@@ -959,7 +1283,15 @@
       imgWithWebFallback(shelfCoverImg);
       frag.appendChild(card);
     });
+    const newCard = document.createElement("div");
+    newCard.className = "shelf-issue-card shelf-new-manual-card";
+    newCard.setAttribute("role", "button");
+    newCard.setAttribute("tabindex", "0");
+    newCard.setAttribute("data-act", "new");
+    newCard.innerHTML = '<div class="shelf-cover-wrap shelf-new-manual-cover"><span class="shelf-new-manual-plus">＋</span></div><div class="shelf-details"><div class="shelf-details-top"><span class="issue-date-tag">自建 · 手动录入</span><h3>新建单篇文章</h3><p>粘贴英文（可附中文），或导入 JSON。样式与期刊共用。</p><div class="shelf-meta-tags"><span class="meta-tag">✎ 对照 / 整篇录入</span><span class="meta-tag">🔤 纯英文亦可</span></div></div></div>';
+    frag.appendChild(newCard);
     grid.appendChild(frag);
+    renderManualShelfSection();
   }
   function setViewMode(mode) {
     if (VIEW_MODES.indexOf(mode) < 0) mode = "interlinear";
@@ -1579,6 +1911,18 @@
           renderLibraryShelf();
           return;
         }
+        const actBtn = e.target.closest("[data-act]");
+        if (actBtn) {
+          const act = actBtn.dataset.act;
+          if (act === "new") {
+            openManualEditor(null);
+            return;
+          }
+          if (actBtn.dataset.issue) {
+            handleManualCardAction(act, actBtn.dataset.issue);
+            return;
+          }
+        }
         const enterBtn = e.target.closest(".shelf-enter-btn");
         const card = e.target.closest(".shelf-issue-card");
         const target = enterBtn || card;
@@ -1589,10 +1933,13 @@
       });
       portal.addEventListener("keydown", function(e) {
         const card = e.target.closest(".shelf-issue-card");
-        if (card && (e.key === "Enter" || e.key === " ")) {
-          e.preventDefault();
-          enterReaderRoom(card.dataset.issue, 1);
+        if (!card || !(e.key === "Enter" || e.key === " ")) return;
+        e.preventDefault();
+        if (card.dataset.act === "new") {
+          openManualEditor(null);
+          return;
         }
+        enterReaderRoom(card.dataset.issue, 1);
       });
     }
     const filterBar = els.tocFilterBar;
@@ -2176,6 +2523,7 @@
       });
     }
     if (els.appSidebar) els.appSidebar.classList.add("collapsed");
+    applyIssueAccent();
     bindStaticEvents();
     bindPortalSearch();
     renderLibraryShelf();

@@ -10,6 +10,7 @@
 import {
   state, els, LS, lsGet, $, $$, allIssues, escHtml, toast, confirmDialog,
   debounce, stripInvisibles, readFloat, readInt, HELD, THEMES, VERSION, scrollPage,
+  applyIssueAccent,
 } from './core.js';
 import { pickVoice, playPageSpeech, stopSpeech, playParagraphSpeech } from './speech.js';
 import {
@@ -36,6 +37,7 @@ import {
 } from './ui.js';
 import { initA11y, announce } from './a11y.js';
 import { exportLocalDataJson, importLocalData } from './data.js';
+import { openManualEditor, handleManualCardAction } from './manual.js';
 
 // 毒舌 1.2：els 由声明式 id 映射表生成，杜绝 50 行手写体力活与 typo 静默失效
 const ELS_BY_ID = {
@@ -135,6 +137,13 @@ function bindStaticEvents() {
         renderLibraryShelf();
         return;
       }
+      // 手建文库动作（新建 / 编辑 / 导出 / 删除）优先于“进入阅读”
+      const actBtn = e.target.closest('[data-act]');
+      if (actBtn) {
+        const act = actBtn.dataset.act;
+        if (act === 'new') { openManualEditor(null); return; }
+        if (actBtn.dataset.issue) { handleManualCardAction(act, actBtn.dataset.issue); return; }
+      }
       const enterBtn = e.target.closest('.shelf-enter-btn');
       const card = e.target.closest('.shelf-issue-card');
       const target = enterBtn || card;
@@ -145,7 +154,10 @@ function bindStaticEvents() {
     });
     portal.addEventListener('keydown', function (e) {
       const card = e.target.closest('.shelf-issue-card');
-      if (card && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); enterReaderRoom(card.dataset.issue, 1); }
+      if (!card || !(e.key === 'Enter' || e.key === ' ')) return;
+      e.preventDefault();
+      if (card.dataset.act === 'new') { openManualEditor(null); return; }
+      enterReaderRoom(card.dataset.issue, 1);
     });
   }
 
@@ -654,6 +666,9 @@ function boot() {
 
   // 侧栏默认收起
   if (els.appSidebar) els.appSidebar.classList.add('collapsed');
+
+  // 初始刊物主题色注入（英文主卡 / 中文辅读框据此染色）
+  applyIssueAccent();
 
   bindStaticEvents();
   bindPortalSearch();

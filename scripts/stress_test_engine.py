@@ -225,8 +225,8 @@ step('7.2-sync: data export/import wired in JS', src.includes('function exportLo
 step('7.2-sync: backup/restore buttons in html', html1.includes('data-sync-export-btn') && html1.includes('data-sync-import-btn'));
 step('7.3-portal: data entries (wordbook/highlights/bookmarks) on homepage', html1.includes('portal-wordbook-btn') && html1.includes('portal-highlights-btn') && html1.includes('portal-bookmarks-btn'));
 step('7.3-portal: highlights review modal + render', src.includes('function renderHighlightsList') && src.includes('highlights-modal') && src.includes('toggleHighlightsModal'));
-step('7.3-theme: en-card tint per-theme variable', cssSrc.includes('--en-card-tint'));
-step('7.3-theme: en-text gradient uses en-card-tint', cssSrc.includes('var(--en-card-tint)'));
+step('7.3-theme: en-card tint variable still defined per-theme', cssSrc.includes('--en-card-tint'));
+step('7.3-theme: en-text gradient uses issue-accent (背景关联主题)', cssSrc.includes('var(--issue-accent)') && cssSrc.includes('--issue-accent: var(--accent)'));
 process.exit(ok ? 0 : 1);
 """
 probe = probe.replace('__JSPATH__', os.path.abspath(js_path).replace('\\', '/'))
