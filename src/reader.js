@@ -210,8 +210,9 @@ export function stubPage(pageNum) {
 
 export function renderSegmentNode(seg, idx) {
   const type = seg.type || 'paragraph';
+  const isCard = (type === 'paragraph' || type === 'ad');
   const div = document.createElement('div');
-  div.className = 'segment-block segment-' + type;
+  div.className = 'segment-block segment-' + type + (isCard ? ' seg-card' : '');
   div.id = 'seg-' + idx;
   const en = toDisplayText(seg.en);
   const zh = toDisplayText(seg.zh);
