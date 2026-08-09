@@ -28,6 +28,9 @@ reader.html
 reader_app.js
 reader_style.css
 code_review_report.html
+# Project B (markdown 自建文章) 生成产物
+manual_assets/
+manual_issues.json
 
 # Agent / Tool Workspace & Backups
 .workbuddy/

@@ -6,7 +6,7 @@
 import {
   state, els, LS, $, $$, allIssues, escHtml, toast, lsGet, lsSet, readInt, readJson,
   webpUrl, webpSrcset, imgWithWebFallback, preloadAdjacentPages, smoothByPref, toDisplayText,
-  applyIssueAccent,
+  applyIssueAccent, getMarkdownArticle,
 } from './core.js';
 import { stopSpeech } from './speech.js';
 import { applyPageHighlights } from './highlight.js';
@@ -14,9 +14,10 @@ import { recordReadingHistory } from './history.js';
 import { announce } from './a11y.js';
 import { getManualArticle } from './manual.js';
 
-// 双源解析：优先 shipped 语料，其次手建文库（同入口、不同数据来源）
+// 三源解析：shipped 语料(ALL_ISSUES) → markdown 自建(MANUAL_ISSUES) → 应用内草稿(localStorage)
+// 两大独立数据项目（PDF 解析 / Markdown 自建）同入口、样式共用、仅数据来源不同
 export function resolveIssue(id) {
-  return allIssues[id] || getManualArticle(id) || null;
+  return allIssues[id] || getMarkdownArticle(id) || getManualArticle(id) || null;
 }
 
 // ==================================================================
@@ -25,8 +26,9 @@ export function resolveIssue(id) {
 export function enterReaderRoom(issueId, targetPage) {
   const resolved = resolveIssue(issueId);
   if (!resolved) { toast('未找到该文章', 'error'); return; }
-  // 手建文章编辑后再次进入时 id 不变，但内容已变，需强制重载；新刊照常重载
-  if (issueId !== state.currentIssueId || resolved.source === 'manual') {
+  // 手建/草稿文章编辑后再次进入时 id 不变但内容已变，需强制重载；新刊照常重载
+  const isUserAuthored = resolved.source === 'manual' || resolved.sourceType === 'markdown';
+  if (issueId !== state.currentIssueId || isUserAuthored) {
     state.currentIssueId = issueId;
     state.currentIssueObj = resolved;
     state.data = resolved.pages || [];
@@ -214,6 +216,18 @@ export function renderSegmentNode(seg, idx) {
   const en = toDisplayText(seg.en);
   const zh = toDisplayText(seg.zh);
   const zhHtml = (seg.zh && String(seg.zh).trim()) ? '<div class="zh-text-card" lang="zh-CN"><div>' + zh + '</div></div>' : '';
+  // 内联图（markdown 流式图文）：图 + 图注，zh 预留
+  if (type === 'embedded') {
+    const fig = document.createElement('figure');
+    fig.className = 'embedded-figure';
+    const cap = seg.caption ? toDisplayText(seg.caption) : '';
+    fig.innerHTML =
+      '<img src="' + escHtml(seg.src) + '" class="embedded-figure-img" alt="' + escHtml(cap || seg.en || '') + '" loading="lazy" decoding="async">' +
+      (cap ? '<figcaption class="embedded-figure-cap">' + cap + '</figcaption>' : '');
+    imgWithWebFallback(fig.querySelector('.embedded-figure-img'));
+    div.appendChild(fig);
+    return div;
+  }
   let enHtml;
   if (type === 'caption') enHtml = '<div class="en-text" lang="en"><em>' + en + '</em></div>';
   else if (type === 'ad') enHtml = '<div class="en-text" lang="en"><strong>[Advertisement]</strong> ' + en + '</div>';

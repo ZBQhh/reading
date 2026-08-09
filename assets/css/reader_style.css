@@ -946,7 +946,7 @@ body.view-split .image-column { display: flex; }
   border: 1px solid var(--border-soft);
   border-left: 3px solid var(--issue-accent);
   border-radius: var(--radius-md);
-  background: color-mix(in srgb, var(--bg-soft) 84%, var(--issue-accent) 6%);
+  background: color-mix(in srgb, var(--bg-soft) 72%, var(--issue-accent) 18%);
   font-family: var(--font-zh);
   font-size: var(--reader-font-scale);
   line-height: 1.75;
@@ -1849,4 +1849,37 @@ mark.page-highlight:hover { background: linear-gradient(180deg, transparent 45%,
   grid-column: 1 / -1;
   font-size: 13px; font-weight: 600; letter-spacing: 0.06em; color: var(--text-2);
   margin: 0 0 12px; padding-left: 2px; text-transform: uppercase;
+}
+
+/* 自建文库 markdown 卡与草稿卡的细微区分 */
+.shelf-md-card .shelf-manual-monogram {
+  font-weight: 700; font-family: var(--font-sans);
+  background: color-mix(in srgb, #fff 70%, transparent);
+  color: color-mix(in srgb, var(--text) 80%, #000);
+  border-radius: 8px; padding: 6px 10px; font-size: 15px;
+}
+
+/* ---- 阅读正文：markdown 流式内联图（embedded 段）---- */
+.embedded-figure {
+  margin: 22px 0;
+  padding: 12px;
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--bg-soft) 76%, var(--issue-accent) 14%);
+  text-align: center;
+}
+.embedded-figure-img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+  display: inline-block;
+  box-shadow: var(--shadow-sm);
+}
+.embedded-figure-cap {
+  margin-top: 10px;
+  font-size: calc(var(--reader-font-scale) * 0.9);
+  line-height: 1.6;
+  color: var(--text-2);
+  font-style: italic;
+  text-align: left;
 }

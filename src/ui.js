@@ -66,25 +66,9 @@ export function renderLibraryShelf() {
     frag.appendChild(card);
   });
 
-  // 「＋ 新建文章」入口卡片（手建文库；与期刊同入口，数据来源不同）
-  const newCard = document.createElement('div');
-  newCard.className = 'shelf-issue-card shelf-new-manual-card';
-  newCard.setAttribute('role', 'button');
-  newCard.setAttribute('tabindex', '0');
-  newCard.setAttribute('data-act', 'new');
-  newCard.innerHTML =
-    '<div class="shelf-cover-wrap shelf-new-manual-cover"><span class="shelf-new-manual-plus">＋</span></div>' +
-    '<div class="shelf-details"><div class="shelf-details-top">' +
-    '<span class="issue-date-tag">自建 · 手动录入</span>' +
-    '<h3>新建单篇文章</h3>' +
-    '<p>粘贴英文（可附中文），或导入 JSON。样式与期刊共用。</p>' +
-    '<div class="shelf-meta-tags"><span class="meta-tag">✎ 对照 / 整篇录入</span>' +
-    '<span class="meta-tag">🔤 纯英文亦可</span></div></div></div>';
-  frag.appendChild(newCard);
-
   grid.appendChild(frag);
 
-  // 刷新手建文库分组（位于期刊网格下方）
+  // 刷新手建文库分组（位于期刊网格下方）：Markdown 文章 + 应用内草稿 + 新建入口
   renderManualShelfSection();
 }
 

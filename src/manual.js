@@ -289,36 +289,67 @@ function doExportFromEditor(node) {
 export function renderManualShelfSection() {
   const grid = els.magazineShelfGrid;
   if (!grid) return;
-  const map = loadManualArticles();
-  const ids = Object.keys(map);
+  // 合并两大自建来源：markdown 构建产物(window.MANUAL_ISSUES) + 应用内草稿(localStorage)
+  const mdMap = (typeof window !== 'undefined' && window.MANUAL_ISSUES) ? window.MANUAL_ISSUES : {};
+  const mdIds = Object.keys(mdMap);
+  const draftMap = loadManualArticles();
+  const draftIds = Object.keys(draftMap);
+
   let section = grid.querySelector('#manual-shelf-section');
-  if (ids.length === 0) {
-    if (section) section.remove();
-    return;
-  }
   if (!section) {
     section = document.createElement('div');
     section.id = 'manual-shelf-section';
     section.className = 'shelf-section';
     grid.parentNode.insertBefore(section, grid.nextSibling);
   }
-  section.innerHTML = '<div class="shelf-section-title">📝 自建文库（' + ids.length + '）</div>';
+  section.innerHTML = '<div class="shelf-section-title">📝 自建文库 · Markdown ' + mdIds.length + ' 篇 · 草稿 ' + draftIds.length + '</div>';
   const frag = document.createDocumentFragment();
-  ids.forEach(function (id) {
-    const a = map[id];
+
+  // —— Project B：markdown 自建文章（文件驱动，无删除/编辑，仅阅读 + 导出备份）——
+  mdIds.forEach(function (id) {
+    const a = mdMap[id];
+    const card = document.createElement('div');
+    card.className = 'shelf-issue-card shelf-manual-card shelf-md-card';
+    card.setAttribute('role', 'button');
+    card.setAttribute('tabindex', '0');
+    card.dataset.issue = id;
+    const segs = (a.pages && a.pages[0] && a.pages[0].segments) || [];
+    const color = a.themeColor || DEFAULT_THEME;
+    const hasZh = segs.some(function (s) { return s.zh && String(s.zh).trim(); });
+    card.innerHTML =
+      '<div class="shelf-cover-wrap shelf-manual-cover" style="background:' + escHtml(color) + ';">' +
+      '<span class="shelf-manual-monogram">M</span></div>' +
+      '<div class="shelf-details"><div class="shelf-details-top">' +
+      '<span class="issue-date-tag">Markdown · ' + segs.length + ' 段' + (hasZh ? ' · 已译' : ' · 待译') + '</span>' +
+      '<h3>' + escHtml(a.displayName || id) + '</h3>' +
+      '<p>' + escHtml(a.author ? ('作者：' + a.author) : (a.website || '自建文章')) + '</p>' +
+      '<div class="shelf-meta-tags">' +
+      '<span class="meta-tag">📄 单页流式</span>' +
+      (a.source ? '<span class="meta-tag">🔗 来源</span>' : '') +
+      '</div></div>' +
+      '<div class="shelf-manual-actions">' +
+      '<button class="shelf-enter-btn" data-issue="' + escHtml(id) + '"><span>开始阅读</span></button>' +
+      '<button class="manual-mini-btn" data-act="md-export" data-issue="' + escHtml(id) + '" aria-label="导出 JSON 备份">⤓</button>' +
+      '</div></div>';
+    frag.appendChild(card);
+  });
+
+  // —— 应用内草稿（localStorage，可编辑/导出/删除）——
+  draftIds.forEach(function (id) {
+    const a = draftMap[id];
     const card = document.createElement('div');
     card.className = 'shelf-issue-card shelf-manual-card';
     card.setAttribute('role', 'button');
     card.setAttribute('tabindex', '0');
     card.dataset.issue = id;
-    const segs = (a.pages[0] && a.pages[0].segments) || [];
+    const segs = (a.pages && a.pages[0] && a.pages[0].segments) || [];
     const color = a.themeColor || DEFAULT_THEME;
     card.innerHTML =
       '<div class="shelf-cover-wrap shelf-manual-cover" style="background:' + escHtml(color) + ';">' +
       '<span class="shelf-manual-monogram">✎</span></div>' +
       '<div class="shelf-details"><div class="shelf-details-top">' +
-      '<span class="issue-date-tag">自建 · ' + segs.length + ' 段</span>' +
-      '<h3>' + escHtml(a.displayName) + '</h3>' +
+      '<span class="issue-date-tag">草稿 · ' + segs.length + ' 段</span>' +
+      '<h3>' + escHtml(a.displayName || id) + '</h3>' +
       '<p>' + escHtml(a.author ? ('作者：' + a.author) : '手动录入文章') + '</p>' +
       '<div class="shelf-meta-tags">' +
       '<span class="meta-tag">🔤 单语/双语</span>' +
@@ -332,15 +363,36 @@ export function renderManualShelfSection() {
       '</div></div>';
     frag.appendChild(card);
   });
+
+  // —— 「＋ 新建文章」入口（打开应用内编辑器，作为快速草稿）——
+  const newCard = document.createElement('div');
+  newCard.className = 'shelf-issue-card shelf-new-manual-card';
+  newCard.setAttribute('role', 'button');
+  newCard.setAttribute('tabindex', '0');
+  newCard.setAttribute('data-act', 'new');
+  newCard.innerHTML =
+    '<div class="shelf-cover-wrap shelf-new-manual-cover"><span class="shelf-new-manual-plus">＋</span></div>' +
+    '<div class="shelf-details"><div class="shelf-details-top">' +
+    '<span class="issue-date-tag">自建 · 快速草稿</span>' +
+    '<h3>新建单篇文章</h3>' +
+    '<p>粘贴英文（可附中文），或导入 JSON。也可直接往 md 数据源文件夹放 .md 由构建生成。</p>' +
+    '<div class="shelf-meta-tags"><span class="meta-tag">✎ 对照 / 整篇录入</span>' +
+    '<span class="meta-tag">🔤 纯英文亦可</span></div></div></div>';
+  frag.appendChild(newCard);
+
   section.appendChild(frag);
 }
 
 // 手建文章卡片上的 编辑/导出/删除 委托处理（由 main.js 的门户委托调用）
 export function handleManualCardAction(act, id) {
-  const a = getManualArticle(id);
+  // 草稿(localStorage) 优先；否则取 markdown 构建产物(window.MANUAL_ISSUES)
+  let a = getManualArticle(id);
+  if (!a && typeof window !== 'undefined' && window.MANUAL_ISSUES && window.MANUAL_ISSUES[id]) {
+    a = window.MANUAL_ISSUES[id];
+  }
   if (!a) return;
   if (act === 'edit') openManualEditor(a);
-  else if (act === 'export') exportArticleJson(a);
+  else if (act === 'export' || act === 'md-export') exportArticleJson(a);
   else if (act === 'delete') {
     confirmDialog({ title: '删除这篇文章？', message: '《' + a.displayName + '》将被永久删除，不可撤销。', okText: '删除', danger: true })
       .then(function (ok) {

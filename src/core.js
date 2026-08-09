@@ -242,3 +242,9 @@ export function applyIssueAccent() {
   if (c) document.documentElement.style.setProperty('--issue-accent', c);
   else document.documentElement.style.removeProperty('--issue-accent');
 }
+
+// Project B（markdown 自建文章）数据源：由 build_markdown_articles.py 注入 window.MANUAL_ISSUES
+export function getMarkdownArticle(id) {
+  if (typeof window === 'undefined' || !window.MANUAL_ISSUES) return null;
+  return window.MANUAL_ISSUES[id] || null;
+}

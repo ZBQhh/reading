@@ -18,6 +18,14 @@ def resolve_version():
 def build_portal():
     with open('assets/data/magazines.json', 'r', encoding='utf-8') as f:
         all_issues = json.load(f)
+    # Project B（markdown 自建文章）数据源：由 build_markdown_articles.py 生成
+    manual_issues = {}
+    if os.path.exists('manual_issues.json'):
+        try:
+            with open('manual_issues.json', 'r', encoding='utf-8') as f:
+                manual_issues = json.load(f)
+        except Exception:
+            manual_issues = {}
     build_version = resolve_version()
     nonce = secrets.token_hex(16)
     csp = (
@@ -508,6 +516,7 @@ def build_portal():
   <script nonce="{nonce}">
     // Embedded Multi-Issue Archive
     window.ALL_ISSUES = {json.dumps(all_issues, ensure_ascii=False).replace('</', '<\\/')};
+    window.MANUAL_ISSUES = {json.dumps(manual_issues, ensure_ascii=False).replace('</', '<\\/')};
     window.BUILD_VERSION = '{build_version}';
   </script>
   <script src="assets/js/reader_app.js" nonce="{nonce}"></script>

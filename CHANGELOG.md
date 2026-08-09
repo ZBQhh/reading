@@ -2,6 +2,19 @@
 
 本项目的历次版本变更记录。格式遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)。
 
+## [2.6.2] - 2026-08-09
+
+### 特性（Project B：Markdown 自建文章数据源 + 中英文背景主题协调）
+
+- **两个项目「入口相同、样式共用、数据源独立」**：新增 Project B —— 用户自行整理的 Markdown 文章目录（默认 `D:\Desktop\md文件\TheAtlantic`，可用 `MD_ARTICLES_ROOT` 覆盖）。`scripts/build_markdown_articles.py` 解析每篇 `.md`（YAML frontmatter + 正文段/内联图→`embedded` 段，中文 `zh` 统一预留为 `null`，待 agent 翻译后回填），复制资源到 `manual_assets/`，输出 `manual_issues.json`；`build_master_portal.py` 在同 nonce 块注入 `window.MANUAL_ISSUES`。PDF 项目读 `window.ALL_ISSUES`，二者同一书架、同一阅读器呈现，互不影响、可重建。
+- **三源解析**：`reader.js:resolveIssue(id) = allIssues[id] || getMarkdownArticle(id) || getManualArticle(id)`；书架「📝 自建文库」分组同时列出 Markdown 文章（文件驱动，仅阅读/导出备份，无编辑删除）与应用内草稿（localStorage，可编辑/导出/删除）+「＋ 新建文章」入口。
+- **中英文背景统一跟随主题**：`.zh-text-card` 底色由 6% 主题色提升至 `color-mix(--bg-soft 72% + --issue-accent 18%)`，与英文卡共用 `--issue-accent` 左条；双卡均随文章 `themeColor` 协调变化，`view-en-only`/`view-zh-only` 下边框处理同步修正。
+- **流式图文渲染**：`renderSegmentNode` 新增 `embedded` 段（内联图 + 图注，复用 `imgWithWebFallback`），支持 Markdown 单页多段图文混排。
+
+### 工程
+
+- 生成器健壮性：`resolve_md_root` 兼容 Windows 盘符(`D:\`/`D:/`) 与 Git-Bash POSIX(`/d/`) 路径形态；`copy_article_assets` 改为按 md 内图片实际引用的子目录名复制（不再依赖 slugify 后的 basename，避免资源目录名大小写/下划线不一致导致静默复制失败、图片 404）；数据源缺失时优雅跳过并写出空 `{}`，绝不中断主构建。
+
 ## [2.6.1] - 2026-08-09
 
 ### 体验（视觉主题关联 + 单篇文章手动录入系统）
