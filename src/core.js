@@ -235,12 +235,11 @@ export function preloadAdjacentPages(pNum) {
 }
 
 // ---------------------------------------------------------------- 主题色注入
-// 每刊/文章的主题色（issue.themeColor）注入到 --issue-accent，驱动英文主卡与中文
-// 辅读框的染色，使阅读背景与主题关联。无主题色时移除内联值，回退 :root 默认(--accent)。
+// 阅读框/分隔线/标题条的主题色跟随「阅读主题」(--accent) 实时变化，
+// 不再把文章固定 themeColor 注入 --issue-accent（避免颜色写死、不随主题切换）。
+// --issue-accent 的 CSS 默认值即 var(--accent)，切换主题即整体联动。
 export function applyIssueAccent() {
-  const c = (state.currentIssueObj && state.currentIssueObj.themeColor) || null;
-  if (c) document.documentElement.style.setProperty('--issue-accent', c);
-  else document.documentElement.style.removeProperty('--issue-accent');
+  document.documentElement.style.removeProperty('--issue-accent');
 }
 
 // Project B（markdown 自建文章）数据源：由 build_markdown_articles.py 注入 window.MANUAL_ISSUES

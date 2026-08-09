@@ -205,9 +205,7 @@
     pre(pNum + 2);
   }
   function applyIssueAccent() {
-    const c = state.currentIssueObj && state.currentIssueObj.themeColor || null;
-    if (c) document.documentElement.style.setProperty("--issue-accent", c);
-    else document.documentElement.style.removeProperty("--issue-accent");
+    document.documentElement.style.removeProperty("--issue-accent");
   }
   function getMarkdownArticle(id) {
     if (typeof window === "undefined" || !window.MANUAL_ISSUES) return null;

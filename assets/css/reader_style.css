@@ -82,8 +82,8 @@ button:focus:not(:focus-visible) { outline: none; }
   --max-reader-w: 1260px;
   --max-reader-w-split: 1900px;
 
-  /* 每刊/文章主题色：由 JS 从 issue.themeColor 注入，英文主卡与中文辅读框据此染色，
-     背景与主题关联；无主题色时回退到当前阅读主题 --accent */
+  /* 阅读框/分隔线/标题条的主题色：默认等于当前阅读主题的 --accent，
+     故随主题切换实时变化；JS 不再注入文章固定色，避免写死。 */
   --issue-accent: var(--accent);
 
 --font-sans: 'Inter', 'Plus Jakarta Sans', 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif;
@@ -892,11 +892,11 @@ body.view-split .image-column { display: flex; }
   word-break: break-word;
   overflow-wrap: anywhere;
 }
-/* 单框双段：外层即唯一框，主题底色主导 + 文章色仅 9% 淡染（切换阅读主题即跟随），均匀细边框 */
+/* 单框双段：外层即唯一框，主题底色主导 + 主题强调色淡染（随阅读主题切换实时变化），均匀细边框 */
 .segment-block.seg-card {
   border: 1px solid var(--border-soft);
   border-radius: var(--radius-md);
-  background: color-mix(in srgb, var(--bg-card) 91%, var(--issue-accent) 9%);
+  background: color-mix(in srgb, var(--bg-card) 88%, var(--issue-accent) 12%);
   box-shadow: var(--shadow-sm);
   overflow: hidden;
 }
@@ -906,12 +906,12 @@ body.view-split .image-column { display: flex; }
   box-shadow: 0 0 0 2px color-mix(in srgb, var(--issue-accent) 28%, transparent), var(--shadow-md);
 }
 
-/* 标题段：左侧色条 + 浅底，不套卡（色条统一用文章主题色，保持全局协调） */
+/* 标题段：左侧色条 + 浅底，不套卡（色条用主题强调色，与框/分隔线同一套色，全局协调） */
 .segment-h3 { background: var(--bg-soft); border-left: 4px solid var(--issue-accent); padding: 8px 14px; }
 .segment-h4 { border-left: 3px solid var(--issue-accent); padding: 6px 12px; }
 .segment-caption { background: transparent; border: none; box-shadow: none; }
 
-/* 羊皮纸质感英文主卡：随主题冷暖自适应底色 + 高光内描边，与透明中文辅读形成双卡层级 */
+/* 英文主卡：底色透明，透出外层主题强调色淡染（英文为主读，颜色随阅读主题变化），与中文辅读形成双段层级 */
 .en-text {
   font-family: var(--font-sans);
   font-size: var(--reader-font-scale);
@@ -940,11 +940,11 @@ body.view-split .image-column { display: flex; }
   background: transparent;
 }
 
-/* 中文段：同一框内的下半部分，实线分隔，底色较英文更浅（英文为主读） */
+/* 中文段：同一框内的下半部分，实线分隔，底色较英文更浅（英文为主读，主题强调色随主题变） */
 .zh-text-card {
   padding: 14px 22px 18px 22px;
   border-top: 2px solid var(--issue-accent);
-  background: color-mix(in srgb, var(--bg-card) 95%, var(--issue-accent) 5%);
+  background: color-mix(in srgb, var(--bg-card) 94%, var(--issue-accent) 6%);
   font-family: var(--font-zh);
   font-size: var(--reader-font-scale);
   line-height: 1.75;

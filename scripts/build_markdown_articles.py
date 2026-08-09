@@ -283,6 +283,9 @@ def build():
     for root, _dirs, files in os.walk(MD_ROOT):
         for fn in files:
             if fn.lower().endswith(".md"):
+                # 跳过 README 等非文章说明文件
+                if fn.lower().startswith("readme"):
+                    continue
                 # 跳过 assets 目录下的文件（若有）
                 if os.sep + "assets" + os.sep in root.replace("/", os.sep):
                     continue
