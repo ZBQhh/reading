@@ -81,16 +81,15 @@
 ```tree
 TheAtlantic/
 ├── index.html                     # 生产级双语阅读馆（构建产物，由 build_master_portal.py 生成）
-├── reader.html                    # 由构建器同步输出的同构副本（构建产物）
+├── reader.html                    # 由构建器同步输出的跳转桩（构建产物）
 ├── README.md                      # 本项目设计与技术白皮书
 ├── CHANGELOG.md                   # 分版本变更记录（Keep a Changelog）
 ├── LICENSE                        # MIT 开源许可证
-├── CODE_REVIEW.md                 # 360° 全维度评审报告与修复执行记录
 ├── .gitignore                     # 严密的安全过滤规则（自动忽略大型 PDF、构建产物与缓存）
 │
 ├── assets/
-│   ├── css/reader_style.css       # 核心样式源码（唯一真源，构建时镜像至根目录）
-│   ├── js/reader_app.js           # 核心交互源码（唯一真源，构建时镜像至根目录）
+│   ├── css/reader_style.css       # 核心样式源码（唯一真源）
+│   ├── js/reader_app.js           # 核心交互源码（唯一真源）
 │   └── data/
 │       ├── publications.json      # 多刊物品牌矩阵元数据
 │       └── magazines.json         # 双语期刊全量解析数据集 (216 页完整转录)
@@ -105,6 +104,7 @@ TheAtlantic/
 │       ├── pages/                 # page_001.md ~ page_112.md 逐页精校文本
 │       └── full_magazine.md       # 7月全本 Markdown 典藏
 │
+├── docs/reviews/                  # 历轮评审报告与整改执行记录（归档）
 ├── raw_pdf/                       # 原始 PDF 来源（已被 .gitignore 排除，不入库）
 │
 └── scripts/                       # 自动化流水线（核心区）
@@ -120,10 +120,10 @@ TheAtlantic/
     └── legacy/                    # 一次性/历史脚本归档（首次入库与审计用）
         ├── build_web_reader.py / build_multi_issue_reader.py  # 早期单页构建器（已由 master 取代）
         ├── transpile_* / compile_* / fix_text.py               # 转录期的临时修复/编译工具
-        └── inspect_* / check_* / audit_*                      # 转录期的临时审计工具
+        └── inspect_* / check_* / audit_*                       # 转录期的临时审计工具
 ```
 
-> **说明**：根目录的 `index.html` / `reader.html` / `reader_style.css` / `reader_app.js` 与 `scripts/legacy/` 下的历史脚本、历史上的 `output/` 构建产物均为**构建产物或一次性工具**，已列入 `.gitignore` 或归档至 `scripts/legacy/`，不可编辑——一切修改请作用于 `assets/` 真源后重新构建。
+> **说明**：根目录的 `index.html` / `reader.html` 为**构建产物**（已列入 `.gitignore`，随构建自动再生成，仅保留最新版本入库）；根级不再存放 `reader_app.js` / `reader_style.css` 副本（已移除，唯一真源为 `assets/`）。`scripts/legacy/` 下的历史脚本与历史 `output/` 构建产物均已归档/忽略，不可编辑——一切修改请作用于 `assets/` 真源后重新构建。
 
 ---
 
@@ -142,7 +142,7 @@ TheAtlantic/
 ## 🛠️ 维护与变更记录
 
 - **完整变更历史**：见 [`CHANGELOG.md`](CHANGELOG.md)（Keep a Changelog 规范，分版本记录，最新 v2.2.0）。
-- **历轮评审与修复执行记录**：`CODE_REVIEW.md`（v1.0）/ `CODE_REVIEW_V2_REAUDIT.md`（v2.0 复核）/ `HARSH_REVIEW.md`（v2.1 整改回执）/ `FINAL_SHARP_REVIEW.md`（终局评测 + v2.2 勘误附录）。
+- **历轮评审与整改执行记录**：`docs/reviews/round-1-code-review.md`（v1.0 360° 评审）/ `round-2-reaudit.md`（v2.0 复核）/ `round-3-harsh-review.md`（v2.1 整改回执）/ `round-4-final-sharp.md`（终局评测 + v2.2 勘误附录）。
 
 **构建与测试闭环**（修改数据后请依次执行）：
 

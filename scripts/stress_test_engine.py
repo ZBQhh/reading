@@ -213,7 +213,7 @@ step('E key triggers exportAllMarkdown', src.includes("code === 'KeyE'") && src.
 step('export-all-btn wired into els map', src.includes("exportAllBtn: 'export-all-btn'"));
 step('7.4: self-hosted fonts via @font-face', cssSrc.includes("@font-face") && cssSrc.includes("newcm08-book.woff2") && cssSrc.includes("source-han-serif-sc-regular.woff2"));
 step('7.4: font refs point ../fonts/ (CSS-relative)', cssSrc.includes("url('../fonts/"));
-step('7.4: serif default mode', src.includes("lsGet(LS.font, 'serif')"));
+step('7.4: sans default mode (黑体首启)', src.includes("lsGet(LS.font, 'sans')"));
 step('R-11: no Google Fonts anywhere', !cssSrc.includes('fonts.googleapis.com') && !cssSrc.includes('fonts.gstatic.com'));
 step('7.2-wordbook: LS.wordbook key + modal + L shortcut', src.includes("wordbook: 'atlantic_reader_wordbook'") && src.includes('wordbook-modal') && src.includes("code === 'KeyL'"));
 step('7.2-wordbook: wb-float-btn on single-word selection', src.includes('wb-float-btn') && src.includes('wordMatch'));

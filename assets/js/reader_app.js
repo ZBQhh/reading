@@ -813,27 +813,30 @@
     return { node: walker.lastChild, off: (walker.lastChild ? (walker.lastChild.nodeValue || '').length : 0) };
   }
 
-  /** 序列化当前鼠标选区为高亮（仅限同段 .en-text 内） */
+  /** 序列化当前鼠标选区为高亮（英文 .en-text 或中文 .zh-text 均可） */
   function captureSelectionHighlight() {
     const sel = window.getSelection();
-    if (!sel || sel.isCollapsed || sel.rangeCount === 0) { toast('💡 请先选中一段英文', 'warn'); return; }
+    if (!sel || sel.isCollapsed || sel.rangeCount === 0) { toast('💡 请先选中一段文字', 'warn'); return; }
     const rg = sel.getRangeAt(0);
     const startEl = rg.startContainer.nodeType === Node.ELEMENT_NODE ? rg.startContainer : rg.startContainer.parentElement;
     const endEl = rg.endContainer.nodeType === Node.ELEMENT_NODE ? rg.endContainer : rg.endContainer.parentElement;
     const segBlock = startEl.closest && startEl.closest('.segment-block');
-    if (!segBlock || !endEl.closest || !endEl.closest('.segment-block')) { toast('⚠️ 高亮仅支持页内单段选区', 'error'); return; }
+    if (!segBlock || !endEl.closest || !endEl.closest('.segment-block')) { toast('⚠️ 高亮仅支持单段选区', 'error'); return; }
     if (startEl.closest('.segment-block') !== endEl.closest('.segment-block')) { toast('⚠️ 高亮仅支持单段选区', 'warn'); return; }
+    const inZh = !!startEl.closest('.zh-text-card');
+    const zhInner = inZh ? segBlock.querySelector('.zh-text-card > div:first-child') : null;
     const enEl = segBlock.querySelector('.en-text');
-    if (!enEl) { toast('⚠️ 该段无英文正文', 'warn'); return; }
-    const walker = document.createTreeWalker(enEl, NodeFilter.SHOW_TEXT);
+    const targetEl = inZh ? zhInner : enEl;
+    if (!targetEl) { toast('⚠️ 该段无可用正文', 'warn'); return; }
+    const walker = document.createTreeWalker(targetEl, NodeFilter.SHOW_TEXT);
     const textNodes = [];
     let n; while ((n = walker.nextNode())) textNodes.push(n);
     let startAbs = -1; let endAbs = -1; let acc = 0;
     for (let i = 0; i < textNodes.length; i++) {
       const tn = textNodes[i];
       const len = (tn.nodeValue || '').length;
-      if (startAbs < 0 && (tn === rg.startContainer || tn.contains(rg.startContainer) || rg.startContainer === enEl)) {
-        if (rg.startContainer === enEl) startAbs = acc;
+      if (startAbs < 0 && (tn === rg.startContainer || tn.contains(rg.startContainer) || rg.startContainer === targetEl)) {
+        if (rg.startContainer === targetEl) startAbs = acc;
         else if (tn === rg.startContainer) startAbs = acc + rg.startOffset;
         else if (tn.contains(rg.startContainer)) {
           let cur = rg.startContainer; let off = rg.startOffset;
@@ -841,7 +844,7 @@
           startAbs = acc + off;
         }
       }
-      if (endAbs === -1 && (tn === rg.endContainer || (tn.contains(rg.endContainer) && rg.endContainer !== enEl))) {
+      if (endAbs === -1 && (tn === rg.endContainer || (tn.contains(rg.endContainer) && rg.endContainer !== targetEl))) {
         if (tn === rg.endContainer) endAbs = acc + rg.endOffset;
         else {
           let cur = rg.endContainer; let off = rg.endOffset;
@@ -860,11 +863,12 @@
     const text = sel.toString().trim();
     if (!text) return;
     const hls = loadHighlights();
+    const lang = inZh ? 'zh' : 'en';
     // 去重：同页同段同区间不重复添加
-    const dup = hls.some(function (h) { return h.issue === currentIssueId && h.page === currentPage && h.seg === segIdx && h.start === startAbs && h.end === endAbs; });
-    if (dup) { removeHighlight(segIdx, startAbs, endAbs); }
+    const dup = hls.some(function (h) { return h.issue === currentIssueId && h.page === currentPage && h.seg === segIdx && h.lang === lang && h.start === startAbs && h.end === endAbs; });
+    if (dup) { removeHighlight(segIdx, startAbs, endAbs, lang); }
     else {
-      hls.push({ issue: currentIssueId, page: currentPage, seg: segIdx, start: startAbs, end: endAbs, text: text.slice(0, 300), ts: Date.now() });
+      hls.push({ issue: currentIssueId, page: currentPage, seg: segIdx, lang: lang, start: startAbs, end: endAbs, text: text.slice(0, 300), ts: Date.now() });
       saveHighlights(hls);
       applyPageHighlights();
       toast('🔖 已高亮「' + text.slice(0, 24) + (text.length > 24 ? '…' : '') + '」');
@@ -872,14 +876,14 @@
     sel.removeAllRanges();
   }
 
-  function removeHighlight(segIdx, start, end) {
+  function removeHighlight(segIdx, start, end, lang) {
     let hls = loadHighlights();
-    hls = hls.filter(function (h) { return !(h.issue === currentIssueId && h.page === currentPage && h.seg === segIdx && h.start === start && h.end === end); });
+    hls = hls.filter(function (h) { return !(h.issue === currentIssueId && h.page === currentPage && h.seg === segIdx && h.lang === lang && h.start === start && h.end === end); });
     saveHighlights(hls);
     applyPageHighlights();
   }
 
-  /** 重渲染当前页高亮（mark 包裹） */
+  /** 重渲染当前页高亮（en/zh 双语 mark 包裹） */
   function applyPageHighlights() {
     const body = els.articleBody;
     if (!body) return;
@@ -888,10 +892,10 @@
     pageHl.forEach(function (hl) {
       const segBlock = body.querySelector('#seg-' + hl.seg);
       if (!segBlock) return;
-      const enEl = segBlock.querySelector('.en-text');
-      if (!enEl) return;
-      const a = locateTextOffset(enEl, hl.start);
-      const b = locateTextOffset(enEl, hl.end);
+      const targetEl = hl.lang === 'zh' ? segBlock.querySelector('.zh-text-card > div:first-child') : segBlock.querySelector('.en-text');
+      if (!targetEl) return;
+      const a = locateTextOffset(targetEl, hl.start);
+      const b = locateTextOffset(targetEl, hl.end);
       if (!a.node || !b.node || a.node === b.node && a.off === b.off) return;
       const rg = document.createRange();
       rg.setStart(a.node, a.off);
@@ -1651,10 +1655,9 @@
                 let start = 0; let cur = hlMark;
                 const offs = [];
                 let total = 0;
-                // 计算被包裹文本在 enEl 文本流中的绝对偏移
-                const pt = [];
-                let whole = '';
-                // 简化：取 mark 前后兄弟文本流
+                // 计算被包裹文本在目标容器（en/zh）文本流中的绝对偏移
+                const inZh = hlMark.closest('.zh-text-card') !== null;
+                const targetEl = inZh ? (block.querySelector('.zh-text-card > div:first-child') || enEl) : enEl;
                 let before = 0;
                 (function scan(el) {
                   el.childNodes.forEach(function (c) {
@@ -1662,10 +1665,10 @@
                     if (c.nodeType === Node.TEXT_NODE) total += (c.nodeValue || '').length;
                     else if (c.nodeType === Node.ELEMENT_NODE && !c.classList.contains('page-highlight')) scan(c);
                   });
-                })(enEl);
+                })(targetEl);
                 const markLen = (hlMark.textContent || '').length;
                 const hls0 = loadHighlights();
-                saveHighlights(hls0.filter(function (h) { return !(h.issue === currentIssueId && h.page === currentPage && h.seg === segIdx && h.start === before && h.end === before + markLen); }));
+                saveHighlights(hls0.filter(function (h) { return !(h.issue === currentIssueId && h.page === currentPage && h.seg === segIdx && h.lang === (inZh ? 'zh' : 'en') && h.start === before && h.end === before + markLen); }));
                 // 物理移除 mark（保留文本）
                 const frag = document.createDocumentFragment();
                 while (hlMark.firstChild) frag.appendChild(hlMark.firstChild);
@@ -1711,6 +1714,10 @@
         const dy = e.changedTouches[0].clientY - touchStartY;
         touchStartX = null;
         touchStartY = null;
+        // 若本次滑动是文本选择（有选区）或触摸起于 selectable 文本，则不当作翻页手势
+        const selNow = window.getSelection();
+        const selecting = selNow && !selNow.isCollapsed && selNow.rangeCount > 0;
+        if (selecting) return;
         if (Math.abs(dx) > HELD.SWIPE_THRESHOLD_PX && Math.abs(dx) > Math.abs(dy) * 1.2) {
           loadPage(currentPage + (dx < 0 ? 1 : -1));
         }
@@ -1722,34 +1729,49 @@
     if (saved > 0) applyFontScale(saved);
     else applyFontScale(globalFontScale);
 
-    // 选文高亮浮动条（毒舌 7.2）：mouseup 时若选中英文文本，浮现「🔖 高亮」按钮；单选一个英文单词时追加「📖 生词」
-    document.addEventListener('mouseup', function (e) {
-      let floatBtn = els.hlFloatBtn;
-      if (floatBtn) { floatBtn.remove(); els.hlFloatBtn = null; }
+    // 选文浮动条（毒舌 7.2 增强）：mouseup / selectionchange / touchend 三通道驱动。
+    // 选中英文段落 → 「🔖 高亮」；单选英文单词 → 追加「📖 生词」；选中中文 → 仅高亮（双语高亮 v2.4）
+    function removeSelectionToolbar() {
+      if (els.hlFloatBtn) { els.hlFloatBtn.remove(); els.hlFloatBtn = null; }
       if (els.wbFloatBtn) { els.wbFloatBtn.remove(); els.wbFloatBtn = null; }
+    }
+    function selectionInsideBody() {
       const sel = window.getSelection();
-      if (!sel || sel.isCollapsed || sel.rangeCount === 0) return;
+      if (!sel || sel.isCollapsed || sel.rangeCount === 0) return null;
       const rg = sel.getRangeAt(0);
-      const selText = sel.toString().trim();
       let el = rg.startContainer;
       if (el.nodeType === Node.TEXT_NODE) el = el.parentElement;
-      if (!el || !els.articleBody || !els.articleBody.contains(el)) { sel.removeAllRanges(); return; }
-      const rect = rg.getBoundingClientRect();
-      floatBtn = document.createElement('button');
+      if (!el || !els.articleBody || !els.articleBody.contains(el)) return null;
+      return { rg: rg, sel: sel };
+    }
+    function showSelectionToolbar() {
+      const ctx = selectionInsideBody();
+      if (!ctx) { removeSelectionToolbar(); return; }
+      const rect = ctx.rg.getBoundingClientRect();
+      if (rect.width === 0 && rect.height === 0) return;
+      if (els.hlFloatBtn) {
+        els.hlFloatBtn.style.top = Math.max(8, rect.top - 38) + 'px';
+        els.hlFloatBtn.style.left = Math.max(8, rect.left + rect.width / 2 - 34) + 'px';
+        if (els.wbFloatBtn) {
+          els.wbFloatBtn.style.top = els.hlFloatBtn.style.top;
+          els.wbFloatBtn.style.left = Math.min(window.innerWidth - 62, parseFloat(els.hlFloatBtn.style.left) + 74) + 'px';
+        }
+        return;
+      }
+      const floatBtn = document.createElement('button');
       floatBtn.type = 'button';
       floatBtn.className = 'hl-float-btn';
       floatBtn.textContent = '🔖 高亮';
       floatBtn.setAttribute('aria-label', '高亮选中文本');
       floatBtn.style.top = Math.max(8, rect.top - 38) + 'px';
       floatBtn.style.left = Math.max(8, rect.left + rect.width / 2 - 34) + 'px';
-      floatBtn.addEventListener('click', function (ev) {
-        ev.stopPropagation();
+      floatBtn.addEventListener('click', function () {
         captureSelectionHighlight();
-        if (els.hlFloatBtn) { els.hlFloatBtn.remove(); els.hlFloatBtn = null; }
-        if (els.wbFloatBtn) { els.wbFloatBtn.remove(); els.wbFloatBtn = null; }
+        removeSelectionToolbar();
       });
       document.body.appendChild(floatBtn);
       els.hlFloatBtn = floatBtn;
+      const selText = ctx.sel.toString().trim();
       const wordMatch = /^[A-Za-z][A-Za-z'-]*$/.test(selText);
       if (wordMatch) {
         const wordBtn = document.createElement('button');
@@ -1759,16 +1781,29 @@
         wordBtn.setAttribute('aria-label', '收藏生词');
         wordBtn.style.top = floatBtn.style.top;
         wordBtn.style.left = Math.min(window.innerWidth - 62, parseFloat(floatBtn.style.left) + 74) + 'px';
-        wordBtn.addEventListener('click', function (ev) {
-          ev.stopPropagation();
+        wordBtn.addEventListener('click', function () {
           addWord(selText);
-          sel.removeAllRanges();
-          if (els.hlFloatBtn) { els.hlFloatBtn.remove(); els.hlFloatBtn = null; }
+          window.getSelection().removeAllRanges();
+          removeSelectionToolbar();
         });
         document.body.appendChild(wordBtn);
         els.wbFloatBtn = wordBtn;
-      } else if (els.wbFloatBtn) { els.wbFloatBtn.remove(); els.wbFloatBtn = null; }
-    });
+      }
+    }
+    let selectionToolbarTimer = null;
+    function scheduleSelectionToolbar() {
+      if (selectionToolbarTimer) clearTimeout(selectionToolbarTimer);
+      selectionToolbarTimer = setTimeout(showSelectionToolbar, 30);
+    }
+    // 桌面 mouseup：同步显示（即时响应 + 冒烟/回归测试同步断言依赖）
+    document.addEventListener('mouseup', showSelectionToolbar);
+    document.addEventListener('selectionchange', scheduleSelectionToolbar);
+    let touchToolbarTimer = null;
+    document.addEventListener('touchend', function () {
+      // 触屏拖动选词后可能无 mouseup（部分 Android WebView），用 touchend 兜底
+      if (touchToolbarTimer) clearTimeout(touchToolbarTimer);
+      touchToolbarTimer = setTimeout(showSelectionToolbar, 80);
+    }, { passive: true });
 
     bindOne('exportAllBtn', exportAllMarkdown);
 
@@ -1950,7 +1985,7 @@
     $$('.popover-theme-card').forEach(function (c) { c.classList.toggle('active', c.dataset.theme === initTheme); });
 
     // 字体模式（毒舌 7.4：自托管 NewCM08 + 思源宋体，默认即出版级衬线）
-    if (lsGet(LS.font, 'serif') === 'serif') { isSerifMode = true; document.body.classList.add('font-mode-serif'); if (els.fontToggleBtn) els.fontToggleBtn.textContent = '🔠 典雅衬线'; }
+    if (lsGet(LS.font, 'sans') === 'serif') { isSerifMode = true; document.body.classList.add('font-mode-serif'); if (els.fontToggleBtn) els.fontToggleBtn.textContent = '🔠 典雅衬线'; }
 
     // 视图 / 对齐还原
     setViewMode(lsGet(LS.view, 'interlinear'));

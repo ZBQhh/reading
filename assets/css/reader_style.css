@@ -89,7 +89,7 @@ button:focus:not(:focus-visible) { outline: none; }
   --font-serif-en: 'NewCM08', 'Merriweather', Georgia, 'Times New Roman', serif;
   --font-serif-zh: 'Source Han Serif SC', 'Noto Serif SC', 'Songti SC', 'SimSun', serif;
   --font-display: 'NewCM08', 'Cinzel', 'Times New Roman', serif;
-  --font-zh: 'Source Han Serif SC', 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  --font-zh: 'Noto Sans SC', 'Source Han Sans SC', 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif;
 }
 
 /* 自托管 @font-face（assets/fonts/*.woff2，构建产物由 scripts/build_fonts.py 生成 · url 相对本 CSS 文件） */

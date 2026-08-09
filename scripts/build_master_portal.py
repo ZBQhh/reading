@@ -5,9 +5,6 @@ import shutil
 def build_portal():
     with open('assets/data/magazines.json', 'r', encoding='utf-8') as f:
         all_issues = json.load(f)
-        
-    shutil.copy2('assets/css/reader_style.css', 'reader_style.css')
-    shutil.copy2('assets/js/reader_app.js', 'reader_app.js')
     
     html_content = f"""<!DOCTYPE html>
 <html lang="en">
