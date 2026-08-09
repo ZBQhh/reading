@@ -17,9 +17,6 @@ def build_portal():
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <title>The Atlantic & Global Journals — Private Bespoke Reader | 顶级期刊双语私享数字典藏</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800;900&family=Inter:wght@300;400;500;600;700;800&family=Merriweather:ital,wght@0,300;0,400;0,700;1,300;1,400&family=Noto+Sans+SC:wght@300;400;500;600;700;900&family=Noto+Serif+SC:wght@300;400;600;700;900&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="assets/css/reader_style.css">
 </head>
 <body class="theme-light view-interlinear align-mode-flush">
@@ -34,11 +31,11 @@ def build_portal():
         <p>Private Bespoke Digital Archive &bull; 双语私享数字期刊典藏馆</p>
       </div>
       <div class="portal-controls">
-        <button class="shelf-enter-btn feature-start-btn" onclick="window.enterReaderRoom('2026-08', 16)" style="background: var(--accent-gold); color: #121316; font-weight: 800;" title="直接跳过刊头广告与目录，秒进8万字重磅正文特稿专区">
+        <button class="shelf-enter-btn feature-start-btn" data-issue="2026-08" data-page="16" style="background: var(--accent-gold); color: #121316; font-weight: 800;" title="直接跳过刊头广告与目录，秒进8万字重磅正文特稿专区">
           <span>📖 直达重磅特稿 (P16: 阅读的终结)</span>
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
         </button>
-        <button class="shelf-enter-btn" onclick="window.enterReaderRoom('2026-08', 1)">
+        <button class="shelf-enter-btn" data-issue="2026-08">
           <span>从封面开始 (P1)</span>
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
         </button>
@@ -86,19 +83,19 @@ def build_portal():
         <span class="btn-label">馆</span>
       </button>
 
-      <button id="toggle-sidebar-btn" class="icon-btn" onclick="window.toggleSidebar(event)" title="展开/收起目录 (T)">
+      <button id="toggle-sidebar-btn" class="icon-btn" title="展开/收起目录 (T)">
         <span class="btn-icon">📋</span>
         <span class="btn-label">目录</span>
       </button>
       
-      <div class="magazine-brand" onclick="window.openLibraryShelf ? window.openLibraryShelf() : window.location.reload()">
+      <div class="magazine-brand">
         <span class="masthead-logo">THE ATLANTIC</span>
       </div>
 
       <!-- Quick Issue Switcher Pill Button -->
       <div class="issue-switcher-pill" id="issue-switcher-pill" title="点击一键切换 8月刊 / 7月刊 (M)">
-        <span class="issue-pill-full">📅 8月刊 &bull; 104P</span>
-        <span class="issue-pill-compact">📅 8月</span>
+        <span class="issue-pill-full">📅 加载中…</span>
+        <span class="issue-pill-compact">📅 …</span>
       </div>
     </div>
 
@@ -126,7 +123,8 @@ def build_portal():
       <!-- Full Page Audio Widget -->
       <div class="audio-player-widget">
         <button id="play-page-audio-btn" class="audio-btn" title="原声朗读本页英文 (P)">
-          <span class="audio-btn-text">▶ 朗读</span>
+          <span class="audio-btn-icon">▶</span>
+          <span class="audio-btn-text">朗读</span>
         </button>
       </div>
 
@@ -216,7 +214,7 @@ def build_portal():
     <!-- Section 6: Utilities -->
     <div class="popover-section">
       <div class="popover-controls-row">
-        <button class="popover-pill-btn" onclick="window.toggleShortcutsModal()" title="查看全站快捷键">⌨️ 快捷键速查</button>
+        <button id="shortcuts-open-btn" class="popover-pill-btn" title="查看全站快捷键">⌨️ 快捷键速查</button>
         <button id="fullscreen-btn" class="popover-pill-btn" title="全屏沉浸阅读 (F)">⛶ 全屏沉浸</button>
       </div>
     </div>
@@ -247,7 +245,7 @@ def build_portal():
         <button class="tab-btn" data-tab="history">⏱️ 历史</button>
         <button class="tab-btn" data-tab="bookmarks">书签</button>
         <button class="tab-btn" data-tab="search-results" id="search-tab" style="display:none;">检索</button>
-        <button class="sidebar-close-btn" id="close-sidebar-btn" onclick="window.toggleSidebar(event)" title="收起目录 (T / Esc)">✕ 收起</button>
+        <button class="sidebar-close-btn" id="close-sidebar-btn" title="收起目录 (T / Esc)">✕ 收起</button>
       </div>
 
       <!-- Tab Content: TOC -->
@@ -304,7 +302,7 @@ def build_portal():
             </div>
           </div>
           <div class="image-canvas-wrap" id="image-canvas-wrap">
-            <img id="page-original-image" src="issues/2026-08/images/page_001.png" alt="Magazine Original Page">
+            <img id="page-original-image" src="data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=" alt="Magazine Original Page">
           </div>
         </div>
 
@@ -360,7 +358,7 @@ def build_portal():
     <div class="shortcuts-card">
       <div class="shortcuts-header">
         <h3>⌨️ 全站全能快捷键速查</h3>
-        <button class="close-shortcuts-btn" onclick="window.toggleShortcutsModal()">&times;</button>
+        <button class="close-shortcuts-btn">&times;</button>
       </div>
       <div class="shortcuts-grid">
         <div class="shortcut-row">
@@ -392,6 +390,18 @@ def build_portal():
           <span class="shortcut-key-badge">M</span>
         </div>
         <div class="shortcut-row">
+          <span>回到页首 (vim gg)</span>
+          <span class="shortcut-key-badge">Shift + G</span>
+        </div>
+        <div class="shortcut-row">
+          <span>滑到底部 (vim G)</span>
+          <span class="shortcut-key-badge">G</span>
+        </div>
+        <div class="shortcut-row">
+          <span>触屏左右滑动翻页</span>
+          <span class="shortcut-key-badge">Swipe</span>
+        </div>
+        <div class="shortcut-row">
           <span>切换逐段 / 原图 / 单语</span>
           <span class="shortcut-key-badge">1 / 2 / 3 / 4</span>
         </div>
@@ -408,16 +418,17 @@ def build_portal():
           <span class="shortcut-key-badge">F</span>
         </div>
         <div class="shortcut-row">
-          <span>返回期刊馆 / 退出</span>
+          <span>返回期刊馆</span>
           <span class="shortcut-key-badge">Esc / H</span>
         </div>
       </div>
+      <div id="shortcuts-version" class="shortcuts-version" style="padding:10px 0 2px; font-size:11px; color:var(--text-muted);"></div>
     </div>
   </div>
 
   <script>
     // Embedded Multi-Issue Archive
-    window.ALL_ISSUES = {json.dumps(all_issues, ensure_ascii=False)};
+    window.ALL_ISSUES = {json.dumps(all_issues, ensure_ascii=False).replace('</', '<\\/')};
   </script>
   <script src="assets/js/reader_app.js"></script>
 </body>

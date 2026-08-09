@@ -1,1542 +1,1411 @@
-// === The Atlantic Grand 24px Digital Reader Script ($20/mo Tier) ===
-(function() {
-  const allIssues = window.ALL_ISSUES || {};
-  let currentPubFilter = 'all';
-  let currentIssueId = localStorage.getItem('atlantic_reader_issue') || "2026-08";
-  if (!allIssues[currentIssueId]) {
-    currentIssueId = Object.keys(allIssues)[0] || "2026-08";
-  }
+/* ============================================================================
+   The Atlantic — Grand Bespoke Digital Magazine Reader (v2.1 · 毒蛇锐评修复版)
+   ----------------------------------------------------------------------------
+   本轮修复（2026-08-09 · 对照 HARSH_REVIEW.md）：
+   - Bug A/B/D/E 已修（v2.0 复审）；本版再修锐评 18 项：
+     死代码(bindOneEl/currentAlignMode/void code)、body._tapspeak DOM 状态、
+     els 声明式映射、G/Shift+G vim 惯例、F 直达、J 去重、搜索去冗余、
+     pickVoice 性能、空数据报错、双卡视觉层级、h3/h4 clamp、滑动手势、
+     confirm 默认聚焦安全侧、toast 分级时长、搜索键盘导航、hero 委托、
+     速度文案、VERSION 可视化
+   ============================================================================ */
+(function () {
+  'use strict';
 
-  let currentIssueObj = allIssues[currentIssueId] || { pages: [] };
+  // ---------------------------------------------------------------- 常量
+  const LS = {
+    issue: 'atlantic_reader_issue',
+    pagePrefix: 'atlantic_reader_last_page_',
+    theme: 'atlantic_reader_theme',
+    view: 'atlantic_reader_view',
+    font: 'atlantic_reader_font_mode',
+    bookmarks: 'atlantic_reader_bookmarks_',
+    history: 'atlantic_reader_history_log',
+    speed: 'atlantic_reader_audio_speed',
+    align: 'atlantic_reader_align_mode',
+    fontScale: 'atlantic_reader_font_scale',
+  };
+  const VIEW_MODES = ['interlinear', 'split', 'en-only', 'zh-only'];
+  const THEMES = ['light', 'sepia', 'beach', 'academic', 'forest', 'dark'];
+  const HELD = {
+    SEARCH_DEBOUNCE: 150,
+    HISTORY_MAX: 50,
+    ZOOM_MAX: 4,
+    ZOOM_MIN: 0.5,
+    JUMP_LOCK_MS: 60,
+    MIN_SPEECH_SEG_CHARS: 5,
+    SWIPE_THRESHOLD_PX: 60,
+  };
+  const VERSION = '2.1.0';
+  const allIssues = window.ALL_ISSUES || {};
+
+  // ---------------------------------------------------------------- 状态
+  // 注意：数据缺失时绝不伪造 104 页空刊（毒舌 2.7/7.6）——boot 时报错
+  let currentPubFilter = 'all';
+  let currentIssueId = lsGet(LS.issue, '');
+  if (!allIssues[currentIssueId]) currentIssueId = Object.keys(allIssues)[0] || '';
+  let currentIssueObj = allIssues[currentIssueId] || { id: '', pages: [], totalPages: 0, displayName: '未加载' };
   let data = currentIssueObj.pages || [];
   let currentPage = 1;
   let currentZoom = 1.0;
-  let globalFontSize = 22.0; // Universal 1:1 Global Base Scale
-  let speechSynth = window.speechSynthesis;
-  let currentUtterance = null;
+  let globalFontScale = 22;
   let isPlayingAudio = false;
-  const STORAGE_KEY_SPEED = 'atlantic_reader_audio_speed';
-  let audioSpeed = parseFloat(localStorage.getItem(STORAGE_KEY_SPEED)) || 1.0;
+  let audioSpeed = readFloat(LS.speed, 1.0);
   let currentPlayingSegmentDiv = null;
   let isSerifMode = false;
-  let currentViewMode = localStorage.getItem('atlantic_reader_view') || 'interlinear';
-  let isNavigating = false; // Lock to guarantee strict 1:1 page turns without double-firing jumps
+  let currentViewMode = lsGet(LS.view, 'interlinear');
+  let isNavigating = false;
+  let searchIndexCache = null;
+  let ttsVoice = null;
+  let currentUtterance = null;
 
-  // LocalStorage Keys
-  const STORAGE_KEY_PAGE_PREFIX = 'atlantic_reader_last_page_';
-  const STORAGE_KEY_THEME = 'atlantic_reader_theme';
-  const STORAGE_KEY_VIEW = 'atlantic_reader_view';
-  const STORAGE_KEY_FONT = 'atlantic_reader_font_mode';
-  const STORAGE_KEY_BOOKMARKS_PREFIX = 'atlantic_reader_bookmarks_';
-  const STORAGE_KEY_ISSUE = 'atlantic_reader_issue';
-  const STORAGE_KEY_HISTORY = 'atlantic_reader_history_log';
+  const els = {};
 
-  // Reading History Management Engine
-  function getHistoryList() {
+  // ---------------------------------------------------------------- 工具
+  /** 读取存储（异常/缺失安全） */
+  function lsGet(key, fallback) {
     try {
-      return JSON.parse(localStorage.getItem(STORAGE_KEY_HISTORY)) || [];
+      const v = localStorage.getItem(key);
+      return v === null ? fallback : v;
     } catch (e) {
-      return [];
+      return fallback;
     }
   }
-
-  function saveHistoryList(list) {
-    localStorage.setItem(STORAGE_KEY_HISTORY, JSON.stringify(list));
-    renderContinueReadingBanner();
-    renderHistoryTab();
+  function lsSet(key, value) {
+    try { localStorage.setItem(key, value); } catch (e) { /* 隐私模式/配额满时静默降级 */ }
   }
-
-  function formatTimeAgo(timestamp) {
-    if (!timestamp) return '刚刚';
-    const diff = Math.floor((Date.now() - timestamp) / 1000);
-    if (diff < 60) return '刚刚';
-    if (diff < 3600) return `${Math.floor(diff / 60)} 分钟前`;
-    if (diff < 86400) return `${Math.floor(diff / 3600)} 小时前`;
-    if (diff < 2592000) return `${Math.floor(diff / 86400)} 天前`;
-    const d = new Date(timestamp);
-    return `${d.getMonth() + 1}月${d.getDate()}日`;
+  function readFloat(key, fallback) {
+    const v = parseFloat(lsGet(key, ''));
+    return Number.isFinite(v) && v > 0 ? v : fallback;
   }
-
-  function recordReadingHistory(issueId, pageNum, sectionTitle) {
-    if (!issueId || !pageNum) return;
-    const issueMeta = allIssues[issueId] || { displayName: `The Atlantic · ${issueId}`, totalPages: 104 };
-    const total = issueMeta.totalPages || 104;
-    const progressPct = Math.min(100, Math.max(1, Math.round((pageNum / total) * 100)));
-
-    let history = getHistoryList().filter(h => h.issueId !== issueId);
-    history.unshift({
-      issueId: issueId,
-      issueName: issueMeta.displayName || issueId,
-      page: pageNum,
-      totalPages: total,
-      progress: progressPct,
-      sectionTitle: sectionTitle ? sanitize(sectionTitle) : `Page ${pageNum}`,
-      timestamp: Date.now()
-    });
-
-    if (history.length > 50) history.pop();
-    saveHistoryList(history);
+  function readInt(str, fallback) {
+    const v = parseInt(str, 10);
+    return Number.isFinite(v) ? v : fallback;
   }
-
-  function renderContinueReadingBanner() {
-    const heroEl = document.getElementById('continue-reading-hero');
-    if (!heroEl) return;
-    const history = getHistoryList();
-    if (!history || history.length === 0) {
-      heroEl.style.display = 'none';
-      return;
-    }
-
-    const latest = history[0];
-    heroEl.style.display = 'flex';
-    heroEl.innerHTML = `
-      <div class="continue-left">
-        <span class="continue-badge">⏱️ 最近在读 · 进度 ${latest.progress}%</span>
-        <h4>${latest.issueName}</h4>
-        <p>上次读到：第 ${latest.page} 页 · ${latest.sectionTitle} (${formatTimeAgo(latest.timestamp)})</p>
-      </div>
-      <button class="continue-btn" title="一键直达断点继续阅读">
-        <span>继续阅读</span>
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
-      </button>
-    `;
-    heroEl.onclick = () => {
-      enterReaderRoom(latest.issueId, latest.page);
-    };
-  }
-
-  function renderHistoryTab() {
-    const listEl = document.getElementById('history-timeline-list');
-    const countEl = document.getElementById('history-count');
-    if (!listEl) return;
-
-    const history = getHistoryList();
-    if (countEl) countEl.textContent = `${history.length} 条阅读足迹`;
-
-    listEl.innerHTML = '';
-    if (history.length === 0) {
-      listEl.innerHTML = '<div class="bookmark-empty-hint">暂无阅读历史，翻阅期刊时系统将自动实时记录您的阅读足迹</div>';
-      return;
-    }
-
-    history.forEach(item => {
-      const card = document.createElement('div');
-      card.className = 'history-item';
-      card.innerHTML = `
-        <div class="history-item-top">
-          <span class="history-page-badge">P${item.page} · ${item.progress}%</span>
-          <span class="history-time-tag">${formatTimeAgo(item.timestamp)}</span>
-        </div>
-        <div class="history-title">${item.sectionTitle}</div>
-        <div class="history-issue-tag">${item.issueName}</div>
-        <div class="history-progress-track">
-          <div class="history-progress-fill" style="width: ${item.progress}%"></div>
-        </div>
-      `;
-      card.addEventListener('click', () => {
-        enterReaderRoom(item.issueId, item.page);
-        if (window.innerWidth <= 960 && sidebar) {
-          sidebar.classList.add('collapsed');
-        }
-      });
-      listEl.appendChild(card);
-    });
-  }
-
-  // Clear History Handler
-  const clearHistoryBtn = document.getElementById('clear-history-btn');
-  if (clearHistoryBtn) {
-    clearHistoryBtn.addEventListener('click', () => {
-      if (confirm('确定要清空全部阅读历史足迹吗？')) {
-        localStorage.removeItem(STORAGE_KEY_HISTORY);
-        renderContinueReadingBanner();
-        renderHistoryTab();
-        showHUDToast('🗑️ 阅读历史足迹已清空');
-      }
-    });
-  }
-
-  // HUD Toast Trigger
-  function showHUDToast(msg) {
-    let toast = document.getElementById('reader-hud-toast');
-    if (!toast) {
-      toast = document.createElement('div');
-      toast.id = 'reader-hud-toast';
-      toast.className = 'reader-hud-toast';
-      document.body.appendChild(toast);
-    }
-    toast.textContent = msg;
-    toast.classList.add('visible');
-    clearTimeout(toast._timeout);
-    toast._timeout = setTimeout(() => {
-      toast.classList.remove('visible');
-    }, 1200);
-  }
-
-  // Smooth Scroll Helper (Guaranteed across Library Portal and Reader Viewport)
-  function scrollPage(delta) {
-    const portal = document.getElementById('library-portal-view');
-    if (portal && !portal.classList.contains('hidden')) {
-      portal.scrollTop += delta;
-      return;
-    }
-
-    const vp = document.querySelector('.reader-viewport');
-    if (vp) {
-      vp.scrollTop += delta;
-    }
-    window.scrollBy(0, delta);
-  }
-
-  // Zero-Delay Scan Image Preloader
-  function preloadAdjacentPages(pNum) {
-    const prevP = pNum - 1;
-    const nextP = pNum + 1;
-    const folder = currentIssueObj.id === '2026-08' ? 'issues/2026-08' : 'issues/2026-07';
-
-    if (prevP >= 1) {
-      const imgPrev = new Image();
-      imgPrev.src = `${folder}/images/page_${String(prevP).padStart(3, '0')}.png`;
-    }
-    if (nextP <= currentIssueObj.totalPages) {
-      const imgNext = new Image();
-      imgNext.src = `${folder}/images/page_${String(nextP).padStart(3, '0')}.png`;
+  function readJson(key, fallback) {
+    try {
+      const v = JSON.parse(lsGet(key, ''));
+      return Array.isArray(v) ? v : fallback;
+    } catch (e) {
+      return fallback;
     }
   }
+  function $(id) { return document.getElementById(id); }
+  function $$(sel, root) { return Array.prototype.slice.call((root || document).querySelectorAll(sel)); }
+  function escHtml(s) {
+    return String(s == null ? '' : s)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+  function escRegex(q) { return q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
+  function stripInvisibles(s) { return (s || '').replace(/[\u00AD\u200B-\u200D\uFEFF]/g, ''); }
+  function debounce(fn, ms) {
+    let t;
+    return function () { const args = arguments; const self = this; clearTimeout(t); t = setTimeout(() => fn.apply(self, args), ms); };
+  }
+  function smoothByPref() {
+    return matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth';
+  }
 
-  // Bulletproof Global Sidebar Toggle
-  window.toggleSidebar = function(e) {
-    if (e && e.stopPropagation) e.stopPropagation();
-    const sb = document.getElementById('app-sidebar');
-    if (sb) {
-      const isCollapsed = sb.classList.toggle('collapsed');
-      showHUDToast(isCollapsed ? '📋 目录导航已收起' : '📖 目录导航已展开');
-    }
-  };
-
-  // DOM Elements
-  const libraryPortal = document.getElementById('library-portal-view');
-  const openPortalBtn = document.getElementById('open-portal-btn');
-  const sidebar = document.getElementById('app-sidebar');
-  const articleBody = document.getElementById('article-body');
-  const pageOriginalImg = document.getElementById('page-original-image');
-  const currentPageBadge = document.getElementById('current-page-badge');
-  const currentSectionBadge = document.getElementById('current-section-badge');
-  const pageSlider = document.getElementById('page-slider');
-  const pageCounterText = document.getElementById('page-counter-text');
-  const prevBtn = document.getElementById('prev-page-btn');
-  const nextBtn = document.getElementById('next-page-btn');
-  const tocList = document.getElementById('toc-list');
-  const pagesGrid = document.getElementById('pages-grid');
-  const searchInput = document.getElementById('global-search');
-  const searchTab = document.getElementById('search-tab');
-  const searchResultsList = document.getElementById('search-results-list');
-  const lightboxModal = document.getElementById('lightbox-modal');
-  const lightboxImg = document.getElementById('lightbox-img');
-  const copyPageBtn = document.getElementById('copy-page-btn');
-  const bookmarkPageBtn = document.getElementById('bookmark-page-btn');
-  const bookmarksList = document.getElementById('bookmarks-list');
-  const playPageAudioBtn = document.getElementById('play-page-audio-btn');
-  const audioSpeedBtn = document.getElementById('audio-speed-btn');
-  const fontToggleBtn = document.getElementById('font-family-toggle');
-  const issueSwitcherPill = document.getElementById('issue-switcher-pill');
-  const magazineShelfGrid = document.getElementById('magazine-shelf-grid');
-  const shortcutsModal = document.getElementById('shortcuts-help-modal');
-
-  // Text Sanitization
-  function sanitize(str) {
-    if (!str) return "";
-    let s = str;
-    s = s.replace(/\*\s+\*/g, ' ');
-    s = s.replace(/\*\s*\*\s*\*/g, ' ');
-    s = s.replace(/\*\*/g, '');
-    s = s.replace(/\*【图注与署名】/g, '').replace(/【图注与署名】/g, '');
-    s = s.replace(/\*【作者署名】/g, '').replace(/【作者署名】/g, '');
-    s = s.replace(/\*【金句精译】/g, '').replace(/【金句精译】/g, '');
-    s = s.replace(/\*【标题翻译】/g, '').replace(/【标题翻译】/g, '');
-    s = s.replace(/\*【副标题翻译】/g, '').replace(/【副标题翻译】/g, '');
-    s = s.replace(/\*【中文翻译】/g, '').replace(/【中文翻译】/g, '');
-    s = s.replace(/(^|\s)\*([^\*]+)\*(\s|$)/g, '$1<em>$2</em>$3');
+  /** 显示态文本：HTML 转义 + 最小 Markdown(*…* → <em>) 后注入 innerHTML 使用 */
+  function toDisplayText(str) {
+    if (!str) return '';
+    let s = String(str);
+    s = escHtml(s);
+    s = s.replace(/\*\s+\*/g, ' ').replace(/\*\*\*/g, ' ');
+    s = s.replace(/\*\*\*/g, '').replace(/\*\*/g, '');
+    s = s.replace(/\*【[^】]*】/g, '');
+    s = s.replace(/(^|\s)\*([^*]+)\*(\s|$)/g, '$1<em>$2</em>$3');
     s = s.replace(/\*/g, '');
     return s.trim();
   }
 
-  // 1. Library Shelf View Rendering & Multi-Publication Brand Matrix
-  function renderLibraryShelf() {
-    if (!magazineShelfGrid) return;
-    magazineShelfGrid.innerHTML = '';
+  /** 纯文本态：供 TTS / 属性 / 剪贴板，无任何 HTML 痕迹 */
+  function toPlainText(str) {
+    if (!str) return '';
+    return stripInvisibles(String(str))
+      .replace(/\*\s+\*/g, ' ').replace(/\*\*\*/g, ' ')
+      .replace(/\*【[^】]*】/g, ' ')
+      .replace(/\*\*/g, '').replace(/\*/g, '')
+      .replace(/[\r\n]+/g, ' ')
+      .trim();
+  }
 
-    const issuesToRender = Object.keys(allIssues).filter(id => {
+  // ---------------------------------------------------------------- HUD
+  // toast(msg, type)：type = ok(1.6s) / warn(2.5s) / error(3.5s)，按消息性质分级（毒舌 4.5）
+  let toastNode = null;
+  function toast(msg, type) {
+    if (!toastNode) {
+      toastNode = document.createElement('div');
+      toastNode.className = 'reader-hud-toast';
+      document.body.appendChild(toastNode);
+    }
+    toastNode.textContent = msg;
+    toastNode.classList.add('visible');
+    clearTimeout(toastNode._t);
+    const ms = type === 'error' ? 3500 : (type === 'warn' ? 2500 : 1600);
+    toastNode._t = setTimeout(function () { toastNode.classList.remove('visible'); }, ms);
+  }
+
+  // ---------------------------------------------------------------- 自定义确认框
+  function confirmDialog(opts) {
+    return new Promise(function (resolve) {
+      const wrap = document.createElement('div');
+      wrap.className = 'confirm-modal';
+      wrap.setAttribute('role', 'dialog');
+      wrap.setAttribute('aria-modal', 'true');
+      wrap.innerHTML =
+        '<div class="confirm-card" role="document">' +
+        '<h3>' + escHtml(opts.title || '确认操作') + '</h3>' +
+        '<p>' + escHtml(opts.message || '') + '</p>' +
+        '<div class="confirm-actions">' +
+        '<button class="confirm-btn confirm-cancel">' + escHtml(opts.cancelText || '取消') + '</button>' +
+        '<button class="confirm-btn confirm-ok' + (opts.danger ? ' danger' : '') + '">' + escHtml(opts.okText || '确认') + '</button>' +
+        '</div></div>';
+      document.body.appendChild(wrap);
+
+      let done = false;
+      function finish(val) {
+        if (done) return;
+        done = true;
+        wrap.remove();
+        resolve(val);
+      }
+      wrap.addEventListener('click', function (e) {
+        if (e.target.classList.contains('confirm-ok')) finish(true);
+        else if (e.target.classList.contains('confirm-cancel')) finish(false);
+        else if (e.target === wrap) finish(false);
+      });
+      const onKey = function (e) {
+        e.stopPropagation();
+        if (e.key === 'Escape') finish(false);
+        else if (e.key === 'Enter' && !e.shiftKey) {
+          // 毒舌 4.4：危险操作默认安全侧——Enter 取决于当前焦点钮
+          const focused = wrap.querySelector(':focus');
+          finish(focused && focused.classList.contains('confirm-cancel') ? false : true);
+        }
+      };
+      wrap.addEventListener('keydown', onKey, true);
+      // 危险操作默认聚焦"取消"，避免误回车；普通确认聚焦"确认"
+      const focusBtn = wrap.querySelector(opts.danger ? '.confirm-cancel' : '.confirm-ok');
+      if (focusBtn) focusBtn.focus();
+    });
+  }
+
+  // ---------------------------------------------------------------- 滚动
+  function scrollPage(delta) {
+    const portal = els.libraryPortal;
+    if (portal && !portal.classList.contains('hidden')) { portal.scrollTop += delta; return; }
+    const vp = els.readerViewport;
+    if (vp) vp.scrollTop += delta;
+  }
+
+  // ---------------------------------------------------------------- 图片预载
+  function preloadAdjacentPages(pNum) {
+    const root = currentIssueObj.imageRoot || 'issues/' + currentIssueObj.id;
+    if (pNum > 1) new Image().src = root + '/images/page_' + String(pNum - 1).padStart(3, '0') + '.png';
+    if (pNum < currentIssueObj.totalPages) new Image().src = root + '/images/page_' + String(pNum + 1).padStart(3, '0') + '.png';
+  }
+
+  // ==================================================================
+  // 期刊馆
+  // ==================================================================
+  function renderLibraryShelf() {
+    const grid = els.magazineShelfGrid;
+    if (!grid) return;
+    grid.innerHTML = '';
+
+    const ids = Object.keys(allIssues).filter(function (id) {
       const issue = allIssues[id];
       if (currentPubFilter === 'all') return true;
       if (currentPubFilter === 'the-atlantic') return issue.pubId === 'the-atlantic' || !issue.pubId;
       return issue.pubId === currentPubFilter;
     });
 
-    if (issuesToRender.length === 0) {
-      magazineShelfGrid.innerHTML = `
-        <div style="grid-column: 1 / -1; padding: 40px; text-align: center; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 16px;">
-          <h3 style="font-size: 18px; color: var(--text-primary); margin-bottom: 8px;">该刊物待入库</h3>
-          <p style="font-size: 13.5px; color: var(--text-secondary);">可通过 <code>python scripts/ingest_magazine.py --pdf raw_pdf/xxx.pdf --pub ${currentPubFilter} --issue 2026-09 --name "2026年9月刊"</code> 一键全自动解析入库！</p>
-        </div>
-      `;
+    if (ids.length === 0) {
+      grid.innerHTML =
+        '<div style="grid-column:1/-1;padding:36px;text-align:center;background:var(--bg-card);border:1px solid var(--border-color);border-radius:16px;">' +
+        '<h3 style="font-size:17px;color:var(--text-primary);margin-bottom:8px;">该刊物待入库</h3>' +
+        '<p style="font-size:12.5px;color:var(--text-secondary);">可用 <code>python scripts/ingest_magazine.py --pdf raw_pdf/xxx.pdf --pub ' +
+        escHtml(currentPubFilter) + ' --issue 2026-09 --name "2026年9月刊"</code> 一键入库</p></div>';
       return;
     }
 
-    issuesToRender.forEach(id => {
+    const frag = document.createDocumentFragment();
+    ids.forEach(function (id) {
       const issue = allIssues[id];
       const card = document.createElement('div');
       card.className = 'shelf-issue-card';
-      card.innerHTML = `
-        <div class="shelf-cover-wrap">
-          <img src="${issue.coverImage}" class="shelf-cover-img" alt="Cover ${issue.name}">
-        </div>
-        <div class="shelf-details">
-          <div class="shelf-details-top">
-            <span class="issue-date-tag">${issue.name} &bull; ${issue.vol}</span>
-            <h3>${issue.pubName || 'The Atlantic'}</h3>
-            <p>${issue.leadArticle || 'Bilingual Digital Archive'}</p>
-            <div class="shelf-meta-tags">
-              <span class="meta-tag">📖 ${issue.totalPages} 页双语转录</span>
-              <span class="meta-tag">¶ 24px 大字逐段对照</span>
-              <span class="meta-tag">🔊 Web Speech TTS</span>
-            </div>
-          </div>
-          <button class="shelf-enter-btn" data-issue="${id}">
-            <span>开始沉浸阅读</span>
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
-          </button>
-        </div>
-      `;
-
-      card.querySelector('.shelf-enter-btn').addEventListener('click', (e) => {
-        e.stopPropagation();
-        enterReaderRoom(id, 1);
-      });
-      card.addEventListener('click', () => {
-        enterReaderRoom(id, 1);
-      });
-
-      magazineShelfGrid.appendChild(card);
+      card.setAttribute('role', 'button');
+      card.setAttribute('tabindex', '0');
+      card.dataset.issue = id;
+      card.innerHTML =
+        '<div class="shelf-cover-wrap">' +
+        '<img src="' + escHtml(issue.coverImage) + '" class="shelf-cover-img" alt="Cover ' + escHtml(issue.name) + '" loading="lazy" decoding="async">' +
+        '</div>' +
+        '<div class="shelf-details"><div class="shelf-details-top">' +
+        '<span class="issue-date-tag">' + escHtml(issue.name) + ' &bull; ' + escHtml(issue.vol) + '</span>' +
+        '<h3>' + escHtml(issue.pubName || 'The Atlantic') + '</h3>' +
+        '<p>' + escHtml(issue.leadArticle || 'Bilingual Digital Archive') + '</p>' +
+        '<div class="shelf-meta-tags">' +
+        '<span class="meta-tag">📖 ' + escHtml(issue.totalPages) + ' 页双语转录</span>' +
+        '<span class="meta-tag">¶ ' + Math.round(globalFontScale) + 'px 大字逐段对照</span>' +
+        '<span class="meta-tag">🔊 Web Speech TTS</span>' +
+        '</div></div>' +
+        '<button class="shelf-enter-btn" data-issue="' + escHtml(id) + '" aria-label="开始沉浸阅读 ' + escHtml(issue.name) + '">' +
+        '<span>开始沉浸阅读</span>' +
+        '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>' +
+        '</button></div>';
+      frag.appendChild(card);
     });
-
-    initPortalSearch();
-    bindPubFilters();
+    grid.appendChild(frag);
   }
 
-  // Publication Filter Pills Handler
-  function bindPubFilters() {
-    document.querySelectorAll('.pub-filter-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        document.querySelectorAll('.pub-filter-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        currentPubFilter = btn.dataset.pub;
-        renderLibraryShelf();
-      });
-    });
-  }
-
-  // Global Home Portal Multi-Issue Instant Search
-  function initPortalSearch() {
-    const pInput = document.getElementById('portal-global-search');
-    const pDropdown = document.getElementById('portal-search-dropdown');
-    if (!pInput || !pDropdown) return;
-
-    pInput.addEventListener('input', (e) => {
-      const query = e.target.value.trim().toLowerCase();
-      if (!query || query.length < 2) {
-        pDropdown.classList.remove('active');
-        pDropdown.innerHTML = '';
-        return;
-      }
-
-      pDropdown.innerHTML = '';
-      let matchCount = 0;
-
-      Object.keys(allIssues).forEach(issueId => {
-        const issue = allIssues[issueId];
-        (issue.pages || []).forEach((p, idx) => {
-          const pageNum = idx + 1;
-          let matchedText = '';
-          if (p.segments) {
-            p.segments.forEach(seg => {
-              if ((seg.en && seg.en.toLowerCase().includes(query)) || (seg.zh && seg.zh.toLowerCase().includes(query))) {
-                matchedText += (seg.en || '') + ' ' + (seg.zh || '') + ' ';
-              }
-            });
-          }
-
-          if (matchedText && matchCount < 10) {
-            matchCount++;
-            const item = document.createElement('div');
-            item.className = 'portal-search-item';
-            const cleanSnippet = sanitize(matchedText.slice(0, 120)).replace(new RegExp(`(${query})`, 'gi'), '<mark>$1</mark>');
-            item.innerHTML = `
-              <div class="portal-search-item-header">
-                <span>${issue.name} &bull; PAGE ${String(pageNum).padStart(3, '0')}</span>
-                <span>${sanitize(p.section) || ''}</span>
-              </div>
-              <div class="portal-search-item-title">${sanitize(p.section) || `Page ${pageNum}`}</div>
-              <div class="portal-search-item-snippet">${cleanSnippet}...</div>
-            `;
-            item.addEventListener('click', () => {
-              pDropdown.classList.remove('active');
-              enterReaderRoom(issueId, pageNum);
-            });
-            pDropdown.appendChild(item);
-          }
+  /** 全库检索索引（惰性构建一次） */
+  function buildSearchIndex() {
+    if (searchIndexCache) return searchIndexCache;
+    const idx = [];
+    Object.keys(allIssues).forEach(function (issueId) {
+      const issue = allIssues[issueId] || { pages: [] };
+      (issue.pages || []).forEach(function (p, i) {
+        const buf = [];
+        (p.segments || []).forEach(function (seg) {
+          if (seg.en) buf.push(String(seg.en).toLowerCase());
+          if (seg.zh) buf.push(String(seg.zh).toLowerCase());
         });
+        idx.push({ issueId: issueId, pageNum: i + 1, section: p.section || '', text: buf.join(' ') });
       });
-
-      if (matchCount > 0) {
-        pDropdown.classList.add('active');
-      } else {
-        pDropdown.innerHTML = '<div style="padding:14px;color:var(--text-muted);font-size:12px;text-align:center;">全刊库未检索到匹配篇章</div>';
-        pDropdown.classList.add('active');
-      }
     });
+    searchIndexCache = idx;
+    return idx;
+  }
 
-    document.addEventListener('click', (e) => {
-      if (pDropdown && !pDropdown.contains(e.target) && e.target !== pInput) {
-        pDropdown.classList.remove('active');
+  function runSearch(query, scopeIssueId) {
+    const q = String(query || '').trim().toLowerCase();
+    if (q.length < 2) return [];
+    // 毒舌 2.5：一个正则两用——test 不带 g（避免 lastIndex 游标），mark 版带 g
+    const isMatch = new RegExp(escRegex(q));
+    const re = new RegExp('(' + escRegex(q) + ')', 'gi');
+    const out = [];
+    buildSearchIndex().forEach(function (row) {
+      if (scopeIssueId && row.issueId !== scopeIssueId) return;
+      if (!isMatch.test(row.text)) return;
+      // 毒舌 7.11：标题先转纯文本再截断，绝不在 HTML 转义结果上切出半个标签
+      const raw = toPlainText(row.section);
+      const section = raw.length > 60 ? raw.slice(0, 60) + '…' : raw;
+      const snippet = toDisplayText(row.text).slice(0, 120).replace(re, '<mark>$1</mark>');
+      out.push({ issueId: row.issueId, pageNum: row.pageNum, section: section, snippet: snippet });
+    });
+    return out;
+  }
+
+  // ---------------------------------------------------------------- 搜索键盘导航（毒舌 4.3：上下箭头选择 + Enter 直达）
+  function bindSearchResultKeys(inputEl, itemSel, onPick) {
+    if (!inputEl) return;
+    let idx = -1;
+    inputEl.addEventListener('keydown', function (e) {
+      const list = $$(itemSel);
+      if (list.length === 0) return;
+      if (e.key === 'ArrowDown') { e.preventDefault(); idx = Math.min(list.length - 1, idx + 1); }
+      else if (e.key === 'ArrowUp') { e.preventDefault(); idx = Math.max(0, idx - 1); }
+      else if (e.key === 'Enter' && idx >= 0 && list[idx]) { e.preventDefault(); onPick(list[idx]); return; }
+      else return;
+      list.forEach(function (it, k) { it.classList.toggle('kv-active', k === idx); });
+      if (list[idx]) list[idx].scrollIntoView({ block: 'nearest' });
+    });
+  }
+
+  function bindPortalSearch() {
+    const input = els.portalSearch;
+    const dropdown = els.portalDropdown;
+    if (!input || !dropdown) return;
+    bindSearchResultKeys(input, '.portal-search-item', function (el) {
+      dropdown.classList.remove('active');
+      enterReaderRoom(el.dataset.issue, parseInt(el.dataset.page, 10));
+    });
+    const handler = debounce(function () {
+      const q = input.value.trim();
+      dropdown.innerHTML = '';
+      if (q.length < 2) { dropdown.classList.remove('active'); return; }
+      const results = runSearch(q, null).slice(0, 12);
+      if (results.length === 0) {
+        const e = document.createElement('div');
+        e.className = 'portal-search-empty';
+        e.textContent = '全刊库未检索到匹配篇章';
+        dropdown.appendChild(e);
+      } else {
+        results.forEach(function (r) {
+          const issue = allIssues[r.issueId] || {};
+          const item = document.createElement('div');
+          item.className = 'portal-search-item';
+          item.dataset.issue = r.issueId;
+          item.dataset.page = String(r.pageNum);
+          item.innerHTML =
+            '<div class="portal-search-item-header">' +
+            '<span>' + escHtml(issue.name || r.issueId) + ' &bull; PAGE ' + String(r.pageNum).padStart(3, '0') + '</span>' +
+            '</div>' +
+            '<div class="portal-search-item-title">' + escHtml(r.section) + '</div>' +
+            '<div class="portal-search-item-snippet">' + r.snippet.slice(0, 200) + '...</div>';
+          item.addEventListener('click', function () {
+            dropdown.classList.remove('active');
+            enterReaderRoom(r.issueId, r.pageNum);
+          });
+          dropdown.appendChild(item);
+        });
+      }
+      dropdown.classList.add('active');
+    }, HELD.SEARCH_DEBOUNCE);
+    input.addEventListener('input', handler);
+    document.addEventListener('click', function (e) {
+      if (dropdown.classList.contains('active') && !dropdown.contains(e.target) && e.target !== input) {
+        dropdown.classList.remove('active');
       }
     });
   }
 
+  // ==================================================================
+  // 阅读室
+  // ==================================================================
   function enterReaderRoom(issueId, targetPage) {
-    if (allIssues[issueId]) {
+    if (allIssues[issueId] && issueId !== currentIssueId) {
       currentIssueId = issueId;
       currentIssueObj = allIssues[issueId];
       data = currentIssueObj.pages || [];
-      localStorage.setItem(STORAGE_KEY_ISSUE, currentIssueId);
+      lsSet(LS.issue, currentIssueId);
+      initTOC();
+      renderBookmarksTab();
     }
-    if (libraryPortal) {
-      libraryPortal.classList.add('hidden');
-    }
-    if (issueSwitcherPill) {
-      issueSwitcherPill.innerHTML = `📅 ${currentIssueObj.displayName} &bull; ${currentIssueObj.totalPages}P`;
-    }
-    initTOC();
-    renderBookmarksTab();
+    const portal = els.libraryPortal;
+    if (portal) portal.classList.add('hidden');
+    refreshPill();
     loadPage(targetPage || 1);
   }
 
   function openLibraryShelf() {
     stopSpeech();
-    if (libraryPortal) {
-      libraryPortal.classList.remove('hidden');
-    }
+    const portal = els.libraryPortal;
+    if (portal) portal.classList.remove('hidden');
   }
 
-  if (openPortalBtn) {
-    openPortalBtn.addEventListener('click', openLibraryShelf);
+  function refreshPill() {
+    const pill = els.issueSwitcherPill;
+    if (!pill) return;
+    const name = currentIssueObj.displayName || currentIssueObj.id;
+    const full = pill.querySelector('.issue-pill-full');
+    const compact = pill.querySelector('.issue-pill-compact');
+    if (full) full.textContent = '📅 ' + name + ' • ' + currentIssueObj.totalPages + 'P';
+    if (compact) compact.textContent = '📅 ' + String(currentIssueObj.id || '').replace('-', '/');
   }
 
-  // Switch Active Issue
+  function nextIssueId() {
+    const ids = Object.keys(allIssues);
+    return ids.length > 1 ? ids[(ids.indexOf(currentIssueId) + 1) % ids.length] : currentIssueId;
+  }
+
   function switchIssue(newIssueId) {
-    if (!allIssues[newIssueId]) return;
+    if (!allIssues[newIssueId] || newIssueId === currentIssueId) return;
     currentIssueId = newIssueId;
     currentIssueObj = allIssues[newIssueId];
     data = currentIssueObj.pages || [];
-    localStorage.setItem(STORAGE_KEY_ISSUE, currentIssueId);
-
-    if (issueSwitcherPill) {
-      issueSwitcherPill.innerHTML = `📅 ${currentIssueObj.displayName} &bull; ${currentIssueObj.totalPages}P`;
-    }
-    if (pageSlider) {
-      pageSlider.max = currentIssueObj.totalPages;
-    }
-
+    lsSet(LS.issue, currentIssueId);
+    refreshPill();
+    if (els.pageSlider) els.pageSlider.max = currentIssueObj.totalPages;
     initTOC();
     renderBookmarksTab();
-    const lastSavedPage = parseInt(localStorage.getItem(STORAGE_KEY_PAGE_PREFIX + currentIssueId), 10) || 1;
-    loadPage(lastSavedPage);
-    showHUDToast(`切换至：${currentIssueObj.displayName}`);
+    const last = readInt(lsGet(LS.pagePrefix + currentIssueId, '1'), 1);
+    loadPage(last);
+    toast('切换至：' + currentIssueObj.displayName);
   }
 
-  // Bookmarks Management
-  function getBookmarks() {
-    try {
-      return JSON.parse(localStorage.getItem(STORAGE_KEY_BOOKMARKS_PREFIX + currentIssueId)) || [];
-    } catch (e) {
-      return [];
-    }
-  }
-
-  function saveBookmarks(list) {
-    localStorage.setItem(STORAGE_KEY_BOOKMARKS_PREFIX + currentIssueId, JSON.stringify(list));
-    renderBookmarksTab();
-  }
-
+  // ---------------------------------------------------------------- 书签
+  function getBookmarks() { return readJson(LS.bookmarks + currentIssueId, []); }
+  function saveBookmarks(list) { lsSet(LS.bookmarks + currentIssueId, JSON.stringify(list)); renderBookmarksTab(); }
   function toggleBookmark(pageNum) {
-    let list = getBookmarks();
-    if (list.includes(pageNum)) {
-      list = list.filter(p => p !== pageNum);
-      showHUDToast(`☆ 已取消收藏 第 ${pageNum} 页`);
-    } else {
-      list.push(pageNum);
-      list.sort((a, b) => a - b);
-      showHUDToast(`⭐ 已成功收藏 第 ${pageNum} 页`);
-    }
+    const list = getBookmarks();
+    const i = list.indexOf(pageNum);
+    if (i >= 0) { list.splice(i, 1); toast('☆ 已取消收藏 第 ' + pageNum + ' 页'); }
+    else { list.push(pageNum); list.sort(function (a, b) { return a - b; }); toast('⭐ 已收藏 第 ' + pageNum + ' 页'); }
     saveBookmarks(list);
     updateBookmarkButton(pageNum);
   }
-
   function updateBookmarkButton(pageNum) {
-    if (!bookmarkPageBtn) return;
-    const list = getBookmarks();
-    if (list.includes(pageNum)) {
-      bookmarkPageBtn.classList.add('active');
-      bookmarkPageBtn.innerHTML = '⭐ 已收藏';
-    } else {
-      bookmarkPageBtn.classList.remove('active');
-      bookmarkPageBtn.innerHTML = '☆ 收藏本页';
-    }
+    if (!els.bookmarkPageBtn) return;
+    const active = getBookmarks().indexOf(pageNum) >= 0;
+    els.bookmarkPageBtn.classList.toggle('active', active);
+    els.bookmarkPageBtn.textContent = active ? '⭐ 已收藏' : '☆ 收藏本页';
   }
-
-  function handleJumpAndCloseSidebarOnMobile(targetPage) {
-    loadPage(targetPage);
-    if (window.innerWidth <= 960) {
-      const sidebar = document.getElementById('app-sidebar');
-      if (sidebar) sidebar.classList.add('collapsed');
-    }
-  }
-
   function renderBookmarksTab() {
-    if (!bookmarksList) return;
+    const listEl = els.bookmarksList;
+    if (!listEl) return;
     const list = getBookmarks();
-    bookmarksList.innerHTML = '';
+    listEl.innerHTML = '';
     if (list.length === 0) {
-      bookmarksList.innerHTML = '<div class="bookmark-empty-hint">暂无书签，点击页面顶部的“收藏本页”可快速标记重要章节</div>';
+      listEl.innerHTML = '<div class="bookmark-empty-hint">暂无书签，点击页面顶部“收藏本页”可快速标记重要章节</div>';
       return;
     }
-
-    list.forEach(p => {
+    const frag = document.createDocumentFragment();
+    list.forEach(function (p) {
       const pageObj = data[p - 1] || {};
       const item = document.createElement('div');
       item.className = 'toc-item';
-      item.innerHTML = `
-        <div class="toc-item-header">
-          <span>PAGE ${String(p).padStart(3, '0')}</span>
-          <span style="color:var(--accent-gold);">★ 书签</span>
-        </div>
-        <div class="toc-item-title">${sanitize(pageObj.section) || `Page ${p}`}</div>
-      `;
-      item.addEventListener('click', () => handleJumpAndCloseSidebarOnMobile(p));
-      bookmarksList.appendChild(item);
+      if (p) item.dataset.page = p;
+      item.setAttribute('role', 'button');
+      item.innerHTML =
+        '<div class="toc-item-header"><span>PAGE ' + String(p).padStart(3, '0') + '</span>' +
+        '<span style="color:var(--accent-gold);">★ 书签</span></div>' +
+        '<div class="toc-item-title">' + toDisplayText(pageObj.section) + '</div>';
+      frag.appendChild(item);
     });
+    listEl.appendChild(frag);
   }
 
-  // Initialize TOC with Categorized Badges (Deep Long-Form Articles vs Visual Spreads)
+  // ---------------------------------------------------------------- 目录
+  function isArticlePage(pageObj, pNum) {
+    const chars = (pageObj.segments || []).reduce(function (a, s) { return a + (s.en ? s.en.length : 0); }, 0);
+    return chars >= 350 || (pageObj.segments && pageObj.segments.length >= 3);
+  }
   function initTOC() {
+    const tocList = els.tocList;
     if (tocList) {
       tocList.innerHTML = '';
-      data.forEach((pageObj, idx) => {
+      const frag = document.createDocumentFragment();
+      data.forEach(function (pageObj, idx) {
         const pNum = idx + 1;
-        if (pageObj.section && pageObj.section.trim()) {
-          const totalChars = (pageObj.segments || []).reduce((acc, s) => acc + (s.en ? s.en.length : 0), 0);
-          const isArticle = totalChars >= 350 || (pageObj.segments && pageObj.segments.length >= 3);
-          const isCover = pNum <= 4 || (pageObj.section.includes('Cover') && !pageObj.section.includes('Story'));
-          
-          let badgeType = isArticle ? 'badge-article' : (isCover ? 'badge-cover' : 'badge-visual');
-          let badgeLabel = isArticle ? '📖 深度长文' : (isCover ? '🏛️ 封面/刊头' : '🎨 视觉图版');
-
-          const li = document.createElement('li');
-          li.className = `toc-item ${isArticle ? 'type-article' : 'type-visual'}`;
-          li.id = `toc-item-p-${pNum}`;
-          li.dataset.page = pNum;
-          li.dataset.type = isArticle ? 'article' : 'visual';
-          li.innerHTML = `
-            <div class="toc-item-header">
-              <span>PAGE ${String(pNum).padStart(3, '0')}</span>
-              <span class="toc-type-badge ${badgeType}">${badgeLabel}</span>
-            </div>
-            <div class="toc-item-title">${sanitize(pageObj.section)}</div>
-          `;
-          li.addEventListener('click', () => handleJumpAndCloseSidebarOnMobile(pNum));
-          tocList.appendChild(li);
-        }
+        if (!pageObj.section || !String(pageObj.section).trim()) return;
+        const isArticle = isArticlePage(pageObj, pNum);
+        const isCover = pNum <= 4 || (String(pageObj.section).indexOf('Cover') >= 0 && String(pageObj.section).indexOf('Story') < 0);
+        const badge = isArticle ? 'badge-article' : (isCover ? 'badge-cover' : 'badge-visual');
+        const label = isArticle ? '📖 深度长文' : (isCover ? '🏛️ 封面/刊头' : '🎨 视觉图版');
+        const li = document.createElement('li');
+        li.className = 'toc-item ' + (isArticle ? 'type-article' : 'type-visual');
+        li.dataset.page = String(pNum);
+        li.dataset.type = isArticle ? 'article' : 'visual';
+        li.setAttribute('role', 'button');
+        li.tabIndex = 0;
+        li.innerHTML =
+          '<div class="toc-item-header"><span>PAGE ' + String(pNum).padStart(3, '0') + '</span>' +
+          '<span class="toc-type-badge ' + badge + '">' + label + '</span></div>' +
+          '<div class="toc-item-title">' + toDisplayText(pageObj.section) + '</div>';
+        frag.appendChild(li);
       });
+      tocList.appendChild(frag);
     }
-
+    const pagesGrid = els.pagesGrid;
     if (pagesGrid) {
       pagesGrid.innerHTML = '';
+      const frag2 = document.createDocumentFragment();
       for (let p = 1; p <= currentIssueObj.totalPages; p++) {
         const tile = document.createElement('div');
-        tile.className = 'page-tile' + (p === 1 ? ' active' : '');
-        tile.id = `tile-p-${p}`;
-        tile.innerHTML = `<span>P${p}</span>`;
-        tile.addEventListener('click', () => handleJumpAndCloseSidebarOnMobile(p));
-        pagesGrid.appendChild(tile);
+        tile.id = 'tile-' + p;
+        tile.className = 'page-tile' + (p === currentPage ? ' active' : '');
+        tile.dataset.page = String(p);
+        tile.setAttribute('role', 'button');
+        tile.innerHTML = '<span>P' + p + '</span>';
+        frag2.appendChild(tile);
       }
+      pagesGrid.appendChild(frag2);
     }
-
-    // Filter Bar in TOC (All vs Long-form Articles vs Visual Art)
-    document.querySelectorAll('.toc-filter-btn').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        document.querySelectorAll('.toc-filter-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        const filter = btn.dataset.filter;
-        document.querySelectorAll('#toc-list .toc-item').forEach(item => {
-          if (filter === 'all' || item.dataset.type === filter) {
-            item.style.display = 'block';
-          } else {
-            item.style.display = 'none';
-          }
-        });
-      });
-    });
   }
 
-  // Professional Publishing-Grade Vertical Golden Centering (block: 'center')
+  // ---------------------------------------------------------------- 侧栏同步
   function syncSidebarActiveState(pageNum) {
-    // 1. Sync Pages Grid with Vertical Centering
-    document.querySelectorAll('.page-tile').forEach(t => t.classList.remove('active'));
-    const activeTile = document.getElementById(`tile-p-${pageNum}`);
-    if (activeTile) {
-      activeTile.classList.add('active');
-      activeTile.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
+    const smooth = smoothByPref();
+    $$('.page-tile').forEach(function (t) { t.classList.remove('active'); });
+    const tile = $('tile-' + pageNum);
+    if (tile) { tile.classList.add('active'); tile.scrollIntoView({ behavior: smooth, block: 'center', inline: 'nearest' }); }
+    $$('.toc-item').forEach(function (i) { i.classList.remove('active'); });
+    const items = $$('#toc-list .toc-item');
+    let active = null;
+    for (let i = 0; i < items.length; i++) {
+      if (parseInt(items[i].dataset.page, 10) <= pageNum) active = items[i];
+      else break;
     }
-
-    // 2. Sync TOC List with Vertical Golden Centering
-    document.querySelectorAll('.toc-item').forEach(item => item.classList.remove('active'));
-    const tocItems = Array.from(document.querySelectorAll('#toc-list .toc-item'));
-    if (tocItems.length > 0) {
-      let activeItem = null;
-      for (let i = 0; i < tocItems.length; i++) {
-        const pVal = parseInt(tocItems[i].dataset.page, 10);
-        if (pVal <= pageNum) {
-          activeItem = tocItems[i];
-        } else {
-          break;
-        }
-      }
-      if (!activeItem) activeItem = tocItems[0];
-      if (activeItem) {
-        activeItem.classList.add('active');
-        activeItem.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
-      }
-    }
+    if (!active) active = items[0];
+    if (active) { active.classList.add('active'); active.scrollIntoView({ behavior: smooth, block: 'center', inline: 'nearest' }); }
   }
 
-  // High-performance syllabification injector for English publication typesetting
-  function injectSyllables(text) {
-    if (!text || typeof text !== 'string') return text;
-    // Common multi-syllable patterns for English publication typesetting (breaks words >= 6 chars)
-    return text.replace(/\b([a-zA-Z]{6,})\b/g, (word) => {
-      return word.replace(/(.{2,3})(?=.{2,3})/g, '$1\u00AD');
+  // ---------------------------------------------------------------- 字号管道（纯 CSS 变量）
+  function applyFontScale(px) {
+    globalFontScale = Math.min(36, Math.max(14, px));
+    globalFontScale = Math.round(globalFontScale * 2) / 2;
+    lsSet(LS.fontScale, String(globalFontScale));
+    document.documentElement.style.setProperty('--reader-font-scale', globalFontScale + 'px');
+  }
+
+  // ==================================================================
+  // TTS 引擎
+  // ==================================================================
+  function pickVoice() {
+    const synth = window.speechSynthesis;
+    if (!synth || !synth.getVoices) return null;
+    const voices = synth.getVoices();
+    if (voices.length === 0) return null;
+    // 毒舌 2.6：英文嗓音只 filter 一次，循环只做 find
+    const enVoices = voices.filter(function (v) { return v.lang && v.lang.toLowerCase().indexOf('en') === 0; });
+    if (enVoices.length === 0) return null;
+    const prefs = ['Google US English', 'Samantha', 'Microsoft Zira', 'Microsoft Aria'];
+    for (let i = 0; i < prefs.length; i++) {
+      const v = enVoices.find(function (v) { return v.name.indexOf(prefs[i]) >= 0; });
+      if (v) return v;
+    }
+    return enVoices[0] || null;
+  }
+
+  function resetSpeechState() {
+    isPlayingAudio = false;
+    currentPlayingSegmentDiv = null;
+    if (els.playPageAudioBtn) {
+      els.playPageAudioBtn.querySelector('.audio-btn-icon').textContent = '▶';
+      els.playPageAudioBtn.querySelector('.audio-btn-text').textContent = '朗读';
+      els.playPageAudioBtn.setAttribute('aria-label', '朗读整页');
+    }
+    $$('.segment-block.playing-active').forEach(function (b) { b.classList.remove('playing-active'); });
+  }
+
+  function stopSpeech() {
+    if (window.speechSynthesis) window.speechSynthesis.cancel();
+    resetSpeechState();
+  }
+
+  function speakText(text) {
+    const synth = window.speechSynthesis;
+    if (!synth) return;
+    const u = new SpeechSynthesisUtterance(toPlainText(text));
+    u.lang = 'en-US';
+    u.rate = audioSpeed;
+    if (ttsVoice) u.voice = ttsVoice;
+    u.onend = resetSpeechState;
+    u.onerror = function () { resetSpeechState(); toast('⚠️ 朗读中断，请重试', 'warn'); };
+    synth.speak(u);
+    currentUtterance = u;
+  }
+
+  function playParagraphSpeech(text, block) {
+    stopSpeech();
+    const clean = toPlainText(text);
+    if (!clean) return;
+    isPlayingAudio = true;
+    currentPlayingSegmentDiv = block;
+    block.classList.add('playing-active');
+    toast('🔊 朗读中（再次点击暂停）');
+    speakText(clean);
+  }
+
+  function playPageSpeech() {
+    const synth = window.speechSynthesis;
+    if (!synth) return;
+    if (isPlayingAudio && !currentPlayingSegmentDiv) { stopSpeech(); toast('⏸ 整页朗读已暂停'); return; }
+    stopSpeech();
+    const pageObj = data[currentPage - 1];
+    if (!pageObj || !pageObj.segments || pageObj.segments.length === 0) return;
+    const enTexts = pageObj.segments.filter(function (s) { return s.en && s.en.length > HELD.MIN_SPEECH_SEG_CHARS; }).map(function (s) { return toPlainText(s.en); });
+    if (enTexts.length === 0) return;
+    isPlayingAudio = true;
+    if (els.playPageAudioBtn) {
+      els.playPageAudioBtn.querySelector('.audio-btn-icon').textContent = '⏸';
+      els.playPageAudioBtn.querySelector('.audio-btn-text').textContent = '暂停';
+      els.playPageAudioBtn.setAttribute('aria-label', '暂停朗读');
+    }
+    toast('🔊 正在朗读整页英文');
+    speakText(enTexts.join('. '));
+  }
+
+  // ==================================================================
+  // 页面渲染
+  // ==================================================================
+  function stubPage(pageNum) {
+    return {
+      pageNumber: pageNum,
+      segments: [],
+      section: currentIssueObj.displayName + ' (Page ' + pageNum + ')',
+      image: (currentIssueObj.imageRoot || 'issues/' + currentIssueObj.id) + '/images/page_' + String(pageNum).padStart(3, '0') + '.png',
+    };
+  }
+
+  function renderSegmentNode(seg, idx) {
+    const type = seg.type || 'paragraph';
+    const div = document.createElement('div');
+    div.className = 'segment-block segment-' + type;
+    div.id = 'seg-' + idx;
+    const en = toDisplayText(seg.en);
+    const zh = toDisplayText(seg.zh);
+    const zhHtml = (seg.zh && String(seg.zh).trim()) ? '<div class="zh-text-card" lang="zh-CN"><div>' + zh + '</div></div>' : '';
+    let enHtml;
+    if (type === 'caption') enHtml = '<div class="en-text" lang="en"><em>' + en + '</em></div>';
+    else if (type === 'ad') enHtml = '<div class="en-text" lang="en"><strong>[Advertisement]</strong> ' + en + '</div>';
+    else enHtml = '<div class="en-text" lang="en">' + en + '</div>';
+    div.innerHTML = enHtml + zhHtml;
+    return div;
+  }
+
+  function renderArtCard(pageObj, pageNum, doc) {
+    const wrap = document.createElement('div');
+    wrap.className = 'embedded-art-card';
+    wrap.innerHTML =
+      '<div class="embedded-art-img-wrap">' +
+      '<img src="' + escHtml(pageObj.image) + '" class="embedded-art-img" alt="' + escHtml(pageObj.section) + '" decoding="async">' +
+      '<span class="embedded-art-zoom-hint">🔍 点击查看 150 DPI 高清全屏原图</span>' +
+      '</div>' +
+      '<div class="segment-block segment-caption">' +
+      '<div class="en-text" lang="en">The Atlantic — ' + escHtml(currentIssueObj.displayName) + ' (Page ' + pageNum + ')</div>' +
+      '<div class="zh-text-card" lang="zh-CN"><div>《大西洋月刊》' + escHtml(currentIssueObj.displayName) + '（第 ' + pageNum + ' 页原版图版）</div></div>' +
+      '</div>';
+    doc.appendChild(wrap);
+  }
+
+  function renderShortVisualPage(pageObj, doc) {
+    const wrap = document.createElement('div');
+    wrap.className = 'embedded-art-card';
+    wrap.innerHTML =
+      '<div class="embedded-art-img-wrap">' +
+      '<img src="' + escHtml(pageObj.image) + '" class="embedded-art-img" alt="' + escHtml(pageObj.section || '原版扫描页') + '" decoding="async">' +
+      '<span class="embedded-art-zoom-hint">🔍 点击查看 150 DPI 高清全屏原图</span>' +
+      '</div>';
+    doc.appendChild(wrap);
+    const segWrap = document.createElement('div');
+    segWrap.className = 'short-page-segments';
+    (pageObj.segments || []).forEach(function (seg, i) {
+      segWrap.appendChild(renderSegmentNode(seg, i));
     });
+    doc.appendChild(segWrap);
   }
 
-  // Load and Render Page (Hero English 24px Card, Pure Ambient Chinese 20.5px)
   function loadPage(pageNum) {
+    const total = currentIssueObj.totalPages || (data && data.length) || 0;
+    if (total <= 0) { toast('⚠️ 刊目数据缺失，无法翻页', 'error'); return; }
     if (pageNum < 1) pageNum = 1;
-    if (pageNum > currentIssueObj.totalPages) pageNum = currentIssueObj.totalPages;
+    if (pageNum > total) pageNum = total;
     currentPage = pageNum;
-    localStorage.setItem(STORAGE_KEY_PAGE_PREFIX + currentIssueId, pageNum);
+    lsSet(LS.pagePrefix + currentIssueId, String(pageNum));
 
     stopSpeech();
     preloadAdjacentPages(pageNum);
 
-    const pageObj = data[pageNum - 1] || { pageNumber: pageNum, segments: [], image: `${currentIssueObj.id === '2026-08' ? 'issues/2026-08' : 'issues/2026-07'}/images/page_${String(pageNum).padStart(3, '0')}.png`, section: "" };
+    const pageObj = data[pageNum - 1] || stubPage(pageNum);
 
-    // Update Badges & Slider
-    if (currentPageBadge) currentPageBadge.textContent = `PAGE ${String(pageNum).padStart(3, '0')} / ${currentIssueObj.totalPages}`;
-    if (currentSectionBadge) currentSectionBadge.textContent = sanitize(pageObj.section) || `The Atlantic (Page ${pageNum})`;
-    if (pageSlider) {
-      pageSlider.max = currentIssueObj.totalPages;
-      pageSlider.value = pageNum;
-    }
-    if (pageCounterText) pageCounterText.textContent = `第 ${pageNum} / ${currentIssueObj.totalPages} 页`;
+    if (els.currentPageBadge) els.currentPageBadge.textContent = 'PAGE ' + String(pageNum).padStart(3, '0') + ' / ' + currentIssueObj.totalPages;
+    if (els.currentSectionBadge) els.currentSectionBadge.textContent = toDisplayText(pageObj.section) || ('The Atlantic (Page ' + pageNum + ')');
+    if (els.pageSlider) { els.pageSlider.max = currentIssueObj.totalPages; els.pageSlider.value = pageNum; }
+    if (els.pageCounterText) els.pageCounterText.textContent = '第 ' + pageNum + ' / ' + currentIssueObj.totalPages + ' 页';
 
     updateBookmarkButton(pageNum);
 
-    // Update Original Image
-    if (pageOriginalImg) {
-      pageOriginalImg.src = pageObj.image;
-      const infoTag = document.getElementById('image-info-tag');
-      if (infoTag) infoTag.textContent = `PAGE ${String(pageNum).padStart(3, '0')} 原版高清扫描图 (150 DPI)`;
+    if (els.pageOriginalImg) {
+      els.pageOriginalImg.src = pageObj.image;
+      if (els.imageInfoTag) els.imageInfoTag.textContent = 'PAGE ' + String(pageNum).padStart(3, '0') + ' 原版高清扫描图 (150 DPI)';
       resetImageZoom();
     }
 
-    // Render Article Body
-    if (articleBody) {
-      articleBody.innerHTML = '';
-      const totalEnChars = (pageObj.segments || []).reduce((acc, s) => acc + (s.en ? s.en.length : 0), 0);
-      const isShortVisualPage = (!pageObj.segments || pageObj.segments.length === 0) || 
-                                (pageObj.segments.length <= 3 && totalEnChars < 450);
+    const body = els.articleBody;
+    if (body) {
+      body.innerHTML = '';
+      const segs = pageObj.segments || [];
+      const totalEn = segs.reduce(function (a, s) { return a + (s.en ? s.en.length : 0); }, 0);
+      const isShortVisual = segs.length === 0 || (segs.length <= 3 && totalEn < 450);
+      const doc = document.createDocumentFragment();
 
-      if (!pageObj.segments || pageObj.segments.length === 0) {
-        articleBody.innerHTML = `
-          <div class="embedded-art-card">
-            <div class="embedded-art-img-wrap" onclick="const lb = document.getElementById('open-lightbox'); if(lb) lb.click();">
-              <img src="${pageObj.image}" alt="Original Page Scan" class="embedded-art-img">
-              <span class="embedded-art-zoom-hint">🔍 点击查看 150 DPI 高清全屏原图</span>
-            </div>
-            <div class="segment-block segment-caption">
-              <div class="en-text" lang="en">The Atlantic — ${currentIssueObj.displayName} (Page ${pageNum})</div>
-              <div class="zh-text-card" lang="zh-CN"><div>《大西洋月刊》${currentIssueObj.displayName}（第 ${pageNum} 页原版图版）</div></div>
-            </div>
-          </div>
-        `;
-      } else if (isShortVisualPage) {
-        // Automatically embed original scan for short visual pages (Page 6 TOC, Page 14 title spread, poems, photo spreads)
-        let segsHtml = '';
-        pageObj.segments.forEach((seg, idx) => {
-          const cleanEn = sanitize(seg.en);
-          const cleanZh = sanitize(seg.zh);
-          segsHtml += `
-            <div class="segment-block segment-${seg.type}" id="seg-${idx}">
-              <div class="en-text" lang="en" title="轻点原声朗读本段 (再次点击暂停)">${cleanEn}</div>
-              ${cleanZh ? `
-                <div class="zh-text-card" lang="zh-CN">
-                  <div>${cleanZh}</div>
-                </div>
-              ` : ''}
-            </div>
-          `;
-        });
-
-        articleBody.innerHTML = `
-          <div class="embedded-art-card">
-            <div class="embedded-art-img-wrap" onclick="const lb = document.getElementById('open-lightbox'); if(lb) lb.click();">
-              <img src="${pageObj.image}" alt="Original Page Scan" class="embedded-art-img">
-              <span class="embedded-art-zoom-hint">🔍 点击查看 150 DPI 高清全屏原图</span>
-            </div>
-          </div>
-          <div class="short-page-segments">
-            ${segsHtml}
-          </div>
-        `;
-
-        // Hook up Tap-to-Speak for short visual pages
-        articleBody.querySelectorAll('.en-text').forEach((enCard, idx) => {
-          const seg = pageObj.segments[idx];
-          if (seg) {
-            const cleanEn = sanitize(seg.en);
-            enCard.addEventListener('click', (e) => {
-              const segDiv = enCard.closest('.segment-block');
-              if (segDiv && segDiv.classList.contains('playing-active') && isPlayingAudio) {
-                stopSpeech();
-                showHUDToast('⏸ 朗读已暂停');
-              } else if (segDiv) {
-                playParagraphSpeech(cleanEn, segDiv);
-              }
-            });
-          }
-        });
+      if (segs.length === 0) {
+        renderArtCard(pageObj, pageNum, doc);
+      } else if (isShortVisual) {
+        renderShortVisualPage(pageObj, doc);
       } else {
-        pageObj.segments.forEach((seg, idx) => {
-          const segDiv = document.createElement('div');
-          segDiv.className = `segment-block segment-${seg.type}`;
-          segDiv.id = `seg-${idx}`;
-
-          const cleanEn = sanitize(seg.en);
-          const cleanZh = sanitize(seg.zh);
-          const hyphenatedEn = injectSyllables(cleanEn);
-
-          if (seg.type === 'h3') {
-            segDiv.innerHTML = `
-              <div class="en-text" lang="en" title="轻点原声朗读 (再次点击暂停)">${cleanEn}</div>
-              ${cleanZh ? `
-                <div class="zh-text-card" lang="zh-CN">
-                  <div>${cleanZh}</div>
-                </div>
-              ` : ''}
-            `;
-          } else if (seg.type === 'h4') {
-            segDiv.innerHTML = `
-              <div class="en-text" lang="en" title="轻点原声朗读 (再次点击暂停)">${cleanEn}</div>
-              ${cleanZh ? `
-                <div class="zh-text-card" lang="zh-CN">
-                  <div>${cleanZh}</div>
-                </div>
-              ` : ''}
-            `;
-          } else if (seg.type === 'caption') {
-            segDiv.innerHTML = `
-              <div class="en-text" lang="en" title="轻点原声朗读 (再次点击暂停)"><em>${cleanEn}</em></div>
-              ${cleanZh ? `
-                <div class="zh-text-card" lang="zh-CN">
-                  <div><em>${cleanZh}</em></div>
-                </div>
-              ` : ''}
-            `;
-          } else if (seg.type === 'byline') {
-            segDiv.innerHTML = `
-              <div class="en-text" lang="en" title="轻点原声朗读 (再次点击暂停)">${cleanEn}</div>
-              ${cleanZh ? `
-                <div class="zh-text-card" lang="zh-CN">
-                  <div>${cleanZh}</div>
-                </div>
-              ` : ''}
-            `;
-          } else if (seg.type === 'quote') {
-            segDiv.innerHTML = `
-              <div class="en-text" lang="en" title="轻点原声朗读 (再次点击暂停)">${cleanEn}</div>
-              ${cleanZh ? `
-                <div class="zh-text-card" lang="zh-CN">
-                  <div>${cleanZh}</div>
-                </div>
-              ` : ''}
-            `;
-          } else if (seg.type === 'ad') {
-            segDiv.innerHTML = `
-              <div class="en-text" lang="en"><strong>[Advertisement]</strong> ${cleanEn}</div>
-              ${cleanZh ? `
-                <div class="zh-text-card" lang="zh-CN">
-                  <div>${cleanZh}</div>
-                </div>
-              ` : ''}
-            `;
-          } else {
-            // Authentic 1:1 Author Paragraph: Pure Clean Words & Direct Tap-to-Speak
-            segDiv.innerHTML = `
-              <div class="en-text" lang="en" title="轻点原声朗读本段 (再次点击暂停)">${cleanEn}</div>
-              ${cleanZh ? `
-                <div class="zh-text-card" lang="zh-CN">
-                  <div>${cleanZh}</div>
-                </div>
-              ` : ''}
-            `;
-          }
-
-          // Direct Tap-to-Speak on the English text card
-          const enCard = segDiv.querySelector('.en-text');
-          if (enCard) {
-            enCard.addEventListener('click', (e) => {
-              if (segDiv.classList.contains('playing-active') && isPlayingAudio) {
-                stopSpeech();
-                showHUDToast('⏸ 朗读已暂停');
-              } else {
-                playParagraphSpeech(cleanEn, segDiv);
-              }
-            });
-          }
-
-          articleBody.appendChild(segDiv);
-        });
+        segs.forEach(function (seg, i) { doc.appendChild(renderSegmentNode(seg, i)); });
       }
+      body.appendChild(doc);
     }
 
-    // Apply current global equal font size
-    applyGlobalFontSize();
-
-    // Record Reading History & Footprint in LocalStorage
     recordReadingHistory(currentIssueId, pageNum, pageObj.section);
-
-    // Trigger Smart Bidirectional TOC & Thumbnail Active Follower with Vertical Golden Centering
     syncSidebarActiveState(pageNum);
 
-    // Scroll viewport to top smoothly
-    const vp = document.querySelector('.reader-viewport');
-    if (vp) vp.scrollTop = 0;
+    if (els.readerViewport) els.readerViewport.scrollTop = 0;
   }
 
-  function applyGlobalFontSize() {
-    const isDesktop = window.innerWidth > 960;
-    const isTablet = window.innerWidth > 640 && window.innerWidth <= 960;
-    const baseSize = isDesktop ? globalFontSize : (isTablet ? 17.5 : 15.0);
-
-    document.querySelectorAll('.segment-paragraph .en-text').forEach(el => {
-      el.style.fontSize = `${baseSize}px`;
-    });
-    document.querySelectorAll('.segment-paragraph .zh-text-card').forEach(el => {
-      el.style.fontSize = `${baseSize}px`;
-    });
+  // ---------------------------------------------------------------- 灯箱 / 缩放
+  function openLightboxImage(src) {
+    if (!els.lightboxModal || !els.lightboxImg) return;
+    els.lightboxImg.src = src;
+    els.lightboxModal.classList.add('active');
+    const c = els.lightboxModal.querySelector('.close-lightbox');
+    if (c) c.focus();
   }
-
-  // Web Speech TTS Engine with Synchronized Golden Glow Pulse & Strict Stop Lock
-  function stopSpeech() {
-    if (speechSynth) {
-      if (speechSynth.pause) speechSynth.pause();
-      if (speechSynth.cancel) speechSynth.cancel();
-    }
-    isPlayingAudio = false;
-    currentPlayingSegmentDiv = null;
-    if (playPageAudioBtn) playPageAudioBtn.innerHTML = '▶ 朗读';
-    document.querySelectorAll('.segment-block').forEach(b => b.classList.remove('playing-active'));
-  }
-
-  function playParagraphSpeech(text, targetBlock) {
-    if (!speechSynth) {
-      alert('您的浏览器不支持 Web Speech 语音合成功能');
-      return;
-    }
-    stopSpeech();
-
-    currentUtterance = new SpeechSynthesisUtterance(text);
-    currentUtterance.lang = 'en-US';
-    currentUtterance.rate = audioSpeed; // Always applies remembered speed
-
-    isPlayingAudio = true;
-    currentPlayingSegmentDiv = targetBlock;
-    targetBlock.classList.add('playing-active');
-    showHUDToast(`🔊 正在以 ${audioSpeed}x 朗读段落 (轻点可暂停)`);
-
-    currentUtterance.onend = () => {
-      isPlayingAudio = false;
-      currentPlayingSegmentDiv = null;
-      targetBlock.classList.remove('playing-active');
-    };
-    currentUtterance.onerror = () => {
-      isPlayingAudio = false;
-      currentPlayingSegmentDiv = null;
-      targetBlock.classList.remove('playing-active');
-    };
-
-    speechSynth.speak(currentUtterance);
-  }
-
-  function playPageSpeech() {
-    if (!speechSynth) return;
-
-    if (isPlayingAudio && !currentPlayingSegmentDiv) {
-      stopSpeech();
-      showHUDToast('⏸ 整页朗读已暂停');
-      return;
-    }
-    stopSpeech();
-
-    const pageObj = data[currentPage - 1];
-    if (!pageObj || !pageObj.segments || pageObj.segments.length === 0) return;
-
-    const enTexts = pageObj.segments.filter(s => s.en && s.en.length > 5).map(s => sanitize(s.en));
-    if (enTexts.length === 0) return;
-
-    const fullPageEn = enTexts.join('. ');
-    currentUtterance = new SpeechSynthesisUtterance(fullPageEn);
-    currentUtterance.lang = 'en-US';
-    currentUtterance.rate = audioSpeed; // Always applies remembered speed
-
-    isPlayingAudio = true;
-    if (playPageAudioBtn) playPageAudioBtn.innerHTML = '⏸ 暂停朗读';
-    showHUDToast(`🔊 正在以 ${audioSpeed}x 原声朗读整页`);
-
-    currentUtterance.onend = () => {
-      isPlayingAudio = false;
-      if (playPageAudioBtn) playPageAudioBtn.innerHTML = '▶ 朗读';
-    };
-    currentUtterance.onerror = () => {
-      isPlayingAudio = false;
-      if (playPageAudioBtn) playPageAudioBtn.innerHTML = '▶ 朗读';
-    };
-
-    speechSynth.speak(currentUtterance);
-  }
-
-  // Zoom controls for original image
   function resetImageZoom() {
     currentZoom = 1.0;
-    if (pageOriginalImg) pageOriginalImg.style.transform = 'scale(1.0)';
+    if (els.pageOriginalImg) els.pageOriginalImg.style.transform = 'scale(1)';
+  }
+  function zoomBy(delta) {
+    currentZoom = Math.min(HELD.ZOOM_MAX, Math.max(HELD.ZOOM_MIN, currentZoom + delta));
+    if (els.pageOriginalImg) els.pageOriginalImg.style.transform = 'scale(' + currentZoom + ')';
   }
 
-  const zoomInBtn = document.getElementById('zoom-in');
-  if (zoomInBtn) {
-    zoomInBtn.addEventListener('click', () => {
-      currentZoom += 0.25;
-      if (pageOriginalImg) pageOriginalImg.style.transform = `scale(${currentZoom})`;
-    });
+  // ==================================================================
+  // 阅读历史
+  // ==================================================================
+  function getHistory() { return readJson(LS.history, []); }
+  function saveHistory(list) {
+    lsSet(LS.history, JSON.stringify(list.slice(0, HELD.HISTORY_MAX)));
+    renderContinueBanner();
+    renderHistoryTab();
   }
-
-  const zoomOutBtn = document.getElementById('zoom-out');
-  if (zoomOutBtn) {
-    zoomOutBtn.addEventListener('click', () => {
-      if (currentZoom > 0.6) {
-        currentZoom -= 0.25;
-        if (pageOriginalImg) pageOriginalImg.style.transform = `scale(${currentZoom})`;
-      }
-    });
+  function formatAgo(t) {
+    if (!t) return '刚刚';
+    const diff = Math.floor((Date.now() - t) / 1000);
+    if (diff < 60) return '刚刚';
+    if (diff < 3600) return Math.floor(diff / 60) + ' 分钟前';
+    if (diff < 86400) return Math.floor(diff / 3600) + ' 小时前';
+    if (diff < 2592000) return Math.floor(diff / 86400) + ' 天前';
+    const d = new Date(t);
+    return (d.getMonth() + 1) + '月' + d.getDate() + '日';
   }
-
-  const zoomResetBtn = document.getElementById('zoom-reset');
-  if (zoomResetBtn) zoomResetBtn.addEventListener('click', resetImageZoom);
-
-  // Lightbox
-  const openLightboxBtn = document.getElementById('open-lightbox');
-  if (openLightboxBtn) {
-    openLightboxBtn.addEventListener('click', () => {
-      if (lightboxImg && pageOriginalImg) {
-        lightboxImg.src = pageOriginalImg.src;
-        lightboxModal.classList.add('active');
-      }
+  function recordReadingHistory(issueId, pageNum, sectionTitle) {
+    if (!issueId || !pageNum) return;
+    const meta = allIssues[issueId] || { displayName: issueId };
+    const total = meta.totalPages || (meta.pages && meta.pages.length) || 0;
+    if (total <= 0) return; // 无数据不记录（毒舌 2.7：不再伪造 104）
+    const pct = Math.min(100, Math.max(1, Math.round((pageNum / total) * 100)));
+    const list = getHistory().filter(function (h) { return h.issueId !== issueId; });
+    list.unshift({
+      issueId: issueId,
+      issueName: meta.displayName || issueId,
+      page: pageNum,
+      totalPages: total,
+      progress: pct,
+      sectionTitle: toPlainText(sectionTitle) || ('Page ' + pageNum),
+      timestamp: Date.now(),
     });
+    saveHistory(list);
   }
-
-  const closeLightboxBtn = document.querySelector('.close-lightbox');
-  if (closeLightboxBtn) {
-    closeLightboxBtn.addEventListener('click', () => {
-      lightboxModal.classList.remove('active');
-    });
+  function renderContinueBanner() {
+    const hero = $('continue-reading-hero');
+    if (!hero) return;
+    const h = getHistory();
+    if (h.length === 0) { hero.style.display = 'none'; return; }
+    const latest = h[0];
+    hero.style.display = 'flex';
+    hero.innerHTML =
+      '<div class="continue-left"><span class="continue-badge">最近在读 · 进度 ' + latest.progress + '%</span>' +
+      '<h4>' + escHtml(latest.issueName) + '</h4>' +
+      '<p>上次读到：第 ' + latest.page + ' 页 · ' + escHtml(latest.sectionTitle) + ' (' + escHtml(formatAgo(latest.timestamp)) + ')</p></div>' +
+      '<button class="continue-btn" aria-label="一键直达断点继续阅读"><span>继续阅读</span>' +
+      '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg></button>';
+    // 毒舌 7.12：事件绑定挪到 bindStaticEvents 一次性委托，这里只渲染内容
   }
-
-  if (lightboxModal) {
-    lightboxModal.addEventListener('click', (e) => {
-      if (e.target === lightboxModal) lightboxModal.classList.remove('active');
-    });
-  }
-
-  // Slider navigation
-  if (pageSlider) {
-    pageSlider.addEventListener('input', (e) => {
-      loadPage(parseInt(e.target.value, 10));
-    });
-  }
-
-  if (prevBtn) prevBtn.addEventListener('click', () => loadPage(currentPage - 1));
-  if (nextBtn) nextBtn.addEventListener('click', () => loadPage(currentPage + 1));
-
-  // Quick jump input
-  const quickJumpBtn = document.getElementById('quick-jump-go');
-  if (quickJumpBtn) {
-    quickJumpBtn.addEventListener('click', () => {
-      const val = parseInt(document.getElementById('quick-jump-num').value, 10);
-      if (val >= 1 && val <= currentIssueObj.totalPages) handleJumpAndCloseSidebarOnMobile(val);
-    });
-  }
-
-  // Issue Switcher Pill
-  if (issueSwitcherPill) {
-    issueSwitcherPill.addEventListener('click', () => {
-      const nextId = currentIssueId === '2026-08' ? '2026-07' : '2026-08';
-      switchIssue(nextId);
-    });
-  }
-
-  // Sidebar Tab Switching
-  document.querySelectorAll('.tab-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-      document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
-      btn.classList.add('active');
-      const pane = document.getElementById(`tab-${btn.dataset.tab}`);
-      if (pane) {
-        pane.classList.add('active');
-        if (btn.dataset.tab === 'history') {
-          renderHistoryTab();
-        } else if (btn.dataset.tab === 'bookmarks') {
-          renderBookmarksTab();
-        }
-        syncSidebarActiveState(currentPage);
-      }
-    });
-  });
-
-  // Switch View Mode Helper
-  function setViewMode(modeName) {
-    currentViewMode = modeName;
-    document.body.classList.remove('view-interlinear', 'view-split', 'view-en-only', 'view-zh-only');
-    document.body.classList.add(`view-${currentViewMode}`);
-    localStorage.setItem(STORAGE_KEY_VIEW, currentViewMode);
-
-    document.querySelectorAll('.view-btn').forEach(b => {
-      if (b.dataset.view === currentViewMode) b.classList.add('active');
-      else b.classList.remove('active');
-    });
-
-    const labels = {
-      'interlinear': '📖 逐段对照',
-      'split': '🪟 原图分栏',
-      'en-only': '🇺🇸 纯英文',
-      'zh-only': '🇨🇳 纯中文'
-    };
-    showHUDToast(`视图切换：${labels[modeName] || modeName}`);
-  }
-
-  // View Mode Switcher Click
-  document.querySelectorAll('.view-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      setViewMode(btn.dataset.view);
-    });
-  });
-
-  // Settings & More Popover Drawer (Apple Books style)
-  const moreSettingsBtn = document.getElementById('more-settings-btn');
-  const settingsPopover = document.getElementById('settings-popover-menu');
-  const settingsBackdrop = document.getElementById('settings-backdrop');
-
-  function toggleSettingsPopover(force) {
-    if (!settingsPopover) return;
-    const isAct = force !== undefined ? force : !settingsPopover.classList.contains('active');
-    if (isAct) {
-      settingsPopover.classList.add('active');
-      if (settingsBackdrop) settingsBackdrop.classList.add('active');
-      if (moreSettingsBtn) moreSettingsBtn.classList.add('active');
-      // Sync active state on theme cards
-      const curTheme = localStorage.getItem(STORAGE_KEY_THEME) || 'light';
-      document.querySelectorAll('.popover-theme-card').forEach(c => {
-        if (c.dataset.theme === curTheme) c.classList.add('active');
-        else c.classList.remove('active');
-      });
-    } else {
-      settingsPopover.classList.remove('active');
-      if (settingsBackdrop) settingsBackdrop.classList.remove('active');
-      if (moreSettingsBtn) moreSettingsBtn.classList.remove('active');
+  function renderHistoryTab() {
+    const listEl = $('history-timeline-list');
+    const countEl = $('history-count');
+    if (!listEl) return;
+    const h = getHistory();
+    if (countEl) countEl.textContent = h.length + ' 条阅读足迹';
+    listEl.innerHTML = '';
+    if (h.length === 0) {
+      listEl.innerHTML = '<div class="bookmark-empty-hint">暂无阅读历史，翻阅期刊时系统将自动实时记录您的阅读足迹</div>';
+      return;
     }
+    const frag = document.createDocumentFragment();
+    h.forEach(function (item) {
+      const card = document.createElement('div');
+      card.className = 'history-item';
+      card.setAttribute('role', 'button');
+      card.tabIndex = 0;
+      card.innerHTML =
+        '<div class="history-item-top"><span class="history-page-badge">P' + item.page + ' · ' + item.progress + '%</span>' +
+        '<span class="history-time-tag">' + escHtml(formatAgo(item.timestamp)) + '</span></div>' +
+        '<div class="history-title">' + escHtml(item.sectionTitle) + '</div>' +
+        '<div class="history-issue-tag">' + escHtml(item.issueName) + '</div>' +
+        '<div class="history-progress-track"><div class="history-progress-fill" style="width:' + item.progress + '%"></div></div>';
+      card.addEventListener('click', function () { jumpFromHistory(item); });
+      frag.appendChild(card);
+    });
+    listEl.appendChild(frag);
+  }
+  function jumpFromHistory(item) {
+    enterReaderRoom(item.issueId, item.page);
+    if (window.innerWidth <= 960 && els.appSidebar) els.appSidebar.classList.add('collapsed');
   }
 
-  if (moreSettingsBtn) {
-    moreSettingsBtn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      toggleSettingsPopover();
+  // ==================================================================
+  // 视图 / 主题 / 对齐
+  // ==================================================================
+  function setViewMode(mode) {
+    if (VIEW_MODES.indexOf(mode) < 0) mode = 'interlinear';
+    currentViewMode = mode;
+    VIEW_MODES.forEach(function (m) { document.body.classList.remove('view-' + m); });
+    document.body.classList.add('view-' + mode);
+    lsSet(LS.view, mode);
+    $$('.view-btn').forEach(function (b) {
+      const act = b.dataset.view === mode;
+      b.classList.toggle('active', act);
+      b.setAttribute('aria-pressed', String(act));
     });
   }
 
-  if (settingsBackdrop) {
-    settingsBackdrop.addEventListener('click', () => {
-      toggleSettingsPopover(false);
-    });
+  function applyTheme(name) {
+    if (THEMES.indexOf(name) < 0) name = 'light';
+    THEMES.forEach(function (t) { document.body.classList.remove('theme-' + t); });
+    document.body.classList.add('theme-' + name);
+    lsSet(LS.theme, name);
+    $$('.popover-theme-card').forEach(function (c) { c.classList.toggle('active', c.dataset.theme === name); });
   }
 
-  // Theme Switcher (Popover Cards & Top Buttons)
-  function applyTheme(themeName) {
-    document.body.classList.remove('theme-light', 'theme-sepia', 'theme-beach', 'theme-academic', 'theme-forest', 'theme-dark');
-    document.body.classList.add(`theme-${themeName}`);
-    localStorage.setItem(STORAGE_KEY_THEME, themeName);
-
-    document.querySelectorAll('.popover-theme-card').forEach(c => {
-      if (c.dataset.theme === themeName) c.classList.add('active');
-      else c.classList.remove('active');
-    });
-
-    const themeNames = {
-      'light': '☀️ 晨曦象牙白',
-      'sepia': '📜 复古羊皮纸',
-      'beach': '🏖️ 清新夏日海滩',
-      'academic': '🧊 学术冷静冰川',
-      'forest': '🌿 森林晨雾薄荷',
-      'dark': '🌙 极夜深曜石'
-    };
-    showHUDToast(`主题切换：${themeNames[themeName] || themeName}`);
-  }
-
-  document.querySelectorAll('.popover-theme-card').forEach(card => {
-    card.addEventListener('click', () => {
-      applyTheme(card.dataset.theme);
-    });
-  });
-
-  document.querySelectorAll('.theme-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      applyTheme(btn.dataset.theme);
-    });
-  });
-
-  // Alignment & Typographic Modes (Flush Left Fixed Spacing vs Justified Two-Sided Alignment)
-  const STORAGE_KEY_ALIGN = 'atlantic_reader_align_mode';
-  let currentAlignMode = localStorage.getItem(STORAGE_KEY_ALIGN) || 'flush';
-  const alignModeToggle = document.getElementById('align-mode-toggle');
-  const alignModeText = document.getElementById('align-mode-text');
-
+  let currentAlignModeInternal = 'flush';
   function applyAlignMode(mode) {
-    currentAlignMode = mode;
+    currentAlignModeInternal = mode === 'justify' ? 'justify' : 'flush';
     document.body.classList.remove('align-mode-flush', 'align-mode-justify');
-    document.body.classList.add(`align-mode-${mode}`);
-    localStorage.setItem(STORAGE_KEY_ALIGN, mode);
-    if (alignModeText) {
-      alignModeText.textContent = mode === 'flush' ? '📖 自然恒定均距 (零拉伸)' : '📐 纸刊两端平齐 (Justified)';
+    document.body.classList.add('align-mode-' + currentAlignModeInternal);
+    lsSet(LS.align, currentAlignModeInternal);
+    if (els.alignModeText) {
+      els.alignModeText.textContent = currentAlignModeInternal === 'flush'
+        ? '📖 自然恒定均距 (零拉伸)' : '📐 纸刊两端平齐 (Justified)';
     }
   }
 
-  if (alignModeToggle) {
-    alignModeToggle.addEventListener('click', () => {
-      const nextMode = currentAlignMode === 'flush' ? 'justify' : 'flush';
-      applyAlignMode(nextMode);
-      showHUDToast(`排版模式：${nextMode === 'flush' ? '📖 自然恒定均距 (每个空格绝对等宽)' : '📐 纸刊两端平齐'}`);
-    });
+  // ==================================================================
+  // 设置抽屉 / 快捷键速查
+  // ==================================================================
+  function toggleSettingsPopover(force) {
+    if (!els.settingsPopover) return;
+    const active = force !== undefined ? force : !els.settingsPopover.classList.contains('active');
+    els.settingsPopover.classList.toggle('active', active);
+    if (els.settingsBackdrop) els.settingsBackdrop.classList.toggle('active', active);
+    if (els.moreSettingsBtn) els.moreSettingsBtn.classList.toggle('active', active);
   }
-  applyAlignMode(currentAlignMode);
-
-  // Font Family Switcher (Modern Sans vs Classic Serif)
-  if (fontToggleBtn) {
-    fontToggleBtn.addEventListener('click', () => {
-      isSerifMode = !isSerifMode;
-      if (isSerifMode) {
-        document.body.classList.add('font-mode-serif');
-        fontToggleBtn.innerHTML = '🔠 典雅衬线';
-        localStorage.setItem(STORAGE_KEY_FONT, 'serif');
-      } else {
-        document.body.classList.remove('font-mode-serif');
-        fontToggleBtn.innerHTML = '🔤 现代黑体';
-        localStorage.setItem(STORAGE_KEY_FONT, 'sans');
-      }
-    });
+  function toggleShortcutsModal() { if (els.shortcutsModal) els.shortcutsModal.classList.toggle('active'); }
+  function toggleSidebar(e) {
+    if (e && e.stopPropagation) e.stopPropagation();
+    const sb = els.appSidebar;
+    if (!sb) return;
+    const collapsed = sb.classList.toggle('collapsed');
+    toast(collapsed ? '📋 目录已收起' : '📖 目录已展开');
   }
 
-  // Global Equal Font Resizer (1:1 Scaling for both English and Chinese)
-  const fontIncBtn = document.getElementById('font-inc-btn');
-  if (fontIncBtn) {
-    fontIncBtn.addEventListener('click', () => {
-      if (globalFontSize < 36) {
-        globalFontSize += 1.5;
-        applyGlobalFontSize();
-        showHUDToast(`全局中英同号：${globalFontSize}px`);
-      }
-    });
-  }
-
-  const fontDecBtn = document.getElementById('font-dec-btn');
-  if (fontDecBtn) {
-    fontDecBtn.addEventListener('click', () => {
-      if (globalFontSize > 14) {
-        globalFontSize -= 1.5;
-        applyGlobalFontSize();
-        showHUDToast(`全局中英同号：${globalFontSize}px`);
-      }
-    });
-  }
-
-  // Fullscreen
-  const fullscreenBtn = document.getElementById('fullscreen-btn');
-  if (fullscreenBtn) {
-    fullscreenBtn.addEventListener('click', () => {
-      if (!document.fullscreenElement) {
-        document.documentElement.requestFullscreen();
-      } else {
-        if (document.exitFullscreen) document.exitFullscreen();
-      }
-    });
-  }
-
-  // Copy Markdown
-  if (copyPageBtn) {
-    copyPageBtn.addEventListener('click', () => {
-      const pageObj = data[currentPage - 1];
-      if (pageObj && pageObj.rawMd) {
-        navigator.clipboard.writeText(pageObj.rawMd).then(() => {
-          copyPageBtn.textContent = '已复制!';
-          showHUDToast('📋 本页 Markdown 已成功复制');
-          setTimeout(() => copyPageBtn.textContent = '📋 复制 Markdown', 2000);
-        });
-      }
-    });
-  }
-
-  // Bookmark Page Button
-  if (bookmarkPageBtn) {
-    bookmarkPageBtn.addEventListener('click', () => {
-      toggleBookmark(currentPage);
-    });
-  }
-
-  // Audio Play Trigger
-  if (playPageAudioBtn) {
-    playPageAudioBtn.addEventListener('click', playPageSpeech);
-  }
-
-  // Persistent Audio Speed Synchronizer (Header Pill + Popover Drawer + Memory)
-  const topAudioSpeedBtn = document.getElementById('audio-speed-btn-top');
-  const drawerAudioSpeedBtn = document.getElementById('audio-speed-btn');
-
-  function updateSpeedDisplays() {
-    const txt = `${audioSpeed}x`;
-    if (topAudioSpeedBtn) topAudioSpeedBtn.textContent = txt;
-    if (drawerAudioSpeedBtn) drawerAudioSpeedBtn.textContent = `${txt} 标准`;
-  }
-
+  // ---------------------------------------------------------------- 行为回调
   function cycleAudioSpeed() {
     if (audioSpeed === 1.0) audioSpeed = 1.25;
     else if (audioSpeed === 1.25) audioSpeed = 1.5;
     else if (audioSpeed === 1.5) audioSpeed = 0.75;
     else audioSpeed = 1.0;
-
-    localStorage.setItem(STORAGE_KEY_SPEED, audioSpeed);
+    lsSet(LS.speed, String(audioSpeed));
     updateSpeedDisplays();
-    showHUDToast(`朗读倍速已设为：${audioSpeed}x (整段与整页均已同步记忆)`);
+    toast('朗读倍速：' + audioSpeed + 'x');
+  }
+  function updateSpeedDisplays() {
+    const txt = audioSpeed + 'x';
+    if (els.topAudioSpeedBtn) els.topAudioSpeedBtn.textContent = txt;
+    // 毒舌 7.1：只有 1x 才标"标准"，1.25/1.5/0.75 不再误标
+    if (els.drawerAudioSpeedBtn) els.drawerAudioSpeedBtn.textContent = audioSpeed === 1 ? '1x 标准' : txt;
+    if (els.audioSpeedBtn) els.audioSpeedBtn.textContent = txt;
+  }
+  function toggleFont() {
+    isSerifMode = !isSerifMode;
+    document.body.classList.toggle('font-mode-serif', isSerifMode);
+    if (els.fontToggleBtn) els.fontToggleBtn.textContent = isSerifMode ? '🔠 典雅衬线' : '🔤 现代黑体';
+    lsSet(LS.font, isSerifMode ? 'serif' : 'sans');
+  }
+  function toggleFullscreen() {
+    if (!document.fullscreenElement) { if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen(); }
+    else if (document.exitFullscreen) document.exitFullscreen();
+  }
+  function jumpToPage(p) {
+    loadPage(p);
+    if (window.innerWidth <= 900 && els.appSidebar) els.appSidebar.classList.add('collapsed');
+  }
+  function jumpFromInput() {
+    const input = $('quick-jump-num');
+    if (!input) return;
+    const v = parseInt(input.value, 10);
+    if (v >= 1 && v <= currentIssueObj.totalPages) jumpToPage(v);
+  }
+  function copyPageMarkdown() {
+    const pageObj = data[currentPage - 1];
+    if (!pageObj || !pageObj.rawMd) { toast('⚠️ 本页无 Markdown 数据', 'warn'); return; }
+    navigator.clipboard.writeText(pageObj.rawMd)
+      .then(function () { toast('📋 本页 Markdown 已复制'); })
+      .catch(function () { toast('⚠️ 复制失败，请手动选择文本复制', 'warn'); });
   }
 
-  if (topAudioSpeedBtn) {
-    topAudioSpeedBtn.addEventListener('click', cycleAudioSpeed);
-  }
-  if (drawerAudioSpeedBtn) {
-    drawerAudioSpeedBtn.addEventListener('click', cycleAudioSpeed);
-  }
-  updateSpeedDisplays();
-
-  // Shortcuts Help Modal Toggle
-  function toggleShortcutsModal() {
-    if (!shortcutsModal) return;
-    shortcutsModal.classList.toggle('active');
-  }
-
-  const closeShortcutsBtn = document.querySelector('.close-shortcuts-btn');
-  if (closeShortcutsBtn) {
-    closeShortcutsBtn.addEventListener('click', () => {
-      if (shortcutsModal) shortcutsModal.classList.remove('active');
-    });
-  }
-  if (shortcutsModal) {
-    shortcutsModal.addEventListener('click', (e) => {
-      if (e.target === shortcutsModal) shortcutsModal.classList.remove('active');
-    });
-  }
-
-  // Full Text Instant Search in Sidebar
-  if (searchInput) {
-    searchInput.addEventListener('input', (e) => {
-      const query = e.target.value.trim().toLowerCase();
-      if (!query || query.length < 2) {
-        if (searchTab) searchTab.style.display = 'none';
-        return;
-      }
-
-      if (searchTab) {
-        searchTab.style.display = 'block';
-        searchTab.click();
-      }
-
-      if (!searchResultsList) return;
-      searchResultsList.innerHTML = '';
-      let matchesCount = 0;
-
-      data.forEach((p, idx) => {
-        const pageNum = idx + 1;
-        let matchedText = '';
-        if (p.segments) {
-          p.segments.forEach(seg => {
-            if ((seg.en && seg.en.toLowerCase().includes(query)) || (seg.zh && seg.zh.toLowerCase().includes(query))) {
-              matchedText += (seg.en || '') + ' ' + (seg.zh || '') + ' ';
-            }
-          });
-        }
-
-        if (matchedText) {
-          matchesCount++;
-          const item = document.createElement('div');
-          item.className = 'toc-item';
-          const cleanSnippet = sanitize(matchedText.slice(0, 140)).replace(new RegExp(`(${query})`, 'gi'), '<mark>$1</mark>');
-          item.innerHTML = `
-            <div class="toc-item-header">
-              <span>PAGE ${String(pageNum).padStart(3, '0')}</span>
-              <span>${sanitize(p.section) || ''}</span>
-            </div>
-            <div class="toc-item-title">${cleanSnippet}...</div>
-          `;
-          item.addEventListener('click', () => handleJumpAndCloseSidebarOnMobile(pageNum));
-          searchResultsList.appendChild(item);
-        }
-      });
-
-      if (matchesCount === 0) {
-        searchResultsList.innerHTML = '<div style="padding:16px;color:var(--text-muted);font-size:12px;">未检索到匹配内容</div>';
-      }
-    });
-  }
-
-  // GLOBAL EXTENDED KEYBOARD SHORTCUT SUITE (IME-Penetrating Dual-Track Physical Engine)
+  // ==================================================================
+  // 全局快捷键
+  // ==================================================================
   function handleGlobalKeyDown(e) {
-    // Only bypass if the user is actively typing inside an input or textarea
     const activeEl = document.activeElement;
     const isTyping = activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA');
     if (isTyping) {
-      if (e.key === 'Escape' || e.code === 'Escape') {
-        activeEl.blur();
-        e.preventDefault();
-      }
+      if (e.key === 'Escape') { activeEl.blur(); e.preventDefault(); }
       return;
     }
-
     const key = (e.key || '').toLowerCase();
     const code = e.code || '';
 
-    // If library shelf is open, J / K / Enter / Space automatically enters reader room
-    const isShelfOpen = libraryPortal && !libraryPortal.classList.contains('hidden');
-    if (isShelfOpen) {
-      if (code === 'KeyJ' || key === 'j' || code === 'ArrowRight' || key === 'arrowright' || code === 'Enter' || code === 'Space') {
-        e.preventDefault();
-        enterReaderRoom(currentIssueId, 1);
-        return;
-      }
+    const shelfOpen = els.libraryPortal && !els.libraryPortal.classList.contains('hidden');
+    if (shelfOpen) {
+      if (code === 'Enter') { e.preventDefault(); enterReaderRoom(currentIssueId, 1); return; }
     }
 
-    // 1. Smooth Scrolling with W, S, Space, Up, Down
     if (code === 'Space' || key === ' ') {
       e.preventDefault();
-      const scrollDelta = window.innerHeight * 0.6;
-      scrollPage(e.shiftKey ? -scrollDelta : scrollDelta);
-    } else if (code === 'KeyW' || key === 'w' || code === 'ArrowUp' || key === 'arrowup') {
+      scrollPage(e.shiftKey ? -window.innerHeight * 0.6 : window.innerHeight * 0.6);
+    } else if (code === 'KeyW' || key === 'w' || code === 'ArrowUp') { e.preventDefault(); scrollPage(-260); }
+    else if (code === 'KeyS' || key === 's' || code === 'ArrowDown') { e.preventDefault(); scrollPage(260); }
+    // 毒舌 2.3：对齐 vim 惯例——G 到底部 / Shift+G 回顶部（键盘速查表已同步）
+    else if (code === 'KeyG' && e.shiftKey) { e.preventDefault(); scrollPage(-1e9); }
+    else if (code === 'KeyG' && !e.shiftKey) { e.preventDefault(); scrollPage(1e9); }
+    else if (code === 'Digit1' || key === '1') { e.preventDefault(); setViewMode('interlinear'); }
+    else if (code === 'Digit2' || key === '2') { e.preventDefault(); setViewMode('split'); }
+    else if (code === 'Digit3' || key === '3') { e.preventDefault(); setViewMode('en-only'); }
+    else if (code === 'Digit4' || key === '4') { e.preventDefault(); setViewMode('zh-only'); }
+    else if (code === 'KeyM' || key === 'm') { e.preventDefault(); switchIssue(nextIssueId()); }
+    else if (code === 'KeyJ' || code === 'ArrowRight' || code === 'PageDown') {
       e.preventDefault();
-      scrollPage(-260);
-    } else if (code === 'KeyS' || key === 's' || code === 'ArrowDown' || key === 'arrowdown') {
+      if (!isNavigating) { isNavigating = true; loadPage(currentPage + 1); setTimeout(function () { isNavigating = false; }, HELD.JUMP_LOCK_MS); }
+    } else if (code === 'KeyK' || code === 'ArrowLeft' || code === 'PageUp') {
       e.preventDefault();
-      scrollPage(260);
-    } else if ((code === 'KeyG' || key === 'g') && !e.shiftKey) {
-      e.preventDefault();
-      const vp = document.querySelector('.reader-viewport');
-      if (vp) vp.scrollTop = 0;
-      window.scrollTo(0, 0);
-    } else if ((code === 'KeyG' || key === 'g') && e.shiftKey) {
-      e.preventDefault();
-      const vp = document.querySelector('.reader-viewport');
-      if (vp) vp.scrollTop = vp.scrollHeight;
-      window.scrollTo(0, document.body.scrollHeight);
-    }
-
-    // 2. View Mode Direct Numbers 1, 2, 3, 4
-    else if (code === 'Digit1' || code === 'Numpad1' || key === '1') {
-      e.preventDefault();
-      setViewMode('interlinear');
-    } else if (code === 'Digit2' || code === 'Numpad2' || key === '2') {
-      e.preventDefault();
-      setViewMode('split');
-    } else if (code === 'Digit3' || code === 'Numpad3' || key === '3') {
-      e.preventDefault();
-      setViewMode('en-only');
-    } else if (code === 'Digit4' || code === 'Numpad4' || key === '4') {
-      e.preventDefault();
-      setViewMode('zh-only');
-    }
-
-    // 3. Issue Quick Switch
-    else if (code === 'KeyM' || key === 'm') {
-      e.preventDefault();
-      const nextId = currentIssueId === '2026-08' ? '2026-07' : '2026-08';
-      switchIssue(nextId);
-    }
-
-    // 4. Strict 1:1 Sequential Page Navigation (J / K / → / ← / PageDown / PageUp)
-    else if (code === 'KeyJ' || key === 'j' || code === 'ArrowRight' || key === 'arrowright' || code === 'PageDown' || key === 'pagedown') {
-      e.preventDefault();
-      if (!isNavigating) {
-        isNavigating = true;
-        loadPage(currentPage + 1);
-        setTimeout(() => { isNavigating = false; }, 60);
-      }
-    } else if (code === 'KeyK' || key === 'k' || code === 'ArrowLeft' || key === 'arrowleft' || code === 'PageUp' || key === 'pageup') {
-      e.preventDefault();
-      if (!isNavigating) {
-        isNavigating = true;
-        loadPage(currentPage - 1);
-        setTimeout(() => { isNavigating = false; }, 60);
-      }
-    }
-
-    // 5. Sidebar Toggle
-    else if (code === 'KeyT' || key === 't') {
-      e.preventDefault();
-      window.toggleSidebar(e);
-    }
-
-    // 6. Shortcuts Cheat Sheet
-    else if (e.key === '?' || (e.shiftKey && (code === 'Slash' || key === '/'))) {
-      e.preventDefault();
-      toggleShortcutsModal();
-    }
-
-    // 7. Escape Navigation
+      if (!isNavigating) { isNavigating = true; loadPage(currentPage - 1); setTimeout(function () { isNavigating = false; }, HELD.JUMP_LOCK_MS); }
+    } else if (code === 'KeyT' || key === 't') { e.preventDefault(); toggleSidebar(e); }
+    else if (e.key === '?' || (e.shiftKey && code === 'Slash')) { e.preventDefault(); toggleShortcutsModal(); }
     else if (code === 'Escape' || key === 'escape') {
-      e.preventDefault();
-      if (shortcutsModal && shortcutsModal.classList.contains('active')) {
-        shortcutsModal.classList.remove('active');
-        return;
-      }
-      if (lightboxModal && lightboxModal.classList.contains('active')) {
-        lightboxModal.classList.remove('active');
-        return;
-      }
-      const sb = document.getElementById('app-sidebar');
-      if (sb && !sb.classList.contains('collapsed')) {
-        sb.classList.add('collapsed');
-        showHUDToast('📋 目录导航已收起');
-      } else {
-        openLibraryShelf();
-      }
-    }
+      const sb = els.appSidebar;
+      if (els.shortcutsModal && els.shortcutsModal.classList.contains('active')) { els.shortcutsModal.classList.remove('active'); return; }
+      if (els.lightboxModal && els.lightboxModal.classList.contains('active')) { els.lightboxModal.classList.remove('active'); return; }
+      if (els.settingsPopover && els.settingsPopover.classList.contains('active')) { toggleSettingsPopover(false); return; }
+      if (sb && !sb.classList.contains('collapsed')) { sb.classList.add('collapsed'); toast('📋 目录已收起'); }
+      else openLibraryShelf();
+    } else if (code === 'KeyB' || key === 'b') { e.preventDefault(); toggleBookmark(currentPage); }
+    else if (code === 'KeyP' || key === 'p') { e.preventDefault(); playPageSpeech(); }
+    // 毒舌 2.4：F 直接调函数，不绕按钮模拟点击
+    else if (code === 'KeyF' || key === 'f') { e.preventDefault(); toggleFullscreen(); }
+    else if (code === 'KeyH' || key === 'h') { e.preventDefault(); openLibraryShelf(); }
 
-    // 8. Bookmark
-    else if (code === 'KeyB' || key === 'b') {
-      e.preventDefault();
-      toggleBookmark(currentPage);
-    }
-
-    // 9. Speech Audio
-    else if (code === 'KeyP' || key === 'p') {
-      e.preventDefault();
-      playPageSpeech();
-    }
-
-    // 10. Fullscreen & Home
-    else if (code === 'KeyF' || key === 'f') {
-      e.preventDefault();
-      if (fullscreenBtn) fullscreenBtn.click();
-    } else if (code === 'KeyH' || key === 'h') {
-      e.preventDefault();
-      openLibraryShelf();
-    }
+    // 其余按键原样放行（无死语句 —— 毒舌 6.5）
   }
 
-  // SINGLE LISTENER REGISTRATION (Capture phase for instant priority)
-  window.addEventListener('keydown', handleGlobalKeyDown, true);
-
-  // Global Clipboard Sanitizer: Guarantees 100% Pure, Unbroken Words on Copy (Stripping any soft hyphens)
-  document.addEventListener('copy', (e) => {
-    const selection = window.getSelection();
-    if (!selection || selection.isCollapsed) return;
-    const rawText = selection.toString();
-    const cleanText = rawText.replace(/\u00AD/g, '').replace(/[\u200B-\u200D\uFEFF]/g, '');
-    if (e.clipboardData) {
-      e.clipboardData.setData('text/plain', cleanText);
-      e.preventDefault();
+  // ==================================================================
+  // 静态事件绑定（启动时执行一次，杜绝监听器累积）
+  // ==================================================================
+  function bindStaticEvents() {
+    // 书架：过滤 + 进入（委托）
+    const portal = els.libraryPortal;
+    if (portal && !portal.dataset.bound) {
+      portal.dataset.bound = '1';
+      portal.addEventListener('click', function (e) {
+        const filterBtn = e.target.closest('.pub-filter-btn');
+        if (filterBtn) {
+          $$('.pub-filter-btn').forEach(function (b) { b.classList.remove('active'); });
+          filterBtn.classList.add('active');
+          currentPubFilter = filterBtn.dataset.pub;
+          renderLibraryShelf();
+          return;
+        }
+        const enterBtn = e.target.closest('.shelf-enter-btn');
+        const card = e.target.closest('.shelf-issue-card');
+        const target = enterBtn || card;
+        if (target && target.dataset && target.dataset.issue) {
+          const jump = parseInt(target.dataset.page, 10);
+          enterReaderRoom(target.dataset.issue, jump > 0 ? jump : 1);
+        }
+      });
+      portal.addEventListener('keydown', function (e) {
+        const card = e.target.closest('.shelf-issue-card');
+        if (card && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); enterReaderRoom(card.dataset.issue, 1); }
+      });
     }
-  });
 
-  // Startup Initialization: Ensure sidebar is cleanly collapsed by default
-  if (sidebar) {
-    sidebar.classList.add('collapsed');
-  }
+    // 目录过滤条（委托）
+    const filterBar = els.tocFilterBar;
+    if (filterBar && !filterBar.dataset.bound) {
+      filterBar.dataset.bound = '1';
+      filterBar.addEventListener('click', function (e) {
+        const btn = e.target.closest('.toc-filter-btn');
+        if (!btn) return;
+        $$('.toc-filter-btn').forEach(function (b) { b.classList.remove('active'); });
+        btn.classList.add('active');
+        const filter = btn.dataset.filter || 'all';
+        $$('#toc-list .toc-item').forEach(function (item) {
+          item.style.display = (filter === 'all' || item.dataset.type === filter) ? '' : 'none';
+        });
+      });
+    }
 
-  // Click on reader viewport to auto-close drawer on mobile
-  const vpEl = document.querySelector('.reader-viewport');
-  if (vpEl) {
-    vpEl.addEventListener('click', () => {
-      if (window.innerWidth <= 960 && sidebar && !sidebar.classList.contains('collapsed')) {
-        sidebar.classList.add('collapsed');
+    // 目录点击
+    const tocList = els.tocList;
+    if (tocList && !tocList.dataset.bound) {
+      tocList.dataset.bound = '1';
+      tocList.addEventListener('click', function (e) {
+        const item = e.target.closest('.toc-item');
+        if (item && item.dataset.page) jumpToPage(parseInt(item.dataset.page, 10));
+      });
+      tocList.addEventListener('keydown', function (e) {
+        const item = e.target.closest('.toc-item');
+        if (item && item.dataset.page && (e.key === 'Enter')) { e.preventDefault(); jumpToPage(parseInt(item.dataset.page, 10)); }
+      });
+    }
+
+    // 缩略图格
+    const pagesGrid = els.pagesGrid;
+    if (pagesGrid && !pagesGrid.dataset.bound) {
+      pagesGrid.dataset.bound = '1';
+      pagesGrid.addEventListener('click', function (e) {
+        const tile = e.target.closest('.page-tile');
+        if (tile && tile.dataset.page) jumpToPage(parseInt(tile.dataset.page, 10));
+      });
+    }
+
+    // 书签列表（复用目录样式，点击直达）
+    const bm = els.bookmarksList;
+    if (bm && !bm.dataset.bound) {
+      bm.dataset.bound = '1';
+      bm.addEventListener('click', function (e) {
+        const item = e.target.closest('.toc-item');
+        if (item && item.dataset.page) jumpToPage(parseInt(item.dataset.page, 10));
+      });
+    }
+
+    // 主功能按钮
+    bindOne('openPortalBtn', openLibraryShelf);
+    bindOne('toggleSidebarBtn', toggleSidebar);
+    bindOne('closeSidebarBtn', toggleSidebar);
+    bindOne('prevPageBtn', function () { loadPage(currentPage - 1); });
+    bindOne('nextPageBtn', function () { loadPage(currentPage + 1); });
+    bindOne('bookmarkPageBtn', function () { toggleBookmark(currentPage); });
+    bindOne('playPageAudioBtn', playPageSpeech);
+    bindOne('moreSettingsBtn', function (e) { e.stopPropagation(); toggleSettingsPopover(); });
+    bindOne('alignModeToggle', function () { applyAlignMode(currentAlignModeInternal === 'flush' ? 'justify' : 'flush'); });
+    bindOne('fontToggleBtn', toggleFont);
+    bindOne('fontIncBtn', function () { applyFontScale(globalFontScale + 1.5); });
+    bindOne('fontDecBtn', function () { applyFontScale(globalFontScale - 1.5); });
+    bindOne('fullscreenBtn', toggleFullscreen);
+    bindOne('copyPageBtn', copyPageMarkdown);
+    bindOne('quickJumpBtn', jumpFromInput);
+    bindOne('issueSwitcherPill', function () { switchIssue(nextIssueId()); });
+    bindOne('topAudioSpeedBtn', cycleAudioSpeed);
+    bindOne('audioSpeedBtn', cycleAudioSpeed);
+    bindOne('drawerAudioSpeedBtn', cycleAudioSpeed);
+    bindOne('zoomInBtn', function () { zoomBy(0.25); });
+    bindOne('zoomOutBtn', function () { zoomBy(-0.25); });
+    bindOne('zoomResetBtn', resetImageZoom);
+    bindOne('closeShortcutsBtn', toggleShortcutsModal);
+    bindOne('shortcutsOpenBtn', toggleShortcutsModal);
+    if (els.settingsBackdrop) els.settingsBackdrop.addEventListener('click', function () { toggleSettingsPopover(false); });
+
+    const openLightboxNode = $('open-lightbox');
+    if (openLightboxNode) openLightboxNode.addEventListener('click', function () {
+      if (els.pageOriginalImg) openLightboxImage(els.pageOriginalImg.src);
+    });
+
+    // 视图切换
+    $$('.view-btn').forEach(function (b) { b.addEventListener('click', function () { setViewMode(b.dataset.view); }); });
+    // 主题卡
+    $$('.popover-theme-card').forEach(function (c) { c.addEventListener('click', function () { applyTheme(c.dataset.theme); }); });
+    // Tab 切换
+    $$('.tab-btn').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        $$('.tab-btn').forEach(function (b) { b.classList.remove('active'); });
+        $$('.tab-pane').forEach(function (p) { p.classList.remove('active'); });
+        btn.classList.add('active');
+        const pane = $('tab-' + btn.dataset.tab);
+        if (pane) {
+          pane.classList.add('active');
+          if (btn.dataset.tab === 'history') renderHistoryTab();
+          else if (btn.dataset.tab === 'bookmarks') renderBookmarksTab();
+          syncSidebarActiveState(currentPage);
+        }
+      });
+    });
+
+    // 模态关闭（点背景）
+    if (els.lightboxModal) els.lightboxModal.addEventListener('click', function (e) {
+      if (e.target === els.lightboxModal) els.lightboxModal.classList.remove('active');
+    });
+    if (els.shortcutsModal) els.shortcutsModal.addEventListener('click', function (e) {
+      if (e.target === els.shortcutsModal) els.shortcutsModal.classList.remove('active');
+    });
+
+    // 品牌徽标 → 回馆
+    const brand = document.querySelector('.magazine-brand');
+    if (brand) brand.addEventListener('click', openLibraryShelf);
+
+    // 继续阅读按卡片（毒舌 7.12：addEventListener 委托，而非每帧 onclick 覆盖）
+    const hero = $('continue-reading-hero');
+    if (hero && !hero.dataset.bound) {
+      hero.dataset.bound = '1';
+      hero.addEventListener('click', function () {
+        const h = getHistory();
+        if (h.length > 0) enterReaderRoom(h[0].issueId, h[0].page);
+      });
+    }
+
+    // 键盘
+    window.addEventListener('keydown', handleGlobalKeyDown, true);
+
+    // 剪贴板净化器（全局唯一，binding 一次）
+    document.addEventListener('copy', function (e) {
+      const sel = window.getSelection();
+      if (!sel || sel.isCollapsed) return;
+      const clean = stripInvisibles(sel.toString());
+      if (e.clipboardData) { e.clipboardData.setData('text/plain', clean); e.preventDefault(); }
+    });
+
+    // 移动端点按正文自动收侧栏
+    if (els.readerViewport) els.readerViewport.addEventListener('click', function () {
+      if (window.innerWidth <= 900 && els.appSidebar && !els.appSidebar.classList.contains('collapsed')) {
+        els.appSidebar.classList.add('collapsed');
       }
     });
+
+    // 轻点朗读 / 原图灯箱：正文委托「一次性」绑定（毒舌 1.10 —— 不再用 body._tapspeak 存状态）
+    const ab = els.articleBody;
+    if (ab && !ab.dataset.boundTap) {
+      ab.dataset.boundTap = '1';
+      ab.addEventListener('click', function (e) {
+        const enCard = e.target.closest('.en-text');
+        if (enCard) {
+          const block = enCard.closest('.segment-block');
+          if (block) {
+            const segs = (data[currentPage - 1] || {}).segments || [];
+            const target = segs[parseInt(block.id.replace('seg-', ''), 10)];
+            if (target) {
+              if (block.classList.contains('playing-active')) { stopSpeech(); toast('⏸ 朗读已暂停'); }
+              else playParagraphSpeech(target.en, block);
+            }
+          }
+          return;
+        }
+        const artWrap = e.target.closest('.embedded-art-img-wrap');
+        if (artWrap) {
+          const img = artWrap.querySelector('img');
+          if (img) openLightboxImage(img.src);
+        }
+      });
+    }
+
+    // 触屏滑动手势翻页（毒舌 4.1 · Kindle 级别的水平翻页）
+    if (els.readerViewport) {
+      let touchStartX = null;
+      let touchStartY = null;
+      els.readerViewport.addEventListener('touchstart', function (e) {
+        touchStartX = e.touches[0].clientX;
+        touchStartY = e.touches[0].clientY;
+      }, { passive: true });
+      els.readerViewport.addEventListener('touchend', function (e) {
+        if (touchStartX === null) return;
+        const dx = e.changedTouches[0].clientX - touchStartX;
+        const dy = e.changedTouches[0].clientY - touchStartY;
+        touchStartX = null;
+        touchStartY = null;
+        if (Math.abs(dx) > HELD.SWIPE_THRESHOLD_PX && Math.abs(dx) > Math.abs(dy) * 1.2) {
+          loadPage(currentPage + (dx < 0 ? 1 : -1));
+        }
+      }, { passive: true });
+    }
+
+    // 字号记忆恢复
+    const saved = readFloat(LS.fontScale, 0);
+    if (saved > 0) applyFontScale(saved);
+    else applyFontScale(globalFontScale);
   }
 
-  renderLibraryShelf();
-
-  const savedTheme = localStorage.getItem(STORAGE_KEY_THEME) || 'light';
-  document.body.classList.remove('theme-light', 'theme-sepia', 'theme-beach', 'theme-academic', 'theme-forest', 'theme-dark');
-  document.body.classList.add(`theme-${savedTheme}`);
-  const activeThemeBtn = document.querySelector(`.theme-btn[data-theme="${savedTheme}"]`);
-  if (activeThemeBtn) {
-    document.querySelectorAll('.theme-btn').forEach(b => b.classList.remove('active'));
-    activeThemeBtn.classList.add('active');
+  function bindOne(id, fn) {
+    const node = els[id];
+    if (node) node.addEventListener('click', fn);
   }
 
-  const savedFont = localStorage.getItem(STORAGE_KEY_FONT) || 'sans';
-  if (savedFont === 'serif') {
-    isSerifMode = true;
-    document.body.classList.add('font-mode-serif');
-    if (fontToggleBtn) fontToggleBtn.innerHTML = '🔠 典雅衬线';
-  } else {
-    isSerifMode = false;
-    document.body.classList.remove('font-mode-serif');
-    if (fontToggleBtn) fontToggleBtn.innerHTML = '🔤 现代黑体';
+  // ==================================================================
+  // 启动
+  // ==================================================================
+  // 毒舌 1.2：els 由声明式 id 映射表生成，杜绝 50 行手写体力活与 typo 静默失效
+  const ELS_BY_ID = {
+    libraryPortal: 'library-portal-view',
+    openPortalBtn: 'open-portal-btn',
+    appSidebar: 'app-sidebar',
+    articleBody: 'article-body',
+    pageOriginalImg: 'page-original-image',
+    currentPageBadge: 'current-page-badge',
+    currentSectionBadge: 'current-section-badge',
+    pageSlider: 'page-slider',
+    pageCounterText: 'page-counter-text',
+    prevPageBtn: 'prev-page-btn',
+    nextPageBtn: 'next-page-btn',
+    tocList: 'toc-list',
+    tocFilterBar: 'toc-filter-bar',
+    pagesGrid: 'pages-grid',
+    searchInput: 'global-search',
+    searchTab: 'search-tab',
+    searchResultsList: 'search-results-list',
+    lightboxModal: 'lightbox-modal',
+    lightboxImg: 'lightbox-img',
+    copyPageBtn: 'copy-page-btn',
+    bookmarkPageBtn: 'bookmark-page-btn',
+    bookmarksList: 'bookmarks-list',
+    playPageAudioBtn: 'play-page-audio-btn',
+    audioSpeedBtn: 'audio-speed-btn',
+    topAudioSpeedBtn: 'audio-speed-btn-top',
+    fontToggleBtn: 'font-family-toggle',
+    fontIncBtn: 'font-inc-btn',
+    fontDecBtn: 'font-dec-btn',
+    issueSwitcherPill: 'issue-switcher-pill',
+    magazineShelfGrid: 'magazine-shelf-grid',
+    shortcutsModal: 'shortcuts-help-modal',
+    settingsBackdrop: 'settings-backdrop',
+    settingsPopover: 'settings-popover-menu',
+    moreSettingsBtn: 'more-settings-btn',
+    alignModeToggle: 'align-mode-toggle',
+    alignModeText: 'align-mode-text',
+    fullscreenBtn: 'fullscreen-btn',
+    zoomInBtn: 'zoom-in',
+    zoomOutBtn: 'zoom-out',
+    zoomResetBtn: 'zoom-reset',
+    quickJumpBtn: 'quick-jump-go',
+    clearHistoryBtn: 'clear-history-btn',
+    portalSearch: 'portal-global-search',
+    portalDropdown: 'portal-search-dropdown',
+    toggleSidebarBtn: 'toggle-sidebar-btn',
+    closeSidebarBtn: 'close-sidebar-btn',
+    shortcutsOpenBtn: 'shortcuts-open-btn',
+    imageInfoTag: 'image-info-tag',
+    quickJumpInput: 'quick-jump-num',
+    shortcutsVersion: 'shortcuts-version',
+  };
+  Object.keys(ELS_BY_ID).forEach(function (k) { els[k] = $(ELS_BY_ID[k]); });
+  els.readerViewport = document.querySelector('.reader-viewport');
+  els.closeShortcutsBtn = document.querySelector('.close-shortcuts-btn');
+
+  // ---------------------------------------------------------------- 数据增强（毒舌 5.1：HTTP 下 fetch 增量刷新，离线 file:// 仍走内联兜底）
+  function upgradeOnlineData() {
+    const proto = location.protocol;
+    if (proto !== 'http:' && proto !== 'https:') return;
+    fetch('assets/data/magazines.json', { cache: 'force-cache' })
+      .then(function (r) { if (!r.ok) throw new Error('fetch failed'); return r.json(); })
+      .then(function (json) {
+        if (!json || typeof json !== 'object') return;
+        let changed = false;
+        Object.keys(json).forEach(function (id) {
+          if (!allIssues[id]) { allIssues[id] = json[id]; changed = true; }
+        });
+        if (!changed) return;
+        searchIndexCache = null;
+        if (els.magazineShelfGrid) renderLibraryShelf();
+        currentIssueObj = allIssues[currentIssueId] || { id: '', pages: [], totalPages: 0, displayName: '未加载' };
+        data = currentIssueObj.pages || [];
+        if (els.tocList) initTOC();
+        refreshPill();
+      })
+      .catch(function () { /* 离线/失败：保持内联数据 */ });
   }
 
-  document.body.classList.add(`view-${currentViewMode}`);
-  const activeViewBtn = document.querySelector(`.view-btn[data-view="${currentViewMode}"]`);
-  if (activeViewBtn) {
-    document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
-    activeViewBtn.classList.add('active');
+  function boot() {
+
+    // 主题初值（无记忆时跟随系统）
+    const storedTheme = lsGet(LS.theme, '');
+    const initTheme = THEMES.indexOf(storedTheme) >= 0 ? storedTheme
+      : (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+    applyTheme(initTheme);
+    $$('.popover-theme-card').forEach(function (c) { c.classList.toggle('active', c.dataset.theme === initTheme); });
+
+    // 字体模式
+    if (lsGet(LS.font, 'sans') === 'serif') { isSerifMode = true; document.body.classList.add('font-mode-serif'); if (els.fontToggleBtn) els.fontToggleBtn.textContent = '🔠 典雅衬线'; }
+
+    // 视图 / 对齐还原
+    setViewMode(lsGet(LS.view, 'interlinear'));
+    applyAlignMode(lsGet(LS.align, 'flush'));
+    updateSpeedDisplays();
+
+    // 侧栏默认收起
+    if (els.appSidebar) els.appSidebar.classList.add('collapsed');
+
+    bindStaticEvents();
+    bindPortalSearch();
+    renderLibraryShelf();
+    renderBookmarksTab();
+    initTOC();
+    refreshPill();
+
+    // 滑块：拖动只更新文本，松手才决定
+    if (els.pageSlider) {
+      els.pageSlider.addEventListener('input', function () {
+        if (els.pageCounterText) els.pageCounterText.textContent = '第 ' + els.pageSlider.value + ' / ' + currentIssueObj.totalPages + ' 页';
+      });
+      els.pageSlider.addEventListener('change', function () {
+        const v = parseInt(els.pageSlider.value, 10);
+        if (v && v !== currentPage) loadPage(v);
+      });
+    }
+
+    // 侧栏检索（防抖 + 索引）
+    if (els.searchInput) {
+      bindSearchResultKeys(els.searchInput, '#search-results-list .toc-item', function (el) {
+        jumpToPage(parseInt(el.dataset.page, 10));
+      });
+      els.searchInput.addEventListener('input', debounce(function () {
+        const q = els.searchInput.value.trim();
+        const listEls = els.searchResultsList;
+        if (!listEls) return;
+        if (q.length < 2) { if (els.searchTab) els.searchTab.style.display = 'none'; return; }
+        if (els.searchTab) { els.searchTab.style.display = 'block'; els.searchTab.click(); }
+        listEls.innerHTML = '';
+        const results = runSearch(q, currentIssueId).slice(0, 30);
+        if (results.length === 0) {
+          listEls.innerHTML = '<div style="padding:14px;font-size:12px;color:var(--text-muted);">未检索到匹配内容</div>';
+          return;
+        }
+        const frag = document.createDocumentFragment();
+        results.forEach(function (r) {
+          const d = document.createElement('div');
+          d.className = 'toc-item';
+          d.dataset.page = String(r.pageNum);
+          d.setAttribute('role', 'button');
+          d.innerHTML =
+            '<div class="toc-item-header"><span>PAGE ' + String(r.pageNum).padStart(3, '0') + '</span>' +
+            '<span>' + escHtml(r.section) + '</span></div>' +
+            '<div class="toc-item-title">' + r.snippet.slice(0, 200) + '...</div>';
+          d.addEventListener('click', function () { jumpToPage(r.pageNum); });
+          frag.appendChild(d);
+        });
+        listEls.appendChild(frag);
+      }, HELD.SEARCH_DEBOUNCE));
+    }
+
+    // 清空历史（自定义模态）
+    bindOne('clearHistoryBtn', function () {
+      confirmDialog({
+        title: '清空全部阅读足迹？',
+        message: '此操作不可撤销，将删除全部期刊的阅读历史记录。',
+        okText: '清空',
+        danger: true,
+      }).then(function (ok) {
+        if (ok) { localStorage.removeItem(LS.history); renderContinueBanner(); renderHistoryTab(); toast('🗑️ 阅读足迹已清空'); }
+      });
+    });
+
+    // 历史首次初始化
+    if (getHistory().length === 0) {
+      const initPage = readInt(lsGet(LS.pagePrefix + currentIssueId, '1'), 1);
+      recordReadingHistory(currentIssueId, initPage, (data[initPage - 1] && data[initPage - 1].section) || 'Cover');
+    }
+    renderContinueBanner();
+    renderHistoryTab();
+
+    // TTS 嗓音预热（毒舌 7.8：== null 更稳健，兼容 undefined）
+    if (window.speechSynthesis) {
+      ttsVoice = pickVoice();
+      if (window.speechSynthesis.onvoiceschanged == null) {
+        window.speechSynthesis.onvoiceschanged = function () { ttsVoice = pickVoice(); };
+      }
+    }
+
+    // VERSION 不再死代码（毒舌 6.5）：显示在快捷键速查页脚
+    if (els.shortcutsVersion) els.shortcutsVersion.textContent = 'The Atlantic Reader v' + VERSION;
+
+    // HTTP 环境异步增量加载外部 JSON（毒舌 5.1）
+    upgradeOnlineData();
+
+    // 暴露 API
+    window.loadPage = loadPage;
+    window.switchIssue = switchIssue;
+    window.enterReaderRoom = enterReaderRoom;
+    window.openLibraryShelf = openLibraryShelf;
+    window.toggleSidebar = toggleSidebar;
+    window.toggleShortcutsModal = toggleShortcutsModal;
+    window.readerVersion = VERSION;
   }
 
-  // Reading History Initialization on Boot
-  if (getHistoryList().length === 0) {
-    const initPage = parseInt(localStorage.getItem(STORAGE_KEY_PAGE_PREFIX + currentIssueId), 10) || 1;
-    recordReadingHistory(currentIssueId, initPage, (data[initPage - 1] && data[initPage - 1].section) || 'Cover');
-  }
-  renderContinueReadingBanner();
-  renderHistoryTab();
-
-  // Global hooks
-  window.loadPage = loadPage;
-  window.switchIssue = switchIssue;
-  window.enterReaderRoom = enterReaderRoom;
-  window.openLibraryShelf = openLibraryShelf;
-  window.toggleShortcutsModal = toggleShortcutsModal;
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
+  else boot();
 })();

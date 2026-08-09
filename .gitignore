@@ -16,3 +16,15 @@ Thumbs.db
 *.tmp
 .idea/
 .vscode/
+# Build Artifacts & Generated Output (regenerable via scripts/)
+output/
+full_magazine.md
+index.html
+reader.html
+reader_app.js
+reader_style.css
+code_review_report.html
+
+# Agent / Tool Workspace & Backups
+.workbuddy/
+_backups/
