@@ -83,6 +83,8 @@ TheAtlantic/
 ├── index.html                     # 生产级双语阅读馆（构建产物，由 build_master_portal.py 生成）
 ├── reader.html                    # 由构建器同步输出的同构副本（构建产物）
 ├── README.md                      # 本项目设计与技术白皮书
+├── CHANGELOG.md                   # 分版本变更记录（Keep a Changelog）
+├── LICENSE                        # MIT 开源许可证
 ├── CODE_REVIEW.md                 # 360° 全维度评审报告与修复执行记录
 ├── .gitignore                     # 严密的安全过滤规则（自动忽略大型 PDF、构建产物与缓存）
 │
@@ -137,26 +139,10 @@ TheAtlantic/
 
 ---
 
-## 🛠️ 2026-08-09 修复执行记录（v2.0）
+## 🛠️ 维护与变更记录
 
-基于 `CODE_REVIEW.md` 的 6 项缺陷清单完成全局修复与回归：
-
-| 编号 | 缺陷 | 修复方式 | 验证 |
-| :---: | :--- | :--- | :--- |
-| P0-1 | 盲切软连字符（`extraordinary → ext-rao-rdi-na-ry`） | 删除 `injectSyllables()`，改依赖浏览器原生 `hyphens: auto` 词典断行（`lang="en-US"`） | 数据软连字符 0 残留；JS 无该函数 |
-| P0-2 | 事件监听器持续累积（翻页/切刊后重复绑定） | 委托 + 一次性绑定（`dataset.bound` / `bindOne` / `bindStaticEvents`） | 代码审查 + `node --check` |
-| P0-3 | 搜索正则崩溃（输入 `a.b((` 触发 `SyntaxError`） | `escRegex()` 全量转义 + 150ms 防抖 + 扁平内存索引 | 行为探针实跑 `a.b((` 通过 |
-| P1-1 | 双刊与硬编码路径（`issues/2026-08`） | 数据补 `pubId` / `imageRoot`，全部 `currentIssueObj` 数据驱动 | 压力测试：两刊 imageRoot 目录断言 |
-| P1-2 | 移动端 `A+` 失效（28 处 `!important` 焊死 15px） | 样式表重构为纯 CSS 变量管道，移动端 `max(15px, var(...))` 舒适区下限 | 压力测试：`!important` = 0 |
-| P1-3 | 滑块拖动触发全量重渲染卡顿 | 拖动只更新文案，`change` 事件才 `loadPage()` | 代码审查 |
-| P2/P3 | 剪贴板静默失败、`confirm()` 系统弹窗、无障碍缺口 | `navigator.clipboard` catch、自定义确认模态、`prefers-reduced-motion`、`:focus-visible` | 压力测试断言通过 |
-| R-6 | 期刊馆首页误显示阅读器整套 UI（顶栏/收藏复制条/阅读区/底部栏） | `portal 可见 → 整套阅读器 display:none` 纯 CSS 状态联动 | 浏览器审计 8 视口 portal 全隐藏 |
-| R-7 | 移动端顶栏挤压不均（320px 品牌仅 3px、胶囊裁半） | 三级降级：隐藏朗读控件 → 胶囊整宽保全 → ≤359px 让位于品牌 | 320px 品牌 61px + 胶囊整宽；390px 品牌 77px |
-| R-8 | 桌面阅读区左右留白偏大；sans 模式下英文仍是衬线 | 阅读区 1060→1260px（split 1720→1900px）；`.en-text` 基底改 `var(--font-sans)`，衬线由 `font-mode-serif` 单独覆盖 | 浏览器实测宽度与 computed 字体族均符合 |
-| R-9 | 移动端缺失「朗读本页」按钮（≤640px 整块隐藏） | 只隐藏顶栏 `1.0x` 倍速胶囊（语速仍在「更多」菜单），朗读按钮降级为 46px 纯图标 | 浏览器实测 320/390px 朗读按钮可见、不挤压 |
-| R-10 | 项目结构冗余（`output/`、全文镜像、一次性脚本/报告） | 删除产物并归档 22 个历史脚本至 `scripts/legacy/`，README 目录树重写 | 213 文件出库；build/audit/stress 全绿 |
-| R-11 | **移动端朗读整页按钮残缺 + 转圈抖动**：图标与文字同在一个 span，≤900px 全隐藏致空心按钮；Google Fonts 阻塞首屏、离线打不开 | 按钮拆「图标+文字」两 span；**彻底移除 Google Fonts，改用系统字体栈**（离线下秒开、零网络请求、零抖动） | 移动端按钮 ▶ 可见；8 视口 0 溢出；完全离线可用 |
-| R-12 | **移动端隐藏了倍速胶囊**（R-9 期间为腾宽度加入「更多」菜单） | ≤640px 恢复显示 `#audio-speed-btn-top`，压缩为 11.5px/紧凑 padding（实测 30px 宽），品牌/返回按钮让位 | 320/390px 实测倍速胶囊 30px 可见、整行不溢出 |
+- **完整变更历史**：见 [`CHANGELOG.md`](CHANGELOG.md)（Keep a Changelog 规范，分版本记录）。
+- **历轮评审与修复执行记录**：`CODE_REVIEW.md`（v1.0）/ `CODE_REVIEW_V2_REAUDIT.md`（v2.0 复核）/ `HARSH_REVIEW.md`（v2.1 整改回执）/ `FINAL_SHARP_REVIEW.md`（终局评测 + 勘误附录）。
 
 **构建与测试闭环**（修改数据后请依次执行）：
 
