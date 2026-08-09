@@ -302,7 +302,7 @@ def build_portal():
             </div>
           </div>
           <div class="image-canvas-wrap" id="image-canvas-wrap">
-            <img id="page-original-image" src="data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=" alt="Magazine Original Page">
+            <img id="page-original-image" src="data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=" alt="Magazine Original Page" decoding="async">
           </div>
         </div>
 
@@ -436,8 +436,22 @@ def build_portal():
 
     with open('index.html', 'w', encoding='utf-8') as f:
         f.write(html_content)
+    # reader.html 是给旧书签/旧链接的 3 行跳转桩（对齐 index.html，避免 2.64MB 字节级重复；毒舌 4.3）
+    redirect_stub = """<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="refresh" content="0; url=index.html">
+  <title>The Atlantic & Global Journals — Reader</title>
+  <style>body{font-family:system-ui,sans-serif;background:#f7f5f1;color:#333;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;text-align:center;padding:0 16px}div{max-width:420px}a{color:#7a5c1e}</style>
+</head>
+<body>
+  <div>跳转至数码典藏馆…<br>若未自动跳转，请<a href="index.html">点击进入阅读器</a></div>
+</body>
+</html>
+"""
     with open('reader.html', 'w', encoding='utf-8') as f:
-        f.write(html_content)
+        f.write(redirect_stub)
 
     print("Master portal compiled successfully with TOC Filter Bar & Feature Fast-Track!")
 

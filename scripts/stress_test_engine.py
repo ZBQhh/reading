@@ -110,6 +110,10 @@ for html_file in ['index.html', 'reader.html']:
     assert os.path.exists(html_file), f"CRITICAL: {html_file} missing!"
     with open(html_file, 'r', encoding='utf-8') as f:
         html_src = f.read()
+    if html_file == 'reader.html' and 'http-equiv="refresh"' in html_src:
+        # 毒舌 4.3：reader.html 已收敛为 3 行跳转 stub（完整应用只存在于 index.html）
+        check('url=index.html' in html_src, "reader.html: redirect stub targets index.html")
+        continue
     missing = [i for i in required_ids if f'id="{i}"' not in html_src]
     check(not missing, f"{html_file}: all {len(required_ids)} required IDs present" + (f" (missing: {missing})" if missing else ""))
     miss_cls = [c for c in required_classes if c not in html_src]
@@ -195,10 +199,10 @@ step('4.3: search keyboard nav present', src.includes('bindSearchResultKeys') &&
 step('4.4: danger confirm focuses cancel', src.includes("opts.danger ? '.confirm-cancel' : '.confirm-ok'"));
 step('4.5: toast typed durations', src.includes('3500') && src.includes('2500') && src.includes('1600'));
 step('5.1: upgradeOnlineData fetch upgrade present', src.includes('upgradeOnlineData'));
-step('5.5: initial img = transparent data URI', html1.includes('data:image/gif;base64') && html2.includes('data:image/gif;base64'));
+step('5.5: initial img = transparent data URI', html1.includes('data:image/gif;base64') && html2.includes('index.html'));
 step('6.5: void code; removed', !src.includes('void code;'));
 step('7.1: speed label standard only when 1x', src.includes("audioSpeed === 1 ? '1x 标准' : txt"));
-step('7.3: pill neutral placeholder', html1.includes('加载中…') && html2.includes('加载中…'));
+step('7.3: pill neutral placeholder', html1.includes('加载中…'));
 step('7.8: onvoiceschanged == null (undefined-safe)', src.includes('.onvoiceschanged == null'));
 step('7.12: hero uses addEventListener', src.includes("hero.addEventListener('click'"));
 step('VERSION surfaced in UI', src.includes('shortcutsVersion'));

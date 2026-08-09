@@ -201,10 +201,26 @@
   }
 
   // ---------------------------------------------------------------- 图片预载
+  function webpUrl(pngSrc) {
+    return String(pngSrc || '').replace(/\.png$/i, '.webp');
+  }
+  function imgWithWebFallback(imgEl) {
+    if (!imgEl || imgEl.dataset.webpFB) return;
+    imgEl.dataset.webpFB = '1';
+    imgEl.addEventListener('error', function () {
+      const cur = imgEl.getAttribute('src') || '';
+      if (/\.webp$/i.test(cur)) imgEl.src = cur.replace(/\.webp$/i, '.png');
+    });
+  }
   function preloadAdjacentPages(pNum) {
     const root = currentIssueObj.imageRoot || 'issues/' + currentIssueObj.id;
-    if (pNum > 1) new Image().src = root + '/images/page_' + String(pNum - 1).padStart(3, '0') + '.png';
-    if (pNum < currentIssueObj.totalPages) new Image().src = root + '/images/page_' + String(pNum + 1).padStart(3, '0') + '.png';
+    const pre = function (n) {
+      if (n < 1 || n > currentIssueObj.totalPages) return;
+      new Image().src = webpUrl(root + '/images/page_' + String(n).padStart(3, '0') + '.png');
+    };
+    pre(pNum - 1);
+    pre(pNum + 1);
+    pre(pNum + 2);
   }
 
   // ==================================================================
@@ -241,7 +257,7 @@
       card.dataset.issue = id;
       card.innerHTML =
         '<div class="shelf-cover-wrap">' +
-        '<img src="' + escHtml(issue.coverImage) + '" class="shelf-cover-img" alt="Cover ' + escHtml(issue.name) + '" loading="lazy" decoding="async">' +
+        '<img src="' + escHtml(webpUrl(issue.coverImage)) + '" class="shelf-cover-img" alt="Cover ' + escHtml(issue.name) + '" loading="lazy" decoding="async">' +
         '</div>' +
         '<div class="shelf-details"><div class="shelf-details-top">' +
         '<span class="issue-date-tag">' + escHtml(issue.name) + ' &bull; ' + escHtml(issue.vol) + '</span>' +
@@ -256,6 +272,8 @@
         '<span>开始沉浸阅读</span>' +
         '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>' +
         '</button></div>';
+      const shelfCoverImg = card.querySelector('.shelf-cover-img');
+      imgWithWebFallback(shelfCoverImg);
       frag.appendChild(card);
     });
     grid.appendChild(frag);
@@ -643,13 +661,14 @@
     wrap.className = 'embedded-art-card';
     wrap.innerHTML =
       '<div class="embedded-art-img-wrap">' +
-      '<img src="' + escHtml(pageObj.image) + '" class="embedded-art-img" alt="' + escHtml(pageObj.section) + '" decoding="async">' +
+      '<img src="' + escHtml(webpUrl(pageObj.image)) + '" class="embedded-art-img" alt="' + escHtml(pageObj.section) + '" decoding="async">' +
       '<span class="embedded-art-zoom-hint">🔍 点击查看 150 DPI 高清全屏原图</span>' +
       '</div>' +
       '<div class="segment-block segment-caption">' +
       '<div class="en-text" lang="en">The Atlantic — ' + escHtml(currentIssueObj.displayName) + ' (Page ' + pageNum + ')</div>' +
       '<div class="zh-text-card" lang="zh-CN"><div>《大西洋月刊》' + escHtml(currentIssueObj.displayName) + '（第 ' + pageNum + ' 页原版图版）</div></div>' +
       '</div>';
+    imgWithWebFallback(wrap.querySelector('.embedded-art-img'));
     doc.appendChild(wrap);
   }
 
@@ -658,9 +677,10 @@
     wrap.className = 'embedded-art-card';
     wrap.innerHTML =
       '<div class="embedded-art-img-wrap">' +
-      '<img src="' + escHtml(pageObj.image) + '" class="embedded-art-img" alt="' + escHtml(pageObj.section || '原版扫描页') + '" decoding="async">' +
+      '<img src="' + escHtml(webpUrl(pageObj.image)) + '" class="embedded-art-img" alt="' + escHtml(pageObj.section || '原版扫描页') + '" decoding="async">' +
       '<span class="embedded-art-zoom-hint">🔍 点击查看 150 DPI 高清全屏原图</span>' +
       '</div>';
+    imgWithWebFallback(wrap.querySelector('.embedded-art-img'));
     doc.appendChild(wrap);
     const segWrap = document.createElement('div');
     segWrap.className = 'short-page-segments';
@@ -691,7 +711,8 @@
     updateBookmarkButton(pageNum);
 
     if (els.pageOriginalImg) {
-      els.pageOriginalImg.src = pageObj.image;
+      els.pageOriginalImg.src = webpUrl(pageObj.image);
+      imgWithWebFallback(els.pageOriginalImg);
       if (els.imageInfoTag) els.imageInfoTag.textContent = 'PAGE ' + String(pageNum).padStart(3, '0') + ' 原版高清扫描图 (150 DPI)';
       resetImageZoom();
     }
@@ -1271,7 +1292,7 @@
   function upgradeOnlineData() {
     const proto = location.protocol;
     if (proto !== 'http:' && proto !== 'https:') return;
-    fetch('assets/data/magazines.json', { cache: 'force-cache' })
+    fetch('assets/data/magazines.json', { cache: 'no-cache' })
       .then(function (r) { if (!r.ok) throw new Error('fetch failed'); return r.json(); })
       .then(function (json) {
         if (!json || typeof json !== 'object') return;
