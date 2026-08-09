@@ -98,7 +98,7 @@ required_ids = [
     'image-info-tag', 'toggle-sidebar-btn', 'close-sidebar-btn', 'fullscreen-btn',
     'issue-switcher-pill', 'magazine-shelf-grid', 'shortcuts-help-modal',
     'lightbox-modal', 'lightbox-img', 'clear-history-btn', 'portal-global-search',
-    'portal-search-dropdown', 'continue-reading-hero',
+    'portal-search-dropdown', 'continue-reading-hero', 'export-all-btn',
 ]
 required_classes = [
     'close-shortcuts-btn', 'magazine-brand', 'shelf-enter-btn', 'popover-theme-card',
@@ -206,6 +206,11 @@ step('7.3: pill neutral placeholder', html1.includes('加载中…'));
 step('7.8: onvoiceschanged == null (undefined-safe)', src.includes('.onvoiceschanged == null'));
 step('7.12: hero uses addEventListener', src.includes("hero.addEventListener('click'"));
 step('VERSION surfaced in UI', src.includes('shortcutsVersion'));
+step('7.2: selection highlight module present', src.includes('function captureSelectionHighlight') && cssSrc.includes('mark.page-highlight'));
+step('7.2: export all-markdown module present', src.includes('function exportAllMarkdown') && src.includes("'the-atlantic-' + currentIssueId"));
+step('highlight float button bound on mouseup', src.includes('hl-float-btn') && src.includes("document.addEventListener('mouseup'"));
+step('E key triggers exportAllMarkdown', src.includes("code === 'KeyE'") && src.includes('exportAllMarkdown()'));
+step('export-all-btn wired into els map', src.includes("exportAllBtn: 'export-all-btn'"));
 process.exit(ok ? 0 : 1);
 """
 probe = probe.replace('__JSPATH__', os.path.abspath(js_path).replace('\\', '/'))

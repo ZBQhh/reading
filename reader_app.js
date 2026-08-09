@@ -9,6 +9,35 @@
      confirm 默认聚焦安全侧、toast 分级时长、搜索键盘导航、hero 委托、
      速度文案、VERSION 可视化
    ============================================================================ */
+
+/**
+ * @typedef {Object} Segment
+ * @property {string} [type]  段落类型（'para' | 'heading' | 'caption' | ...）
+ * @property {string} [en]    英文原文（1:1 同频排版）
+ * @property {string} [zh]    中文精译伴读
+ */
+
+/**
+ * @typedef {Object} Page
+ * @property {number} pageNumber  页码（1 起）
+ * @property {string} image       原版扫描图路径（PNG；runtime 自动换 WebP）
+ * @property {string} [section]   版面区块名（Cover/Article/VisualArt...）
+ * @property {string} [title]     页面标题
+ * @property {Array<Segment>} segments 页内双语段落序列
+ */
+
+/**
+ * @typedef {Object} Issue
+ * @property {string} id           期号 id（如 '2026-08'）
+ * @property {string} name         显示名（'2026年8月刊'）
+ * @property {string} [vol]        卷期名
+ * @property {string} [pubId]      刊物 id
+ * @property {string} [imageRoot]  图片根目录（默认 'issues/{id}'）
+ * @property {string} [coverImage] 封面图路径
+ * @property {number} totalPages   总页数
+ * @property {Array<Page>} pages   全量页面数据
+ */
+
 (function () {
   'use strict';
 
@@ -24,6 +53,7 @@
     speed: 'atlantic_reader_audio_speed',
     align: 'atlantic_reader_align_mode',
     fontScale: 'atlantic_reader_font_scale',
+    highlights: 'atlantic_reader_highlights',
   };
   const VIEW_MODES = ['interlinear', 'split', 'en-only', 'zh-only'];
   const THEMES = ['light', 'sepia', 'beach', 'academic', 'forest', 'dark'];
@@ -733,6 +763,7 @@
         segs.forEach(function (seg, i) { doc.appendChild(renderSegmentNode(seg, i)); });
       }
       body.appendChild(doc);
+      applyPageHighlights();
     }
 
     recordReadingHistory(currentIssueId, pageNum, pageObj.section);
@@ -756,6 +787,167 @@
   function zoomBy(delta) {
     currentZoom = Math.min(HELD.ZOOM_MAX, Math.max(HELD.ZOOM_MIN, currentZoom + delta));
     if (els.pageOriginalImg) els.pageOriginalImg.style.transform = 'scale(' + currentZoom + ')';
+  }
+
+  // ==================================================================
+  // 选文高亮 + 全刊导出（毒舌 7.2：阅读闭环——高亮 → 导出 → 回顾）
+  // ==================================================================
+  function loadHighlights() {
+    try { return JSON.parse(localStorage.getItem(LS.highlights) || '[]'); } catch (e) { return []; }
+  }
+  function saveHighlights(list) {
+    try { localStorage.setItem(LS.highlights, JSON.stringify(list)); } catch (e) { /* 配额满时静默 */ }
+  }
+
+  /** 把 section 内的绝对字符偏移转换为 (文本节点, 节点内偏移) */
+  function locateTextOffset(container, offset) {
+    const walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT);
+    let acc = 0; let node;
+    while ((node = walker.nextNode())) {
+      const len = (node.nodeValue || '').length;
+      if (acc + len > offset) return { node: node, off: offset - acc };
+      acc += len;
+    }
+    return { node: walker.lastChild, off: (walker.lastChild ? (walker.lastChild.nodeValue || '').length : 0) };
+  }
+
+  /** 序列化当前鼠标选区为高亮（仅限同段 .en-text 内） */
+  function captureSelectionHighlight() {
+    const sel = window.getSelection();
+    if (!sel || sel.isCollapsed || sel.rangeCount === 0) { toast('💡 请先选中一段英文', 'warn'); return; }
+    const rg = sel.getRangeAt(0);
+    const startEl = rg.startContainer.nodeType === Node.ELEMENT_NODE ? rg.startContainer : rg.startContainer.parentElement;
+    const endEl = rg.endContainer.nodeType === Node.ELEMENT_NODE ? rg.endContainer : rg.endContainer.parentElement;
+    const segBlock = startEl.closest && startEl.closest('.segment-block');
+    if (!segBlock || !endEl.closest || !endEl.closest('.segment-block')) { toast('⚠️ 高亮仅支持页内单段选区', 'error'); return; }
+    if (startEl.closest('.segment-block') !== endEl.closest('.segment-block')) { toast('⚠️ 高亮仅支持单段选区', 'warn'); return; }
+    const enEl = segBlock.querySelector('.en-text');
+    if (!enEl) { toast('⚠️ 该段无英文正文', 'warn'); return; }
+    const walker = document.createTreeWalker(enEl, NodeFilter.SHOW_TEXT);
+    const textNodes = [];
+    let n; while ((n = walker.nextNode())) textNodes.push(n);
+    let startAbs = -1; let endAbs = -1; let acc = 0;
+    for (let i = 0; i < textNodes.length; i++) {
+      const tn = textNodes[i];
+      const len = (tn.nodeValue || '').length;
+      if (startAbs < 0 && (tn === rg.startContainer || tn.contains(rg.startContainer) || rg.startContainer === enEl)) {
+        if (rg.startContainer === enEl) startAbs = acc;
+        else if (tn === rg.startContainer) startAbs = acc + rg.startOffset;
+        else if (tn.contains(rg.startContainer)) {
+          let cur = rg.startContainer; let off = rg.startOffset;
+          while (cur && cur !== tn) { off += (cur.previousSibling ? (cur.previousSibling.textContent || '').length : 0); cur = cur.parentNode; }
+          startAbs = acc + off;
+        }
+      }
+      if (endAbs === -1 && (tn === rg.endContainer || (tn.contains(rg.endContainer) && rg.endContainer !== enEl))) {
+        if (tn === rg.endContainer) endAbs = acc + rg.endOffset;
+        else {
+          let cur = rg.endContainer; let off = rg.endOffset;
+          while (cur && cur !== tn) { off += (cur.previousSibling ? (cur.previousSibling.textContent || '').length : 0); cur = cur.parentNode; }
+          endAbs = acc + off;
+        }
+      } else if (endAbs === -1 && rg.endContainer.nodeType === Node.TEXT_NODE && rg.endContainer === tn) {
+        endAbs = acc + rg.endOffset;
+      }
+      if (startAbs >= 0 && endAbs >= 0) break;
+      acc += len;
+    }
+    if (startAbs < 0 || endAbs < 0) { toast('⚠️ 无法定位选区，请重选', 'warn'); return; }
+    const segIdx = parseInt(String(segBlock.id).replace('seg-', ''), 10);
+    if (isNaN(segIdx)) { toast('⚠️ 段索引异常', 'error'); return; }
+    const text = sel.toString().trim();
+    if (!text) return;
+    const hls = loadHighlights();
+    // 去重：同页同段同区间不重复添加
+    const dup = hls.some(function (h) { return h.issue === currentIssueId && h.page === currentPage && h.seg === segIdx && h.start === startAbs && h.end === endAbs; });
+    if (dup) { removeHighlight(segIdx, startAbs, endAbs); }
+    else {
+      hls.push({ issue: currentIssueId, page: currentPage, seg: segIdx, start: startAbs, end: endAbs, text: text.slice(0, 300), ts: Date.now() });
+      saveHighlights(hls);
+      applyPageHighlights();
+      toast('🔖 已高亮「' + text.slice(0, 24) + (text.length > 24 ? '…' : '') + '」');
+    }
+    sel.removeAllRanges();
+  }
+
+  function removeHighlight(segIdx, start, end) {
+    let hls = loadHighlights();
+    hls = hls.filter(function (h) { return !(h.issue === currentIssueId && h.page === currentPage && h.seg === segIdx && h.start === start && h.end === end); });
+    saveHighlights(hls);
+    applyPageHighlights();
+  }
+
+  /** 重渲染当前页高亮（mark 包裹） */
+  function applyPageHighlights() {
+    const body = els.articleBody;
+    if (!body) return;
+    const pageHl = loadHighlights().filter(function (h) { return h.issue === currentIssueId && h.page === currentPage; });
+    if (pageHl.length === 0) return;
+    pageHl.forEach(function (hl) {
+      const segBlock = body.querySelector('#seg-' + hl.seg);
+      if (!segBlock) return;
+      const enEl = segBlock.querySelector('.en-text');
+      if (!enEl) return;
+      const a = locateTextOffset(enEl, hl.start);
+      const b = locateTextOffset(enEl, hl.end);
+      if (!a.node || !b.node || a.node === b.node && a.off === b.off) return;
+      const rg = document.createRange();
+      rg.setStart(a.node, a.off);
+      rg.setEnd(b.node, b.off);
+      const mark = document.createElement('mark');
+      mark.className = 'page-highlight';
+      try {
+        rg.surroundContents(mark);
+      } catch (e) {
+        try {
+          const frag = rg.extractContents();
+          mark.appendChild(frag);
+          rg.insertNode(mark);
+        } catch (e2) { /* 跨元素选区过期，忽略重建 */ }
+      }
+    });
+  }
+
+  function countHighlights() { return loadHighlights().filter(function (h) { return h.issue === currentIssueId; }).length; }
+
+  /** 导出全刊 Markdown（含本刊高亮节） */
+  function exportAllMarkdown() {
+    const total = currentIssueObj.totalPages || (data && data.length) || 0;
+    if (total <= 0) { toast('⚠️ 刊目数据缺失，无法导出', 'error'); return; }
+    const md = data.map(function (pageObj, i) {
+      if (!pageObj || typeof pageObj.rawMd !== 'string') return '';
+      return '\n\n---\n\n## PAGE ' + String(i + 1).padStart(3, '0') + ' — ' + (pageObj.section || '') + '\n\n' + pageObj.rawMd.trim();
+    }).join('');
+    const hls = loadHighlights().filter(function (h) { return h.issue === currentIssueId; });
+    const hlSection = hls.length === 0 ? '' : '\n\n---\n\n## 📌 我的高亮（' + hls.length + ' 条）\n\n' + hls.map(function (h) {
+      return '> **PAGE ' + String(h.page).padStart(3, '0') + '** — ' + h.text.replace(/\n/g, ' ') + '\n';
+    }).join('\n');
+    const header = '# ' + currentIssueObj.displayName + '\n\n> 由 The Atlantic Private Bespoke Reader 导出 · ' + currentIssueObj.totalPages + ' 页双语典藏\n\n已含高亮节（' + hls.length + ' 条）';
+    const full = header + md + hlSection + '\n';
+    const blob = new Blob([full], { type: 'text/markdown;charset=utf-8' });
+    const urlName = 'the-atlantic-' + currentIssueId + '-export.md';
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = urlName;
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(function () { URL.revokeObjectURL(url); a.remove(); }, 1000);
+    toast('📤 已导出 ' + urlName + '（含 ' + hls.length + ' 条高亮）');
+  }
+  /** 高亮数据导出（纯高亮清单） */
+  function exportHighlightsMd() {
+    const hls = loadHighlights().filter(function (h) { return h.issue === currentIssueId; });
+    const md = '# 我的高亮 — ' + currentIssueObj.displayName + '\n\n' + (hls.length === 0 ? '（暂无高亮）' : hls.map(function (h) {
+      return '> **PAGE ' + String(h.page).padStart(3, '0') + '** — ' + h.text.replace(/\n/g, ' ') + '\n';
+    }).join('\n'));
+    const blob = new Blob([md], { type: 'text/markdown;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = 'my-highlights-' + currentIssueId + '.md';
+    document.body.appendChild(a); a.click();
+    setTimeout(function () { URL.revokeObjectURL(url); a.remove(); }, 1000);
+    toast('📤 已导出高亮清单（' + hls.length + ' 条）');
   }
 
   // ==================================================================
@@ -993,6 +1185,7 @@
     else if (code === 'KeyP' || key === 'p') { e.preventDefault(); playPageSpeech(); }
     // 毒舌 2.4：F 直接调函数，不绕按钮模拟点击
     else if (code === 'KeyF' || key === 'f') { e.preventDefault(); toggleFullscreen(); }
+    else if (code === 'KeyE' || key === 'e') { e.preventDefault(); exportAllMarkdown(); }
     else if (code === 'KeyH' || key === 'h') { e.preventDefault(); openLibraryShelf(); }
 
     // 其余按键原样放行（无死语句 —— 毒舌 6.5）
@@ -1176,6 +1369,45 @@
     if (ab && !ab.dataset.boundTap) {
       ab.dataset.boundTap = '1';
       ab.addEventListener('click', function (e) {
+        const hlMark = e.target.closest('mark.page-highlight');
+        if (hlMark) {
+          const block = hlMark.closest('.segment-block');
+          if (block) {
+            const segIdx = parseInt(block.id.replace('seg-', ''), 10);
+            if (!isNaN(segIdx)) {
+              const enEl = block.querySelector('.en-text');
+              if (enEl) {
+                const walker = document.createTreeWalker(enEl, NodeFilter.SHOW_TEXT);
+                const all = [];
+                let n; while ((n = walker.nextNode())) all.push(n);
+                let start = 0; let cur = hlMark;
+                const offs = [];
+                let total = 0;
+                // 计算被包裹文本在 enEl 文本流中的绝对偏移
+                const pt = [];
+                let whole = '';
+                // 简化：取 mark 前后兄弟文本流
+                let before = 0;
+                (function scan(el) {
+                  el.childNodes.forEach(function (c) {
+                    if (c === hlMark) { before = total; }
+                    if (c.nodeType === Node.TEXT_NODE) total += (c.nodeValue || '').length;
+                    else if (c.nodeType === Node.ELEMENT_NODE && !c.classList.contains('page-highlight')) scan(c);
+                  });
+                })(enEl);
+                const markLen = (hlMark.textContent || '').length;
+                const hls0 = loadHighlights();
+                saveHighlights(hls0.filter(function (h) { return !(h.issue === currentIssueId && h.page === currentPage && h.seg === segIdx && h.start === before && h.end === before + markLen); }));
+                // 物理移除 mark（保留文本）
+                const frag = document.createDocumentFragment();
+                while (hlMark.firstChild) frag.appendChild(hlMark.firstChild);
+                hlMark.parentNode.replaceChild(frag, hlMark);
+                applyPageHighlights();
+              }
+            }
+          }
+          return;
+        }
         const enCard = e.target.closest('.en-text');
         if (enCard) {
           const block = enCard.closest('.segment-block');
@@ -1221,6 +1453,35 @@
     const saved = readFloat(LS.fontScale, 0);
     if (saved > 0) applyFontScale(saved);
     else applyFontScale(globalFontScale);
+
+    // 选文高亮浮动条（毒舌 7.2）：mouseup 时若选中英文文本，浮现「🔖 高亮」按钮
+    document.addEventListener('mouseup', function (e) {
+      let floatBtn = els.hlFloatBtn;
+      if (floatBtn) { floatBtn.remove(); els.hlFloatBtn = null; }
+      const sel = window.getSelection();
+      if (!sel || sel.isCollapsed || sel.rangeCount === 0) return;
+      const rg = sel.getRangeAt(0);
+      let el = rg.startContainer;
+      if (el.nodeType === Node.TEXT_NODE) el = el.parentElement;
+      if (!el || !els.articleBody || !els.articleBody.contains(el)) { sel.removeAllRanges(); return; }
+      const rect = rg.getBoundingClientRect();
+      floatBtn = document.createElement('button');
+      floatBtn.type = 'button';
+      floatBtn.className = 'hl-float-btn';
+      floatBtn.textContent = '🔖 高亮';
+      floatBtn.setAttribute('aria-label', '高亮选中文本');
+      floatBtn.style.top = Math.max(8, rect.top - 38) + 'px';
+      floatBtn.style.left = Math.max(8, rect.left + rect.width / 2 - 34) + 'px';
+      floatBtn.addEventListener('click', function (ev) {
+        ev.stopPropagation();
+        captureSelectionHighlight();
+        if (els.hlFloatBtn) { els.hlFloatBtn.remove(); els.hlFloatBtn = null; }
+      });
+      document.body.appendChild(floatBtn);
+      els.hlFloatBtn = floatBtn;
+    });
+
+    bindOne('exportAllBtn', exportAllMarkdown);
   }
 
   function bindOne(id, fn) {
@@ -1280,6 +1541,8 @@
     toggleSidebarBtn: 'toggle-sidebar-btn',
     closeSidebarBtn: 'close-sidebar-btn',
     shortcutsOpenBtn: 'shortcuts-open-btn',
+    exportAllBtn: 'export-all-btn',
+    hlFloatBtn: null,
     imageInfoTag: 'image-info-tag',
     quickJumpInput: 'quick-jump-num',
     shortcutsVersion: 'shortcuts-version',

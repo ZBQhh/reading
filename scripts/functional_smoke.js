@@ -87,6 +87,31 @@ function check(name, cond, extra) {
   check('J 翻页后 current-page-badge 前进', badgeBefore !== badgeAfter && badgeAfter.indexOf(badgeBefore) < 0, badgeBefore + ' -> ' + badgeAfter);
   check('K 翻页后 badge 回退', badgeBack === badgeBefore, badgeAfter + ' -> ' + badgeBack);
 
+  // --- TEST 4: 选文高亮（毒舌 7.2）——选择首段英文 → 存储 + mark 渲染 ---
+  const hlResult = await page.evaluate(() => {
+    const body = document.getElementById('article-body');
+    if (!body) return { ok: false, why: 'no article-body' };
+    const enText = body.querySelector('.en-text');
+    if (!enText) return { ok: false, why: 'no .en-text' };
+    const txtNode = enText.firstChild;
+    if (!txtNode || txtNode.nodeType !== 3) return { ok: false, why: 'no text node' };
+    const len = (txtNode.nodeValue || '').length;
+    if (len < 8) return { ok: false, why: 'text too short: ' + len };
+    const rg = document.createRange();
+    rg.setStart(txtNode, 0);
+    rg.setEnd(txtNode, Math.min(8, len));
+    const sel = window.getSelection();
+    sel.removeAllRanges();
+    sel.addRange(rg);
+    document.dispatchEvent(new MouseEvent('mouseup', { bubbles: true }));
+    const btn = document.querySelector('.hl-float-btn');
+    if (btn) btn.click();
+    const saved = JSON.parse(localStorage.getItem('atlantic_reader_highlights') || '[]');
+    const marks = body.querySelectorAll('mark.page-highlight').length;
+    return { ok: saved.length > 0 && marks > 0, why: 'saved=' + saved.length + ' marks=' + marks };
+  });
+  check('选区高亮写入 localStorage 并渲染 mark', hlResult.ok === true, hlResult.why);
+
   check('浏览器侧无未捕获 JS 异常', errors.length === 0, errors.join(' | ').slice(0, 200));
 
   await browser.close();

@@ -1524,3 +1524,32 @@ body.font-mode-serif .zh-text-card { font-family: var(--font-serif-zh); }
   .shortcut-row { font-size: 12px; }
   .lightbox-modal img { max-height: 84vh; }
 }
+/* ============================================================
+   选文高亮（毒舌 7.2 · 阅读闭环：高亮 → 回顾 → 导出）
+   ============================================================ */
+mark.page-highlight {
+  background: linear-gradient(180deg, transparent 55%, rgba(212, 175, 55, 0.38) 55%);
+  color: inherit;
+  border-radius: 2px;
+  padding: 0 1px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+mark.page-highlight:hover { background: linear-gradient(180deg, transparent 45%, rgba(212, 175, 55, 0.62) 45%); }
+.theme-dark mark.page-highlight { background: linear-gradient(180deg, transparent 55%, rgba(240, 196, 76, 0.35) 55%); }
+.hl-float-btn {
+  position: fixed;
+  z-index: 400;
+  transform: translateX(-50%);
+  background: var(--accent-gold);
+  color: #121316;
+  border: none;
+  border-radius: 999px;
+  padding: 5px 14px;
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+  transition: opacity 0.1s;
+}
+.hl-float-btn:hover { opacity: 0.88; }
