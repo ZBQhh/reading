@@ -637,6 +637,10 @@
     // Render Article Body
     if (articleBody) {
       articleBody.innerHTML = '';
+      const totalEnChars = (pageObj.segments || []).reduce((acc, s) => acc + (s.en ? s.en.length : 0), 0);
+      const isShortVisualPage = (!pageObj.segments || pageObj.segments.length === 0) || 
+                                (pageObj.segments.length <= 3 && totalEnChars < 450);
+
       if (!pageObj.segments || pageObj.segments.length === 0) {
         articleBody.innerHTML = `
           <div class="embedded-art-card">
@@ -650,34 +654,52 @@
             </div>
           </div>
         `;
-      } else if (pageObj.segments.length === 1 && pageObj.segments[0].type === 'caption') {
-        const seg = pageObj.segments[0];
-        const cleanEn = sanitize(seg.en);
-        const cleanZh = sanitize(seg.zh);
+      } else if (isShortVisualPage) {
+        // Automatically embed original scan for short visual pages (Page 6 TOC, Page 14 title spread, poems, photo spreads)
+        let segsHtml = '';
+        pageObj.segments.forEach((seg, idx) => {
+          const cleanEn = sanitize(seg.en);
+          const cleanZh = sanitize(seg.zh);
+          segsHtml += `
+            <div class="segment-block segment-${seg.type}" id="seg-${idx}">
+              <div class="en-text" lang="en" title="轻点原声朗读本段 (再次点击暂停)">${cleanEn}</div>
+              ${cleanZh ? `
+                <div class="zh-text-card" lang="zh-CN">
+                  <div>${cleanZh}</div>
+                </div>
+              ` : ''}
+            </div>
+          `;
+        });
+
         articleBody.innerHTML = `
           <div class="embedded-art-card">
             <div class="embedded-art-img-wrap" onclick="const lb = document.getElementById('open-lightbox'); if(lb) lb.click();">
               <img src="${pageObj.image}" alt="Original Page Scan" class="embedded-art-img">
               <span class="embedded-art-zoom-hint">🔍 点击查看 150 DPI 高清全屏原图</span>
             </div>
-            <div class="segment-block segment-caption" id="seg-0">
-              <div class="en-text" lang="en" title="轻点原声朗读 (再次点击暂停)"><em>${cleanEn}</em></div>
-              <div class="zh-text-card" lang="zh-CN"><div><em>${cleanZh}</em></div></div>
-            </div>
+          </div>
+          <div class="short-page-segments">
+            ${segsHtml}
           </div>
         `;
-        const enCard = articleBody.querySelector('.en-text');
-        if (enCard) {
-          enCard.addEventListener('click', (e) => {
-            const segDiv = enCard.closest('.segment-block');
-            if (segDiv && segDiv.classList.contains('playing-active') && isPlayingAudio) {
-              stopSpeech();
-              showHUDToast('⏸ 朗读已暂停');
-            } else if (segDiv) {
-              playParagraphSpeech(cleanEn, segDiv);
-            }
-          });
-        }
+
+        // Hook up Tap-to-Speak for short visual pages
+        articleBody.querySelectorAll('.en-text').forEach((enCard, idx) => {
+          const seg = pageObj.segments[idx];
+          if (seg) {
+            const cleanEn = sanitize(seg.en);
+            enCard.addEventListener('click', (e) => {
+              const segDiv = enCard.closest('.segment-block');
+              if (segDiv && segDiv.classList.contains('playing-active') && isPlayingAudio) {
+                stopSpeech();
+                showHUDToast('⏸ 朗读已暂停');
+              } else if (segDiv) {
+                playParagraphSpeech(cleanEn, segDiv);
+              }
+            });
+          }
+        });
       } else {
         pageObj.segments.forEach((seg, idx) => {
           const segDiv = document.createElement('div');
@@ -1475,6 +1497,14 @@
     document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
     activeViewBtn.classList.add('active');
   }
+
+  // Reading History Initialization on Boot
+  if (getHistoryList().length === 0) {
+    const initPage = parseInt(localStorage.getItem(STORAGE_KEY_PAGE_PREFIX + currentIssueId), 10) || 1;
+    recordReadingHistory(currentIssueId, initPage, (data[initPage - 1] && data[initPage - 1].section) || 'Cover');
+  }
+  renderContinueReadingBanner();
+  renderHistoryTab();
 
   // Global hooks
   window.loadPage = loadPage;
