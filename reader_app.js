@@ -790,6 +790,7 @@
                 </div>
               ` : ''}
             `;
+          } else {
             // Authentic 1:1 Author Paragraph: Pure Clean Words & Direct Tap-to-Speak
             segDiv.innerHTML = `
               <div class="en-text" lang="en" title="轻点原声朗读本段 (再次点击暂停)">${cleanEn}</div>
