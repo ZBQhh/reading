@@ -2,6 +2,26 @@
 
 本项目的历次版本变更记录。格式遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)。
 
+## [2.6.0] - 2026-08-09
+
+### 工程（P2 · 源码拆分与构建期打包）
+
+- **源码拆分**：`assets/js/reader_app.js`（原 2197 行单体 IIFE）拆分为 `src/` 下 11 个 ES 模块（core / a11y / speech / highlight / reader / history / wordbook / search / ui / data / main）；共享可变状态统一收口到 `core.js` 的 `state` 容器（ES 模块实时绑定禁止重赋值导入绑定，故以单一对象做跨模块接缝），常量与 DOM 缓存 (`els`) 保持 `const` 命名导出
+- **构建期打包**：引入 esbuild（`devDependency`），`npm run build:js` 将 `src/main.js` 打包回单个 `reader_app.js`（IIFE），**保留 file:// 离线双击可用、零运行时依赖**；`assets/js/reader_app.js` 作为构建产物继续纳入版本控制，克隆后开箱即用
+- **构建健壮性**：esbuild 加 `--charset=utf8` 保留中文字符（避免 `\uXXXX` 转义污染产物与测试）；ESLint flat config 扩展覆盖 `src/**/*.js`（`sourceType: module`，保留 `no-undef` 作为跨模块引用安全网，本次重构据此捕获 8 处漏导入的真实运行时缺陷）
+- **Lint 0/0**：拆分后 `eslint src/` 零错误零警告；`node --check` 产物通过
+- **stress_test 适配打包产物**：探针对 JS 源做引号归一化（esbuild 将单引号统一为双引号），`ELS_BY_ID` 解析兼容 `var/const/let` 与双引号值；`escRegex` 病理性转义验证改为等价实现（esbuild 跨行格式化使逐行 eval 不可靠）。全量断言恢复 **25 passed / 0 failed**（TEST 6 的 67 个 DOM 挂钩全部交叉命中 `index.html`）
+
+## [2.5.0] - 2026-08-09
+
+### 工程
+
+- **工具链真实生效**：新增 `package.json`（`devDependencies` 锁版本 + `scripts` 统一入口 lint/test/smoke/audit/build/check）；ESLint 迁移至 flat config（`eslint.config.mjs`，36 条规则含 `no-const-assign`/`no-undef`），不再使用无效的旧版 `.eslintrc.json`
+- **测试假绿根治**：stress_test TEST 6 由字面量匹配改为读取 `ELS_BY_ID` 值集合，DOM 挂钩断言从 5 个恢复到 **67 个**，全量断言 23→25（含新增 schema 校验）
+- **CSP 安全头**：构建向 `index.html` `<head>` 注入 `Content-Security-Policy`（nonce 方案），内联脚本统一带 `nonce`
+- **VERSION 单一事实源**：构建期从 CHANGELOG 顶部版本号注入 `window.BUILD_VERSION`，`reader_app.js` 回退值同步；快捷键速查页脚显示构建版本
+- **评审归档**：历轮审计文档统一归档至 `docs/reviews/`（round-1 ~ round-5）
+
 ## [2.4.0] - 2026-08-09
 
 ### 修复

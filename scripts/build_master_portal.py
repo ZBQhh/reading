@@ -27,6 +27,7 @@ def build_portal():
         "img-src 'self' data: blob:; "
         "font-src 'self'; "
         "connect-src 'self'; "
+        "manifest-src 'self'; "
         "media-src 'self' blob:"
     )
 
@@ -37,8 +38,10 @@ def build_portal():
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#0e1116">
   <meta http-equiv="Content-Security-Policy" content="{csp}">
   <meta name="build-version" content="{build_version}">
+  <link rel="manifest" href="manifest.webmanifest">
   <title>The Atlantic & Global Journals — Private Bespoke Reader | 顶级期刊双语私享数字典藏</title>
   <link rel="stylesheet" href="assets/css/reader_style.css">
 </head>

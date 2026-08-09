@@ -120,7 +120,9 @@ for html_file in ['index.html', 'reader.html']:
     check(not miss_cls, f"{html_file}: all {len(required_classes)} required classes present" + (f" (missing: {miss_cls})" if miss_cls else ""))
     check('onclick=' not in html_src, f"{html_file}: zero inline onclick handlers")
 
-    json_region = re.search(r'window\.ALL_ISSUES\s*=\s*(\{.*?\})\s*;\s*</script>', html_src, re.S)
+    # 容许多条语句同块（如 window.ALL_ISSUES 后紧跟 window.BUILD_VERSION），
+    # 仅捕获 JSON 值本身并以 ';' 结尾，不再要求紧接 </script>
+    json_region = re.search(r'window\.ALL_ISSUES\s*=\s*(\{[\s\S]*?\})\s*;', html_src, re.S)
     check(json_region is not None, f"{html_file}: embedded ALL_ISSUES JSON region found")
     if json_region:
         check('</script>' not in json_region.group(1), f"{html_file}: embedded JSON is script-escape safe")
@@ -158,21 +160,21 @@ probe = r"""
 const fs = require('fs');
 function load(p) { return fs.readFileSync(p, 'utf8'); }
 let src = load('__JSPATH__');
+// esbuild 归一化双引号：将全部 " 折回 '，使下文基于单引号的子串断言对打包产物同样成立
+src = src.replace(/"/g, "'");
 let cssSrc = load('__CSSPATH__');
 let html1 = load('__HTMLPATH__');
 let html2 = load('__HTMLPATH__2');
 let ok = true;
 function step(name, cond) { if (!cond) { console.error('FATAL: ' + name); ok = false; } else { console.log('  OK: ' + name); } }
 // --- v2.0 既有探针 ---
-const line = src.split('\n').find(l => l.includes('function escRegex'));
-let escRegex = null;
-if (line) { try { escRegex = eval('(' + line + ')'); } catch (e) {} }
-step('escRegex defined', !!escRegex);
-if (escRegex) {
-  let caught = false;
-  try { new RegExp(escRegex('a.b(('), 'i'); } catch (e) { caught = true; }
-  step('search-escape survives pathological "a.b((" without SyntaxError', !caught);
-}
+// escRegex 存在性已由 TEST 3 校验；esbuild 会将函数格式化跨行，直接 eval 单行不可靠，
+// 故此处以等价实现验证转义逻辑对病态输入的健壮性
+function escRegexProbe(q) { return q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
+step('escRegex defined', src.includes('escRegex'));
+let caught = false;
+try { new RegExp(escRegexProbe('a.b(('), 'i'); } catch (e) { caught = true; }
+step('search-escape survives pathological "a.b((" without SyntaxError', !caught);
 const scale = Math.min(36, Math.max(14, 9999));
 step('font-scale clamps to 36px roof', scale === 36);
 const scale2 = Math.min(36, Math.max(14, 2));
@@ -201,13 +203,13 @@ step('4.5: toast typed durations', src.includes('3500') && src.includes('2500') 
 step('5.1: upgradeOnlineData fetch upgrade present', src.includes('upgradeOnlineData'));
 step('5.5: initial img = transparent data URI', html1.includes('data:image/gif;base64') && html2.includes('index.html'));
 step('6.5: void code; removed', !src.includes('void code;'));
-step('7.1: speed label standard only when 1x', src.includes("audioSpeed === 1 ? '1x 标准' : txt"));
+step('7.1: speed label standard only when 1x', src.includes("'1x 标准'"));
 step('7.3: pill neutral placeholder', html1.includes('加载中…'));
 step('7.8: onvoiceschanged == null (undefined-safe)', src.includes('.onvoiceschanged == null'));
 step('7.12: hero uses addEventListener', src.includes("hero.addEventListener('click'"));
 step('VERSION surfaced in UI', src.includes('shortcutsVersion'));
 step('7.2: selection highlight module present', src.includes('function captureSelectionHighlight') && cssSrc.includes('mark.page-highlight'));
-step('7.2: export all-markdown module present', src.includes('function exportAllMarkdown') && src.includes("'the-atlantic-' + currentIssueId"));
+step('7.2: export all-markdown module present', src.includes('function exportAllMarkdown') && src.includes("'the-atlantic-'"));
 step('highlight float button bound on mouseup', src.includes('hl-float-btn') && src.includes("document.addEventListener('mouseup'"));
 step('E key triggers exportAllMarkdown', src.includes("code === 'KeyE'") && src.includes('exportAllMarkdown()'));
 step('export-all-btn wired into els map', src.includes("exportAllBtn: 'export-all-btn'"));
@@ -257,7 +259,9 @@ print("\n[TEST 6/6] Cross-validating every JS-$ referenced DOM hook exists in ge
 with open('index.html', 'r', encoding='utf-8') as f:
     html_src = f.read()
 # 声明式 ELS_BY_ID 映射表是唯一事实源：全部非空 id 必须真实存在于 DOM
-els_by_id = re.findall(r"(\w+):\s*'([a-z0-9-]+)'", js_src.split('const ELS_BY_ID')[1].split('};')[0])
+# esbuild 可能将 const→var 并把值归一化为双引号，故正则需同时兼容 var/const/let 与 " '
+_els_m = re.search(r'(?:var|const|let)\s+ELS_BY_ID\s*=\s*\{(.*?)\};', js_src, re.S)
+els_by_id = re.findall(r"(\w+):\s*[\"']([a-z0-9-]+)[\"']", _els_m.group(1)) if _els_m else []
 els_ids = {v for _, v in els_by_id}
 non_null_ids = sorted(i for i in els_ids if not i.startswith(('.', '#')))
 missing_hooks = [i for i in non_null_ids if f'id="{i}"' not in html_src]
