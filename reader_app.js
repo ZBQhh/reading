@@ -68,7 +68,7 @@
     SWIPE_THRESHOLD_PX: 60,
     WORDBOOK_MAX: 500,
   };
-  const VERSION = '2.1.0';
+  const VERSION = '2.3.0';
   const allIssues = window.ALL_ISSUES || {};
 
   // ---------------------------------------------------------------- 状态

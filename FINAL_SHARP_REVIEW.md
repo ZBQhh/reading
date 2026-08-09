@@ -383,10 +383,13 @@ Functional smoke: 6 passed / 0 failed
 
 ### 9.5 新增回归（本轮唯一布局回归点，已修复）
 
-1024px 视口（iPad Pro 竖屏）顶部栏 `#more-settings-btn` 溢出 3px（scrollWidth 1027 > 1024）。经定位为顶栏按钮内边距压迫，`@media (max-width: 1180px)` 收紧 `padding: 7px 9px` 后，**8 视口 × 7 状态浏览器审计 ALL CLEAN**（回归前 6 状态报 1 溢出）。
+- 1024px 视口（iPad Pro 竖屏）顶部栏 `#more-settings-btn` 溢出 3px（scrollWidth 1027 > 1024）。经定位为顶栏按钮内边距压迫，`@media (max-width: 1180px)` 收紧 `padding: 7px 9px` 后，**8 视口 × 7 状态浏览器审计 ALL CLEAN**（回归前 6 状态报 1 溢出）。
+- 移动端期刊馆首页（≤900px）底部残留「📖 逐段/🪟 原图/🇺🇸 英文/🇨🇳 中文」视图切换栏（`mobile-view-bar` sticky 泄漏到 portal 之后）。补齐 `reader_style.css` 门户隐藏规则（`.library-portal-view:not(.hidden) ~ .mobile-view-bar { display: none; }`），首页 scrollHeight 2235→2190 复原，进入阅读室后切换栏照常出现。
 
-### 9.6 勘误后遗疑点（未完成项，供下轮）
+### 9.6 勘误后遗疑点（推进状态更新——AI 之外已全部完成）
 
-- 🔸 七次维度「跨设备同步 / AI 辅助 / 生词本」三条仍空缺（正文列为 2026 标配）
-- 🔸 `reader.html` stub 迁移后 stress 断言数变化，需要文档口径同步
-- 🔸 PNG 源档保留与 GitHub Pages 仓库体积（244MB）的权衡待决策——建议保留或迁移至独立 `scans/` 分支
+- 🔸 **生词本**（双击 / 选词收藏 + 语境句 + TTS 发音 + 导出 + 清空）✅ 已落地，`L` 键开关，浮层「📖 生词」按钮与高亮浮层同列
+- 🔸 **跨设备同步**（离线形态：数据备份/恢复 JSON）✅ 已落地——书签/高亮/生词/足迹/设置一键导出导入（真云同步需后端，留待后续）
+- 🔸 **PNG 源档**（244MB 与仓库体积权衡）✅ 已决策执行：216 张 PNG 归档 `scans-png` 分支，main 工作树仅跟踪 WebP；本地磁盘仍保留 PNG 用于图载降级
+- 🔸 **stress 断言口径** ✅ 已同步：README 构建闭环更新为「6 套件全绿（reader.html stub 化后 25 项断言）+ 9 项功能冒烟」
+- 🔸 **AI 辅助**（摘要/问答/生词本自动化）——仍空缺，需外部服务或本地模型，属产品级决策，暂缓
