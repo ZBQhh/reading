@@ -2,6 +2,10 @@
 *.pdf
 raw_pdf/
 
+# PNG 页面扫描源档（216 张，约 244MB）——已归档至 scans-png 分支
+# 工作树本地保留用于 webp 异常降级；需源档时切：git checkout scans-png -- issues/
+issues/**/images/*.png
+
 # Python Cache & Virtual Environments
 *.pyc
 __pycache__/
