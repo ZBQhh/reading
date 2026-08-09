@@ -141,13 +141,14 @@ TheAtlantic/
 
 ## 🛠️ 维护与变更记录
 
-- **完整变更历史**：见 [`CHANGELOG.md`](CHANGELOG.md)（Keep a Changelog 规范，分版本记录）。
-- **历轮评审与修复执行记录**：`CODE_REVIEW.md`（v1.0）/ `CODE_REVIEW_V2_REAUDIT.md`（v2.0 复核）/ `HARSH_REVIEW.md`（v2.1 整改回执）/ `FINAL_SHARP_REVIEW.md`（终局评测 + 勘误附录）。
+- **完整变更历史**：见 [`CHANGELOG.md`](CHANGELOG.md)（Keep a Changelog 规范，分版本记录，最新 v2.2.0）。
+- **历轮评审与修复执行记录**：`CODE_REVIEW.md`（v1.0）/ `CODE_REVIEW_V2_REAUDIT.md`（v2.0 复核）/ `HARSH_REVIEW.md`（v2.1 整改回执）/ `FINAL_SHARP_REVIEW.md`（终局评测 + v2.2 勘误附录）。
 
 **构建与测试闭环**（修改数据后请依次执行）：
 
 ```powershell
 python scripts/build_master_portal.py  # 重建 index.html / reader.html（assets/ 真源 → 根目录镜像）
-python scripts/stress_test_engine.py   # 6 套件 30 项断言全绿
+python scripts/stress_test_engine.py   # 6 套件全绿（reader.html stub 化后 25 项断言）
 node scripts/browser_layout_audit.js   # 真实浏览器多端溢出审计（8 视口 × 7 状态，需 node + playwright-core）
+node scripts/functional_smoke.js       # 真实浏览器功能冒烟（6 项交互断言）
 ```

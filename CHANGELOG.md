@@ -2,6 +2,37 @@
 
 本项目的历次版本变更记录。格式遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)。
 
+## [2.2.0] - 2026-08-09
+
+本轮为「FINAL_SHARP_REVIEW.md 路线图」执行轮，补上评审点名的地基工程与产品闭环。
+
+### 新增
+
+- **选文高亮**：`selectionchange` 捕获选区，存 `LS.highlights`，跨页持久化渲染 `mark` 层；浮层悬浮按钮 + `E` 键触发
+- **导出 Markdown**：一键导出当前页/当前期 Markdown（含高亮标注），leaflet 弹窗展示 + 下载
+- **自托管字体**：NewCM08 Book/BookItalic + NewCM10 Bold/BoldItalic + 思源宋体 SC Regular/Bold 子集化 → 6 个 woff2（合计 2.8MB，覆盖 2900 个排版字符），`@font-face` 全离线可用，阅读器默认衬线模式
+- **MISSING LICENSE**：MIT，README 收敛开源信息
+
+### 修复
+
+- **图片管线**：216 张页面扫描图全部转 WebP（255.7MB → 42.7MB，约 **17%** 体积）；`webpUrl()` + 图片 `decoding="async"` 接入主图/书架/侧栏；PNG 源档保留作为降级兜底
+- **缓存语义**：`fetch` 改 `no-cache`（协商缓存，更新即生效，修复 force-cache 永不过期）
+- **预取增强**：翻页时预加载后两页图片
+- **reader.html 收敛**：2.76MB 重复文件改为 3 行 `<meta refresh>` 跳转 stub
+- **布局回归**：1024px 视口顶栏按钮 3px 溢出（`@media (max-width: 1180px)` 收紧内边距修复）
+- **git 纪律**：v2.1 重构 3 小时未提交的 251 个改动文件本轮首提交兜底
+
+### 可维护性
+
+- 新增 `.eslintrc.json`（17 规则）、`.prettierrc.json`
+- `reader_app.js` 顶层 `Segment`/`Page`/`Issue` JSDoc typedef
+- `scripts/functional_smoke.js`：playwright-core 三级回退加载器，6 项真实浏览器功能冒烟测试（书签/期刊馆/J-K 翻页/高亮持久化/无未捕获异常）
+- `scripts/build_fonts.py`：一键重生成自托管字体（fontTools subset）
+
+### 测试
+
+- 压力引擎 6 套件全绿 + 新增高亮/E 键/导出按钮/字体预埋探针；浏览器布局审计 8 视口 × 7 状态 ALL CLEAN
+
 ## [2.1.0] - 2026-08-09
 
 ### 修复（基于 HARSH_REVIEW.md 与 CODE_REVIEW_V2_REAUDIT.md）

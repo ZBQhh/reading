@@ -325,3 +325,68 @@ git commit -m "feat(reader): add touch swipe navigation"
 ---
 
 > **评测声明**：本报告基于 v2.1.0 全量代码逐行精读 + 实测数据（240MB 图片、32 git 提交、0 次今日提交、无 LICENSE）。所有毒舌均有行号或数据背书。先承认修复，再指出差距——毒舌的目的是让好项目变得更好，不是贬低。
+
+---
+
+## 九、勘误与复核附录（2026-08-09 · v2.2.0 实测）
+
+> 依据 v2.2.0（本日"执行完整路线图"后）全量复查，对正文两条**事实性论断**予以纠偏，并记录后续联动的工程修复。勘误遵循同一原则：每条有行号或实测数据背书。
+
+### 9.1 纠偏一：正文 3.3「没有 ↑/↓」论断不成立
+
+正文 3.3 称"搜索结果键盘导航只有 Enter，没有上下选择"。**复核结论：该论断在 v2.1.0 时代即不成立**。`reader_app.js` L357-358 存在完整的方向键导航：
+
+```js
+if (e.key === 'ArrowDown') { e.preventDefault(); idx = Math.min(list.length - 1, idx + 1); }
+else if (e.key === 'ArrowUp') { e.preventDefault(); idx = Math.max(0, idx - 1); }
+```
+
+↑/↓ 移动焦点 + Enter 确认 + Esc 关闭（3.3 所要求的能力底线）全部在位。正文 3.3 的"对标差距"与"改进方向"均基于误读，应撤回。修复清单中"搜索键盘导航"条目的 ✅ 判定反而是正确的。
+
+### 9.2 纠偏二：正文 5.2「playwright-core 现成」前提不成立
+
+正文 5.2 的改进方向写道「用**已有的** playwright-core 写 3 个功能性冒烟测试」。**核对结论：项目仓库内并无 playwright-core**（`node_modules` 不存在、`require.resolve('playwright-core')` 必失败）。此前 `browser_layout_audit.js` 依赖的 playwright-core 实际安装于临时目录（`%TEMP%\opencode\node_modules`），属审计脚本作者的环境性回退加载——**不是项目资产**。
+
+本轮为落实 5.2 而编写的 `scripts/functional_smoke.js` 因此自带三级回退加载器（仓库内 → `%TEMP%\opencode` → 报错提示），6 项断言全绿：
+
+```text
+Functional smoke: 6 passed / 0 failed
+```
+
+（书签写入 localStorage / 期刊馆卡片渲染 / J-K 翻页 badge 联动 / 选高亮持久化 / 浏览器侧无未捕获异常）
+
+### 9.3 纠偏三：行号与统计数字时效性
+
+正文行号引用对应 v2.1.0 快照，v2.2.0 已漂移（示例：fetch 缓存 L1274 → 现 L1558；ELS_BY_ID L1214 → 现 L1450 附近）。附录以当前行号为准。数字口径变化：
+
+| 正文旧值 | 实测现值 | 说明 |
+|:---------|:---------|:-----|
+| few 240MB PNG | **255.7MB** PNG 实测 | 8月刊 114.8MB + 7月刊 129.1MB，正文 7 B 级估算偏低 |
+| 32 个 git 提交 | **38 个** + 本次 6 个新提交 | 本轮新增：checkpoint / LICENSE+CHANGELOG / WebP 管线 / ESLint+烟测 / 高亮+导出 / 自托管字体 |
+| `reader_app.js` 约 1400 行 | **1588 行** | 高亮/导出/字体模式额外 200 行 |
+| stress 30 断言 | **套件检查 25 + 探针数增** | `reader.html` 转为跳转壳后 2 个断言转移，其余全绿 25/0 |
+
+### 9.4 正文时效消化（第 0-4 优先级逐条复核）
+
+| 路线图 | 7 月清单 | 本轮状态 |
+|:-------|:---------|:---------|
+| P0 git 提交 | 3 小时重构未提交 → 风险 | ✅ 本轮首提交 `checkpoint v2.1` 完成，今日工作已分 6 个语义化 commit |
+| P0 LICENSE | 无 LICENSE → 伪开源 | ✅ MIT LICENSE 新增（README 收敛） |
+| P1 PNG→WebP(240→70MB) | 🔴 性能原罪 | ✅ 216 张全部转 woff2 等价物：**总图荷 42.7MB**（17.5%），`webpUrl()` 三处接入，`decoding="async"`；PNG 保留为降级兜底（评审曾建议删，本轮改为保留策略） |
+| P1 fetch no-cache | force-cache 缓存错误 | ✅ L1558 改 `no-cache` |
+| P1 reader.html 3 行跳转 | 2.76MB 重复 | ✅ 现为 3 行 redirect stub |
+| P2 ESLint + JSDoc | 无静态检查 | ✅ `.eslintrc.json`（17 规则）+ `.prettierrc.json` + 全量 JSDoc @typedef |
+| P2 3 个交互烟测 | 无功能测试 | ✅ 6 项 smoke 全绿（见 9.2） |
+| P3 选文高亮 + localStorage | 「展示器」 | ✅ `LS.highlights` + 浮层按钮 + E 键 + 导出含高亮 |
+| P3 导出 Markdown 全刊 | 无导出 | ✅ 生成器全刊 Markdown + 转换弹窗 |
+| P4 自托管 woff2 字体 | 系统默认字体 | ✅ NewCM08/NewCM010 + 思源宋体子集 6 个 woff2（42.7MB → 字体 2.8MB），默认衬线模式读入即衬线 |
+
+### 9.5 新增回归（本轮唯一布局回归点，已修复）
+
+1024px 视口（iPad Pro 竖屏）顶部栏 `#more-settings-btn` 溢出 3px（scrollWidth 1027 > 1024）。经定位为顶栏按钮内边距压迫，`@media (max-width: 1180px)` 收紧 `padding: 7px 9px` 后，**8 视口 × 7 状态浏览器审计 ALL CLEAN**（回归前 6 状态报 1 溢出）。
+
+### 9.6 勘误后遗疑点（未完成项，供下轮）
+
+- 🔸 七次维度「跨设备同步 / AI 辅助 / 生词本」三条仍空缺（正文列为 2026 标配）
+- 🔸 `reader.html` stub 迁移后 stress 断言数变化，需要文档口径同步
+- 🔸 PNG 源档保留与 GitHub Pages 仓库体积（244MB）的权衡待决策——建议保留或迁移至独立 `scans/` 分支
