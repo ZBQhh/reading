@@ -953,8 +953,68 @@
   }
 
   // ==================================================================
-  // 生词本（毒舌 7.2：双语阅读器的天作之合——双击选词 → 收藏 → 回顾）
+  // 跨设备同步（离线形态：JSON 备份导出 / 导入恢复——毒舌 7.2「跨设备同步」的本地可行实现）
   // ==================================================================
+  function collectLocalData() {
+    const bag = {};
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k && k.indexOf('atlantic_reader_') === 0) bag[k] = localStorage.getItem(k);
+    }
+    return bag;
+  }
+  function exportLocalDataJson() {
+    const bag = collectLocalData();
+    const blob = new Blob([JSON.stringify({ app: 'the-atlantic-reader', version: 1, exportedAt: new Date().toISOString(), data: bag }, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = 'atlantic-reader-backup-' + new Date().toISOString().slice(0, 10) + '.json';
+    document.body.appendChild(a); a.click();
+    setTimeout(function () { URL.revokeObjectURL(url); a.remove(); }, 1000);
+    toast('📦 已导出本地数据备份（' + Object.keys(bag).length + ' 项）');
+  }
+  function importLocalData(file) {
+    const reader = new FileReader();
+    reader.onerror = function () { toast('⚠️ 备份文件读取失败', 'error'); };
+    reader.onload = function () {
+      try {
+        const payload = JSON.parse(String(reader.result));
+        const bag = payload && payload.data && typeof payload.data === 'object' ? payload.data : (payload && typeof payload === 'object' ? payload : null);
+        if (!bag || typeof bag !== 'object') { toast('⚠️ 备份格式无法识别', 'error'); return; }
+        const keys = Object.keys(bag).filter(function (k) { return k.indexOf('atlantic_reader_') === 0; });
+        if (keys.length === 0) { toast('⚠️ 备份中无本应用数据', 'warn'); return; }
+        confirmDialog({
+          title: '导入备份（覆盖本地数据）？',
+          message: '将导入 ' + keys.length + ' 项数据（书签/高亮/生词/足迹/设置），覆盖当前设备同名数据。',
+          okText: '导入',
+          danger: true,
+        }).then(function (ok) {
+          if (!ok) return;
+          keys.forEach(function (k) {
+            try { localStorage.setItem(k, bag[k]); } catch (e) { /* 配额满时跳过 */ }
+          });
+          // 重置运行时状态以反映恢复的数据
+          currentIssueId = lsGet(LS.issue, '');
+          if (!allIssues[currentIssueId]) currentIssueId = Object.keys(allIssues)[0] || '';
+          currentIssueObj = allIssues[currentIssueId] || { id: '', pages: [], totalPages: 0, displayName: '未加载' };
+          data = currentIssueObj.pages || [];
+          renderBookmarksTab();
+          renderHistoryTab();
+          renderContinueBanner();
+          if (els.wordbookList) renderWordbook();
+          applyFontScale(readFloat(LS.fontScale, 0) || globalFontScale);
+          const restoredTheme = lsGet(LS.theme, '');
+          if (THEMES.indexOf(restoredTheme) >= 0) applyTheme(restoredTheme);
+          setViewMode(lsGet(LS.view, 'interlinear'));
+          applyAlignMode(lsGet(LS.align, 'flush'));
+          toast('✅ 备份导入成功（' + keys.length + ' 项）');
+        });
+      } catch (e) {
+        toast('⚠️ 备份文件解析失败：' + e.message, 'error');
+      }
+    };
+    reader.readAsText(file);
+  }
   function loadWordbook() {
     try { return JSON.parse(localStorage.getItem(LS.wordbook) || '[]'); } catch (e) { return []; }
   }
@@ -1647,6 +1707,21 @@
     if (els.wordbookModal) els.wordbookModal.addEventListener('click', function (e) {
       if (e.target === els.wordbookModal) els.wordbookModal.classList.remove('active');
     });
+
+    // 数据备份/还原（跨设备同步的离线形态）
+    bindOne('dataSyncExportBtn', exportLocalDataJson);
+    bindOne('dataSyncImportBtn', function () {
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = '.json,application/json';
+      input.style.display = 'none';
+      input.addEventListener('change', function () {
+        if (input.files && input.files[0]) importLocalData(input.files[0]);
+        input.remove();
+      });
+      document.body.appendChild(input);
+      input.click();
+    });
   }
 
   function bindOne(id, fn) {
@@ -1707,6 +1782,8 @@
     closeSidebarBtn: 'close-sidebar-btn',
     shortcutsOpenBtn: 'shortcuts-open-btn',
     exportAllBtn: 'export-all-btn',
+    dataSyncExportBtn: 'data-sync-export-btn',
+    dataSyncImportBtn: 'data-sync-import-btn',
     hlFloatBtn: null,
     wbFloatBtn: null,
     wordbookModal: 'wordbook-modal',

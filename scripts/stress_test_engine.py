@@ -219,6 +219,8 @@ step('7.2-wordbook: LS.wordbook key + modal + L shortcut', src.includes("wordboo
 step('7.2-wordbook: wb-float-btn on single-word selection', src.includes('wb-float-btn') && src.includes('wordMatch'));
 step('7.2-wordbook: add/remove/clear/export/speak wired', src.includes('function addWord') && src.includes('function removeWord') && src.includes('function clearWordbook') && src.includes('exportWordbookMd') && src.includes('function speakWord'));
 step('7.2-wordbook: wordbook modal in html', html1.includes('id="wordbook-modal"') && html1.includes('wordbook-open-btn'));
+step('7.2-sync: data export/import wired in JS', src.includes('function exportLocalDataJson') && src.includes('function importLocalData') && src.includes('collectLocalData'));
+step('7.2-sync: backup/restore buttons in html', html1.includes('data-sync-export-btn') && html1.includes('data-sync-import-btn'));
 process.exit(ok ? 0 : 1);
 """
 probe = probe.replace('__JSPATH__', os.path.abspath(js_path).replace('\\', '/'))

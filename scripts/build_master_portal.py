@@ -220,6 +220,7 @@ def build_portal():
       <div class="popover-controls-row">
         <button id="fullscreen-btn" class="popover-pill-btn" title="全屏沉浸阅读 (F)">⛶ 全屏沉浸</button>
         <button class="popover-pill-btn" id="data-sync-export-btn" title="导出全部本地数据（书签/高亮/生词/足迹）为 JSON，用于跨设备备份">📦 数据备份</button>
+        <button class="popover-pill-btn" id="data-sync-import-btn" title="从 JSON 备份恢复本地数据（跨设备迁移）">📥 恢复</button>
       </div>
     </div>
   </div>
