@@ -892,24 +892,23 @@ body.view-split .image-column { display: flex; }
   word-break: break-word;
   overflow-wrap: anywhere;
 }
-/* 单框双段：外层即唯一框（英文深 + 中文浅，实线分隔），不再框套框 */
+/* 单框双段：外层即唯一框，主题底色主导 + 文章色仅 9% 淡染（切换阅读主题即跟随），均匀细边框 */
 .segment-block.seg-card {
   border: 1px solid var(--border-soft);
-  border-left: 3px solid var(--issue-accent);
   border-radius: var(--radius-md);
-  background: transparent;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45), var(--shadow-sm);
+  background: color-mix(in srgb, var(--bg-card) 91%, var(--issue-accent) 9%);
+  box-shadow: var(--shadow-sm);
   overflow: hidden;
 }
 .segment-block.seg-card:hover { border-color: var(--border-strong); }
 .segment-block.seg-card.playing-active {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 2px var(--accent-soft), var(--shadow-md);
+  border-color: var(--issue-accent);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--issue-accent) 28%, transparent), var(--shadow-md);
 }
 
-/* 标题段：左侧色条 + 浅底，不套卡 */
-.segment-h3 { background: var(--bg-soft); border-left: 4px solid var(--accent); padding: 8px 14px; }
-.segment-h4 { border-left: 3px solid var(--accent-soft); padding: 6px 12px; }
+/* 标题段：左侧色条 + 浅底，不套卡（色条统一用文章主题色，保持全局协调） */
+.segment-h3 { background: var(--bg-soft); border-left: 4px solid var(--issue-accent); padding: 8px 14px; }
+.segment-h4 { border-left: 3px solid var(--issue-accent); padding: 6px 12px; }
 .segment-caption { background: transparent; border: none; box-shadow: none; }
 
 /* 羊皮纸质感英文主卡：随主题冷暖自适应底色 + 高光内描边，与透明中文辅读形成双卡层级 */
@@ -929,8 +928,7 @@ body.view-split .image-column { display: flex; }
   font-feature-settings: "kern" 1, "liga" 1;
   display: block;
   padding: 20px 22px;
-  background: color-mix(in srgb, var(--bg-card) 72%, var(--issue-accent) 28%);
-  transition: background var(--transition-fast);
+  background: transparent;
 }
 .en-text em { font-style: italic; }
 
@@ -942,11 +940,11 @@ body.view-split .image-column { display: flex; }
   background: transparent;
 }
 
-/* 中文段：同一框内的下半部分，实线分隔，底色较英文浅 */
+/* 中文段：同一框内的下半部分，实线分隔，底色较英文更浅（英文为主读） */
 .zh-text-card {
-  padding: 16px 22px 16px 18px;
+  padding: 14px 22px 18px 22px;
   border-top: 2px solid var(--issue-accent);
-  background: color-mix(in srgb, var(--bg-card) 86%, var(--issue-accent) 14%);
+  background: color-mix(in srgb, var(--bg-card) 95%, var(--issue-accent) 5%);
   font-family: var(--font-zh);
   font-size: var(--reader-font-scale);
   line-height: 1.75;
@@ -1851,7 +1849,7 @@ mark.page-highlight:hover { background: linear-gradient(180deg, transparent 45%,
   padding: 12px;
   border: 1px solid var(--border-soft);
   border-radius: var(--radius-md);
-  background: color-mix(in srgb, var(--bg-soft) 66%, var(--issue-accent) 20%);
+  background: color-mix(in srgb, var(--bg-soft) 88%, var(--issue-accent) 12%);
   text-align: center;
 }
 .embedded-figure-img {
