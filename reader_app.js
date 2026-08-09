@@ -29,6 +29,132 @@
   const STORAGE_KEY_FONT = 'atlantic_reader_font_mode';
   const STORAGE_KEY_BOOKMARKS_PREFIX = 'atlantic_reader_bookmarks_';
   const STORAGE_KEY_ISSUE = 'atlantic_reader_issue';
+  const STORAGE_KEY_HISTORY = 'atlantic_reader_history_log';
+
+  // Reading History Management Engine
+  function getHistoryList() {
+    try {
+      return JSON.parse(localStorage.getItem(STORAGE_KEY_HISTORY)) || [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  function saveHistoryList(list) {
+    localStorage.setItem(STORAGE_KEY_HISTORY, JSON.stringify(list));
+    renderContinueReadingBanner();
+    renderHistoryTab();
+  }
+
+  function formatTimeAgo(timestamp) {
+    if (!timestamp) return '刚刚';
+    const diff = Math.floor((Date.now() - timestamp) / 1000);
+    if (diff < 60) return '刚刚';
+    if (diff < 3600) return `${Math.floor(diff / 60)} 分钟前`;
+    if (diff < 86400) return `${Math.floor(diff / 3600)} 小时前`;
+    if (diff < 2592000) return `${Math.floor(diff / 86400)} 天前`;
+    const d = new Date(timestamp);
+    return `${d.getMonth() + 1}月${d.getDate()}日`;
+  }
+
+  function recordReadingHistory(issueId, pageNum, sectionTitle) {
+    if (!issueId || !pageNum) return;
+    const issueMeta = allIssues[issueId] || { displayName: `The Atlantic · ${issueId}`, totalPages: 104 };
+    const total = issueMeta.totalPages || 104;
+    const progressPct = Math.min(100, Math.max(1, Math.round((pageNum / total) * 100)));
+
+    let history = getHistoryList().filter(h => h.issueId !== issueId);
+    history.unshift({
+      issueId: issueId,
+      issueName: issueMeta.displayName || issueId,
+      page: pageNum,
+      totalPages: total,
+      progress: progressPct,
+      sectionTitle: sectionTitle ? sanitize(sectionTitle) : `Page ${pageNum}`,
+      timestamp: Date.now()
+    });
+
+    if (history.length > 50) history.pop();
+    saveHistoryList(history);
+  }
+
+  function renderContinueReadingBanner() {
+    const heroEl = document.getElementById('continue-reading-hero');
+    if (!heroEl) return;
+    const history = getHistoryList();
+    if (!history || history.length === 0) {
+      heroEl.style.display = 'none';
+      return;
+    }
+
+    const latest = history[0];
+    heroEl.style.display = 'flex';
+    heroEl.innerHTML = `
+      <div class="continue-left">
+        <span class="continue-badge">⏱️ 最近在读 · 进度 ${latest.progress}%</span>
+        <h4>${latest.issueName}</h4>
+        <p>上次读到：第 ${latest.page} 页 · ${latest.sectionTitle} (${formatTimeAgo(latest.timestamp)})</p>
+      </div>
+      <button class="continue-btn" title="一键直达断点继续阅读">
+        <span>继续阅读</span>
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
+      </button>
+    `;
+    heroEl.onclick = () => {
+      enterReaderRoom(latest.issueId, latest.page);
+    };
+  }
+
+  function renderHistoryTab() {
+    const listEl = document.getElementById('history-timeline-list');
+    const countEl = document.getElementById('history-count');
+    if (!listEl) return;
+
+    const history = getHistoryList();
+    if (countEl) countEl.textContent = `${history.length} 条阅读足迹`;
+
+    listEl.innerHTML = '';
+    if (history.length === 0) {
+      listEl.innerHTML = '<div class="bookmark-empty-hint">暂无阅读历史，翻阅期刊时系统将自动实时记录您的阅读足迹</div>';
+      return;
+    }
+
+    history.forEach(item => {
+      const card = document.createElement('div');
+      card.className = 'history-item';
+      card.innerHTML = `
+        <div class="history-item-top">
+          <span class="history-page-badge">P${item.page} · ${item.progress}%</span>
+          <span class="history-time-tag">${formatTimeAgo(item.timestamp)}</span>
+        </div>
+        <div class="history-title">${item.sectionTitle}</div>
+        <div class="history-issue-tag">${item.issueName}</div>
+        <div class="history-progress-track">
+          <div class="history-progress-fill" style="width: ${item.progress}%"></div>
+        </div>
+      `;
+      card.addEventListener('click', () => {
+        enterReaderRoom(item.issueId, item.page);
+        if (window.innerWidth <= 960 && sidebar) {
+          sidebar.classList.add('collapsed');
+        }
+      });
+      listEl.appendChild(card);
+    });
+  }
+
+  // Clear History Handler
+  const clearHistoryBtn = document.getElementById('clear-history-btn');
+  if (clearHistoryBtn) {
+    clearHistoryBtn.addEventListener('click', () => {
+      if (confirm('确定要清空全部阅读历史足迹吗？')) {
+        localStorage.removeItem(STORAGE_KEY_HISTORY);
+        renderContinueReadingBanner();
+        renderHistoryTab();
+        showHUDToast('🗑️ 阅读历史足迹已清空');
+      }
+    });
+  }
 
   // HUD Toast Trigger
   function showHUDToast(msg) {
@@ -513,13 +639,45 @@
       articleBody.innerHTML = '';
       if (!pageObj.segments || pageObj.segments.length === 0) {
         articleBody.innerHTML = `
-          <div class="segment-block segment-paragraph">
-            <div class="en-text">[Full-bleed illustration, photo portfolio or editorial art page]</div>
-            <div class="zh-text-card">
-              <div>【本页主要为全版摄影作品、插图画作或整版赞助专页】</div>
+          <div class="embedded-art-card">
+            <div class="embedded-art-img-wrap" onclick="const lb = document.getElementById('open-lightbox'); if(lb) lb.click();">
+              <img src="${pageObj.image}" alt="Original Page Scan" class="embedded-art-img">
+              <span class="embedded-art-zoom-hint">🔍 点击查看 150 DPI 高清全屏原图</span>
+            </div>
+            <div class="segment-block segment-caption">
+              <div class="en-text" lang="en">The Atlantic — ${currentIssueObj.displayName} (Page ${pageNum})</div>
+              <div class="zh-text-card" lang="zh-CN"><div>《大西洋月刊》${currentIssueObj.displayName}（第 ${pageNum} 页原版图版）</div></div>
             </div>
           </div>
         `;
+      } else if (pageObj.segments.length === 1 && pageObj.segments[0].type === 'caption') {
+        const seg = pageObj.segments[0];
+        const cleanEn = sanitize(seg.en);
+        const cleanZh = sanitize(seg.zh);
+        articleBody.innerHTML = `
+          <div class="embedded-art-card">
+            <div class="embedded-art-img-wrap" onclick="const lb = document.getElementById('open-lightbox'); if(lb) lb.click();">
+              <img src="${pageObj.image}" alt="Original Page Scan" class="embedded-art-img">
+              <span class="embedded-art-zoom-hint">🔍 点击查看 150 DPI 高清全屏原图</span>
+            </div>
+            <div class="segment-block segment-caption" id="seg-0">
+              <div class="en-text" lang="en" title="轻点原声朗读 (再次点击暂停)"><em>${cleanEn}</em></div>
+              <div class="zh-text-card" lang="zh-CN"><div><em>${cleanZh}</em></div></div>
+            </div>
+          </div>
+        `;
+        const enCard = articleBody.querySelector('.en-text');
+        if (enCard) {
+          enCard.addEventListener('click', (e) => {
+            const segDiv = enCard.closest('.segment-block');
+            if (segDiv && segDiv.classList.contains('playing-active') && isPlayingAudio) {
+              stopSpeech();
+              showHUDToast('⏸ 朗读已暂停');
+            } else if (segDiv) {
+              playParagraphSpeech(cleanEn, segDiv);
+            }
+          });
+        }
       } else {
         pageObj.segments.forEach((seg, idx) => {
           const segDiv = document.createElement('div');
@@ -615,6 +773,9 @@
 
     // Apply current global equal font size
     applyGlobalFontSize();
+
+    // Record Reading History & Footprint in LocalStorage
+    recordReadingHistory(currentIssueId, pageNum, pageObj.section);
 
     // Trigger Smart Bidirectional TOC & Thumbnail Active Follower with Vertical Golden Centering
     syncSidebarActiveState(pageNum);
@@ -803,6 +964,11 @@
       const pane = document.getElementById(`tab-${btn.dataset.tab}`);
       if (pane) {
         pane.classList.add('active');
+        if (btn.dataset.tab === 'history') {
+          renderHistoryTab();
+        } else if (btn.dataset.tab === 'bookmarks') {
+          renderBookmarksTab();
+        }
         syncSidebarActiveState(currentPage);
       }
     });

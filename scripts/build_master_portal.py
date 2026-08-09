@@ -25,7 +25,7 @@ def build_portal():
 <body class="theme-light view-interlinear align-mode-flush">
 
   <!-- ==========================================================================
-       1. APPLE NEWS+ DIGITAL MAGAZINE LIBRARY PORTAL (全刊库首页 + 矩阵筛选 + 全库检索)
+       1. APPLE NEWS+ DIGITAL MAGAZINE LIBRARY PORTAL (全刊库首页 + 矩阵筛选 + 全库检索 + 最近在读)
        ========================================================================== -->
   <div id="library-portal-view" class="library-portal-view">
     <header class="portal-header">
@@ -45,6 +45,9 @@ def build_portal():
       <span class="portal-hero-badge">DIGITAL BESPOKE ARCHIVE</span>
       <h2>精选典藏期刊库</h2>
       <p>依托 1:1 印刷排版首行缩进解析、真实作者段落集与 22px 英文微浮雕卡片，汇聚全球顶级政经、文学与前沿科技思想典籍。</p>
+
+      <!-- Continue Reading Hero Banner (Auto-Populated from LocalStorage History) -->
+      <div id="continue-reading-hero" class="continue-reading-hero" style="display: none;"></div>
       
       <!-- Home Portal Global Multi-Issue Instant Search -->
       <div class="portal-search-wrap">
@@ -237,6 +240,7 @@ def build_portal():
       <div class="sidebar-tabs">
         <button class="tab-btn active" data-tab="toc">目录导航</button>
         <button class="tab-btn" data-tab="pages">缩略图</button>
+        <button class="tab-btn" data-tab="history">⏱️ 历史</button>
         <button class="tab-btn" data-tab="bookmarks">书签</button>
         <button class="tab-btn" data-tab="search-results" id="search-tab" style="display:none;">检索</button>
         <button class="sidebar-close-btn" id="close-sidebar-btn" onclick="window.toggleSidebar(event)" title="收起目录 (T / Esc)">✕ 收起</button>
@@ -254,6 +258,15 @@ def build_portal():
           <button id="quick-jump-go">跳转</button>
         </div>
         <div class="pages-grid" id="pages-grid"></div>
+      </div>
+
+      <!-- Tab Content: Reading History Footprints Timeline -->
+      <div class="tab-pane" id="tab-history">
+        <div class="history-pane-header">
+          <span class="history-count" id="history-count">0 条阅读足迹</span>
+          <button id="clear-history-btn" class="clear-history-btn" title="清空全部历史足迹">🗑️ 清空</button>
+        </div>
+        <div class="history-timeline-list" id="history-timeline-list"></div>
       </div>
 
       <!-- Tab Content: Bookmarks -->
@@ -406,7 +419,7 @@ def build_portal():
     with open('reader.html', 'w', encoding='utf-8') as f:
         f.write(html_content)
 
-    print("Master portal compiled successfully with Desktop Audio Speed Pill Outside & Memory Engine!")
+    print("Master portal compiled successfully with Reading History Architecture!")
 
 if __name__ == '__main__':
     build_portal()
