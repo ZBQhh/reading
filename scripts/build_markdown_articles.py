@@ -4,7 +4,7 @@
 build_markdown_articles.py — Project B 数据源生成器（与 PDF 解析项目相互独立）。
 
 职责（与用户约定）：
-- 数据源：用户自行整理的 Markdown 文章目录（默认 D:\\Desktop\\md文件\\TheAtlantic，
+- 数据源：用户自行整理的 Markdown 文章目录（默认 D:\\Desktop\\reading\\reading data\\TheAtlantic，
   可用环境变量 MD_ARTICLES_ROOT 覆盖）。每篇一个 .md，结构与示例一致：
     ---
     title / author / date / website / month / source / saved_at
@@ -34,7 +34,7 @@ import sys
 # ----------------------------------------------------------------- 路径
 HERE = os.path.dirname(os.path.abspath(__file__))
 PROJECT_ROOT = os.path.dirname(HERE)
-DEFAULT_MD_ROOT = r"D:\Desktop\md文件\TheAtlantic"
+DEFAULT_MD_ROOT = r"D:\Desktop\reading\reading data\TheAtlantic"
 MANUAL_ASSETS = os.path.join(PROJECT_ROOT, "manual_assets")
 OUT_JSON = os.path.join(PROJECT_ROOT, "manual_issues.json")
 
@@ -217,6 +217,9 @@ def copy_article_assets(month_dir, asset_folders):
 
     关键点：asset 子目录名以 md 内图片引用为准（保留原始大小写/下划线），
     而非 slugify 后的 basename，避免二者不一致导致复制静默失败、图片 404。
+
+    覆盖策略：用 copytree(dirs_exist_ok=True) 直接覆盖，避免 rmtree 触发
+    沙箱安全删除拦截（其回收站操作在 workspace 内会失败）。
     """
     for folder in asset_folders:
         src = os.path.join(month_dir, "assets", folder)
@@ -224,9 +227,7 @@ def copy_article_assets(month_dir, asset_folders):
         if not os.path.isdir(src):
             print("[markdown]   ⚠ 资源目录缺失，跳过：%s" % src)
             continue
-        if os.path.isdir(dst):
-            shutil.rmtree(dst)
-        shutil.copytree(src, dst)
+        shutil.copytree(src, dst, dirs_exist_ok=True)
 
 
 # ----------------------------------------------------------------- 主流程
@@ -239,9 +240,7 @@ def build():
             json.dump({}, f, ensure_ascii=False, indent=2)
         return {}
 
-    # 清空并重建 manual_assets
-    if os.path.isdir(MANUAL_ASSETS):
-        shutil.rmtree(MANUAL_ASSETS)
+    # 准备 manual_assets 目录（不整体 rmtree，避免触发沙箱安全删除拦截）
     os.makedirs(MANUAL_ASSETS, exist_ok=True)
 
     issues = {}
