@@ -34,8 +34,12 @@ def build_portal():
         <p>Private Bespoke Digital Archive &bull; 双语私享数字期刊典藏馆</p>
       </div>
       <div class="portal-controls">
+        <button class="shelf-enter-btn feature-start-btn" onclick="window.enterReaderRoom('2026-08', 16)" style="background: var(--accent-gold); color: #121316; font-weight: 800;" title="直接跳过刊头广告与目录，秒进8万字重磅正文特稿专区">
+          <span>📖 直达重磅特稿 (P16: 阅读的终结)</span>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
+        </button>
         <button class="shelf-enter-btn" onclick="window.enterReaderRoom('2026-08', 1)">
-          <span>快速进入 8月刊</span>
+          <span>从封面开始 (P1)</span>
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
         </button>
       </div>
@@ -248,6 +252,11 @@ def build_portal():
 
       <!-- Tab Content: TOC -->
       <div class="tab-pane active" id="tab-toc">
+        <div class="toc-filter-bar" id="toc-filter-bar">
+          <button class="toc-filter-btn active" data-filter="all">全部</button>
+          <button class="toc-filter-btn" data-filter="article">📖 仅看长文特稿</button>
+          <button class="toc-filter-btn" data-filter="visual">🎨 视觉图版</button>
+        </div>
         <ul class="toc-list" id="toc-list"></ul>
       </div>
 
@@ -419,7 +428,7 @@ def build_portal():
     with open('reader.html', 'w', encoding='utf-8') as f:
         f.write(html_content)
 
-    print("Master portal compiled successfully with Reading History Architecture!")
+    print("Master portal compiled successfully with TOC Filter Bar & Feature Fast-Track!")
 
 if __name__ == '__main__':
     build_portal()

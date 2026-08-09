@@ -527,20 +527,29 @@
     });
   }
 
-  // Initialize TOC
+  // Initialize TOC with Categorized Badges (Deep Long-Form Articles vs Visual Spreads)
   function initTOC() {
     if (tocList) {
       tocList.innerHTML = '';
       data.forEach((pageObj, idx) => {
         const pNum = idx + 1;
         if (pageObj.section && pageObj.section.trim()) {
+          const totalChars = (pageObj.segments || []).reduce((acc, s) => acc + (s.en ? s.en.length : 0), 0);
+          const isArticle = totalChars >= 350 || (pageObj.segments && pageObj.segments.length >= 3);
+          const isCover = pNum <= 4 || (pageObj.section.includes('Cover') && !pageObj.section.includes('Story'));
+          
+          let badgeType = isArticle ? 'badge-article' : (isCover ? 'badge-cover' : 'badge-visual');
+          let badgeLabel = isArticle ? '📖 深度长文' : (isCover ? '🏛️ 封面/刊头' : '🎨 视觉图版');
+
           const li = document.createElement('li');
-          li.className = 'toc-item';
+          li.className = `toc-item ${isArticle ? 'type-article' : 'type-visual'}`;
           li.id = `toc-item-p-${pNum}`;
           li.dataset.page = pNum;
+          li.dataset.type = isArticle ? 'article' : 'visual';
           li.innerHTML = `
             <div class="toc-item-header">
               <span>PAGE ${String(pNum).padStart(3, '0')}</span>
+              <span class="toc-type-badge ${badgeType}">${badgeLabel}</span>
             </div>
             <div class="toc-item-title">${sanitize(pageObj.section)}</div>
           `;
@@ -561,6 +570,23 @@
         pagesGrid.appendChild(tile);
       }
     }
+
+    // Filter Bar in TOC (All vs Long-form Articles vs Visual Art)
+    document.querySelectorAll('.toc-filter-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        document.querySelectorAll('.toc-filter-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        const filter = btn.dataset.filter;
+        document.querySelectorAll('#toc-list .toc-item').forEach(item => {
+          if (filter === 'all' || item.dataset.type === filter) {
+            item.style.display = 'block';
+          } else {
+            item.style.display = 'none';
+          }
+        });
+      });
+    });
   }
 
   // Professional Publishing-Grade Vertical Golden Centering (block: 'center')

@@ -1221,6 +1221,65 @@ body.font-mode-serif {
   display: block;
 }
 
+/* TOC Categorization Filter Bar & Badges */
+.toc-filter-bar {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 8px;
+  padding: 0 2px;
+}
+
+.toc-filter-btn {
+  flex: 1;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 4px 6px;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: var(--transition-smooth);
+  white-space: nowrap;
+  text-align: center;
+}
+
+.toc-filter-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.toc-filter-btn.active {
+  background: var(--accent);
+  color: #ffffff;
+  border-color: var(--accent);
+}
+
+.toc-type-badge {
+  font-size: 9px;
+  font-weight: 700;
+  padding: 1px 5px;
+  border-radius: 4px;
+  letter-spacing: 0.2px;
+}
+
+.toc-type-badge.badge-article {
+  background: rgba(201, 138, 44, 0.15);
+  color: var(--accent-gold);
+  border: 0.5px solid var(--accent-gold);
+}
+
+.toc-type-badge.badge-visual {
+  background: var(--bg-hover);
+  color: var(--text-muted);
+  border: 0.5px solid var(--border-subtle);
+}
+
+.toc-type-badge.badge-cover {
+  background: var(--bg-hover);
+  color: var(--text-secondary);
+}
+
 .toc-list {
   list-style: none;
   display: flex;
