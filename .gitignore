@@ -32,3 +32,4 @@ code_review_report.html
 # Agent / Tool Workspace & Backups
 .workbuddy/
 _backups/
+node_modules/

@@ -1,0 +1,18 @@
+{
+  "name": "atlantic-reader",
+  "private": true,
+  "version": "2.5.0",
+  "description": "The Atlantic & Global Journals — Private Bespoke Bilingual Digital Reader",
+  "scripts": {
+    "build": "python scripts/build_master_portal.py",
+    "lint": "eslint assets/js/",
+    "test": "python scripts/stress_test_engine.py",
+    "smoke": "node scripts/functional_smoke.js",
+    "audit": "node scripts/browser_layout_audit.js",
+    "check": "node --check assets/js/reader_app.js"
+  },
+  "devDependencies": {
+    "eslint": "^9.39.5",
+    "playwright-core": "^1.62.1"
+  }
+}

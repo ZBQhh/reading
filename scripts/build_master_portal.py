@@ -1,11 +1,35 @@
-import os
+﻿import os
 import json
-import shutil
+import re
+import secrets
+
+def resolve_version():
+    """VERSION 单一事实源：从 CHANGELOG.md 顶部 `## [x.y.z]` 解析（v2.5 起构建注入）。"""
+    try:
+        with open('CHANGELOG.md', 'r', encoding='utf-8') as f:
+            head = f.read(2000)
+        m = re.search(r'##\s*\[\s*(\d+\.\d+\.\d+)\s*\]', head)
+        if m:
+            return m.group(1)
+    except OSError:
+        pass
+    return '2.5.0'
 
 def build_portal():
     with open('assets/data/magazines.json', 'r', encoding='utf-8') as f:
         all_issues = json.load(f)
-    
+    build_version = resolve_version()
+    nonce = secrets.token_hex(16)
+    csp = (
+        "default-src 'self'; "
+        "script-src 'self' 'nonce-" + nonce + "'; "
+        "style-src 'self' 'unsafe-inline'; "
+        "img-src 'self' data: blob:; "
+        "font-src 'self'; "
+        "connect-src 'self'; "
+        "media-src 'self' blob:"
+    )
+
     html_content = f"""<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -13,6 +37,8 @@ def build_portal():
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta http-equiv="Content-Security-Policy" content="{csp}">
+  <meta name="build-version" content="{build_version}">
   <title>The Atlantic & Global Journals — Private Bespoke Reader | 顶级期刊双语私享数字典藏</title>
   <link rel="stylesheet" href="assets/css/reader_style.css">
 </head>
@@ -476,11 +502,12 @@ def build_portal():
     </div>
   </div>
 
-  <script>
+  <script nonce="{nonce}">
     // Embedded Multi-Issue Archive
     window.ALL_ISSUES = {json.dumps(all_issues, ensure_ascii=False).replace('</', '<\\/')};
+    window.BUILD_VERSION = '{build_version}';
   </script>
-  <script src="assets/js/reader_app.js"></script>
+  <script src="assets/js/reader_app.js" nonce="{nonce}"></script>
 </body>
 </html>"""
 

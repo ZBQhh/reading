@@ -1,4 +1,4 @@
-/* ============================================================================
+﻿/* ============================================================================
    The Atlantic — Grand Bespoke Digital Magazine Reader (v2.1 · 毒蛇锐评修复版)
    ----------------------------------------------------------------------------
    本轮修复（2026-08-09 · 对照 HARSH_REVIEW.md）：
@@ -68,7 +68,7 @@
     SWIPE_THRESHOLD_PX: 60,
     WORDBOOK_MAX: 500,
   };
-  const VERSION = '2.3.0';
+  const VERSION = window.BUILD_VERSION || '2.5.0';
   const allIssues = window.ALL_ISSUES || {};
 
   // ---------------------------------------------------------------- 状态
@@ -85,11 +85,9 @@
   let audioSpeed = readFloat(LS.speed, 1.0);
   let currentPlayingSegmentDiv = null;
   let isSerifMode = false;
-  let currentViewMode = lsGet(LS.view, 'interlinear');
   let isNavigating = false;
   let searchIndexCache = null;
   let ttsVoice = null;
-  let currentUtterance = null;
 
   const els = {};
 
@@ -99,12 +97,12 @@
     try {
       const v = localStorage.getItem(key);
       return v === null ? fallback : v;
-    } catch (e) {
+    } catch (_e) {
       return fallback;
     }
   }
   function lsSet(key, value) {
-    try { localStorage.setItem(key, value); } catch (e) { /* 隐私模式/配额满时静默降级 */ }
+    try { localStorage.setItem(key, value); } catch (_e) { /* 隐私模式/配额满时静默降级 */ }
   }
   function readFloat(key, fallback) {
     const v = parseFloat(lsGet(key, ''));
@@ -118,7 +116,7 @@
     try {
       const v = JSON.parse(lsGet(key, ''));
       return Array.isArray(v) ? v : fallback;
-    } catch (e) {
+    } catch (_e) {
       return fallback;
     }
   }
@@ -510,7 +508,7 @@
   }
 
   // ---------------------------------------------------------------- 目录
-  function isArticlePage(pageObj, pNum) {
+  function isArticlePage(pageObj) {
     const chars = (pageObj.segments || []).reduce(function (a, s) { return a + (s.en ? s.en.length : 0); }, 0);
     return chars >= 350 || (pageObj.segments && pageObj.segments.length >= 3);
   }
@@ -522,7 +520,7 @@
       data.forEach(function (pageObj, idx) {
         const pNum = idx + 1;
         if (!pageObj.section || !String(pageObj.section).trim()) return;
-        const isArticle = isArticlePage(pageObj, pNum);
+        const isArticle = isArticlePage(pageObj);
         const isCover = pNum <= 4 || (String(pageObj.section).indexOf('Cover') >= 0 && String(pageObj.section).indexOf('Story') < 0);
         const badge = isArticle ? 'badge-article' : (isCover ? 'badge-cover' : 'badge-visual');
         const label = isArticle ? '📖 深度长文' : (isCover ? '🏛️ 封面/刊头' : '🎨 视觉图版');
@@ -627,7 +625,6 @@
     u.onend = resetSpeechState;
     u.onerror = function () { resetSpeechState(); toast('⚠️ 朗读中断，请重试', 'warn'); };
     synth.speak(u);
-    currentUtterance = u;
   }
 
   function playParagraphSpeech(text, block) {
@@ -795,10 +792,10 @@
   // 选文高亮 + 全刊导出（毒舌 7.2：阅读闭环——高亮 → 导出 → 回顾）
   // ==================================================================
   function loadHighlights() {
-    try { return JSON.parse(localStorage.getItem(LS.highlights) || '[]'); } catch (e) { return []; }
+    try { return JSON.parse(localStorage.getItem(LS.highlights) || '[]'); } catch (_e) { return []; }
   }
   function saveHighlights(list) {
-    try { localStorage.setItem(LS.highlights, JSON.stringify(list)); } catch (e) { /* 配额满时静默 */ }
+    try { localStorage.setItem(LS.highlights, JSON.stringify(list)); } catch (_e) { /* 配额满时静默 */ }
   }
 
   /** 把 section 内的绝对字符偏移转换为 (文本节点, 节点内偏移) */
@@ -904,17 +901,15 @@
       mark.className = 'page-highlight';
       try {
         rg.surroundContents(mark);
-      } catch (e) {
+      } catch (_e) {
         try {
           const frag = rg.extractContents();
           mark.appendChild(frag);
           rg.insertNode(mark);
-        } catch (e2) { /* 跨元素选区过期，忽略重建 */ }
+        } catch (_e2) { /* 跨元素选区过期，忽略重建 */ }
       }
     });
   }
-
-  function countHighlights() { return loadHighlights().filter(function (h) { return h.issue === currentIssueId; }).length; }
 
   /** 导出全刊 Markdown（含本刊高亮节） */
   function exportAllMarkdown() {
@@ -995,7 +990,7 @@
         }).then(function (ok) {
           if (!ok) return;
           keys.forEach(function (k) {
-            try { localStorage.setItem(k, bag[k]); } catch (e) { /* 配额满时跳过 */ }
+            try { localStorage.setItem(k, bag[k]); } catch (_e) { /* 配额满时跳过 */ }
           });
           // 重置运行时状态以反映恢复的数据
           currentIssueId = lsGet(LS.issue, '');
@@ -1013,17 +1008,17 @@
           applyAlignMode(lsGet(LS.align, 'flush'));
           toast('✅ 备份导入成功（' + keys.length + ' 项）');
         });
-      } catch (e) {
-        toast('⚠️ 备份文件解析失败：' + e.message, 'error');
+      } catch (_e) {
+        toast('⚠️ 备份文件解析失败', 'error');
       }
     };
     reader.readAsText(file);
   }
   function loadWordbook() {
-    try { return JSON.parse(localStorage.getItem(LS.wordbook) || '[]'); } catch (e) { return []; }
+    try { return JSON.parse(localStorage.getItem(LS.wordbook) || '[]'); } catch (_e) { return []; }
   }
   function saveWordbook(list) {
-    try { localStorage.setItem(LS.wordbook, JSON.stringify(list.slice(0, HELD.WORDBOOK_MAX))); } catch (e) { /* 配额满时静默 */ }
+    try { localStorage.setItem(LS.wordbook, JSON.stringify(list.slice(0, HELD.WORDBOOK_MAX))); } catch (_e) { /* 配额满时静默 */ }
   }
   /** 取当前页含该词的 .en-text 片段作为语境（上限 120 字符） */
   function wordContext(word) {
@@ -1309,7 +1304,6 @@
   // ==================================================================
   function setViewMode(mode) {
     if (VIEW_MODES.indexOf(mode) < 0) mode = 'interlinear';
-    currentViewMode = mode;
     VIEW_MODES.forEach(function (m) { document.body.classList.remove('view-' + m); });
     document.body.classList.add('view-' + mode);
     lsSet(LS.view, mode);
@@ -1649,11 +1643,6 @@
             if (!isNaN(segIdx)) {
               const enEl = block.querySelector('.en-text');
               if (enEl) {
-                const walker = document.createTreeWalker(enEl, NodeFilter.SHOW_TEXT);
-                const all = [];
-                let n; while ((n = walker.nextNode())) all.push(n);
-                let start = 0; let cur = hlMark;
-                const offs = [];
                 let total = 0;
                 // 计算被包裹文本在目标容器（en/zh）文本流中的绝对偏移
                 const inZh = hlMark.closest('.zh-text-card') !== null;

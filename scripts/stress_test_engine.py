@@ -256,10 +256,17 @@ check('prefers-reduced-motion' in css_src, "reduced-motion accessibility guard p
 print("\n[TEST 6/6] Cross-validating every JS-$ referenced DOM hook exists in generated HTML...")
 with open('index.html', 'r', encoding='utf-8') as f:
     html_src = f.read()
-js_ids = set(re.findall(r"\$\('([^']+)'\)", js_src))
-js_ids = {i for i in js_ids if not i.startswith(('.', '#'))}
-missing_hooks = [i for i in js_ids if f'id="{i}"' not in html_src]
-check(not missing_hooks, f"all {len(js_ids)} JS-$ referenced hooks exist in index.html" + (f" (missing: {missing_hooks})" if missing_hooks else ""))
+# 声明式 ELS_BY_ID 映射表是唯一事实源：全部非空 id 必须真实存在于 DOM
+els_by_id = re.findall(r"(\w+):\s*'([a-z0-9-]+)'", js_src.split('const ELS_BY_ID')[1].split('};')[0])
+els_ids = {v for _, v in els_by_id}
+non_null_ids = sorted(i for i in els_ids if not i.startswith(('.', '#')))
+missing_hooks = [i for i in non_null_ids if f'id="{i}"' not in html_src]
+check(not missing_hooks, f"all {len(non_null_ids)} ELS_BY_ID hooks exist in index.html" + (f" (missing: {missing_hooks})" if missing_hooks else ""))
+# 另保留字面量 $('id') 直引兜底（legacy 直引也应真实存在）
+literal_ids = set(re.findall(r"\$\('([^']+)'\)", js_src))
+literal_ids = {i for i in literal_ids if not i.startswith(('.', '#'))}
+missing_lit = [i for i in literal_ids if f'id="{i}"' not in html_src]
+check(not missing_lit, f"all {len(literal_ids)} literal $('id') hooks exist in index.html" + (f" (missing: {missing_lit})" if missing_lit else ""))
 
 print("\n================================================================================")
 print(f"STRESS ENGINE COMPLETE: {PASS} passed / {FAIL} failed across 6 suites")
