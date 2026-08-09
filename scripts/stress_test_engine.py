@@ -211,6 +211,10 @@ step('7.2: export all-markdown module present', src.includes('function exportAll
 step('highlight float button bound on mouseup', src.includes('hl-float-btn') && src.includes("document.addEventListener('mouseup'"));
 step('E key triggers exportAllMarkdown', src.includes("code === 'KeyE'") && src.includes('exportAllMarkdown()'));
 step('export-all-btn wired into els map', src.includes("exportAllBtn: 'export-all-btn'"));
+step('7.4: self-hosted fonts via @font-face', cssSrc.includes("@font-face") && cssSrc.includes("newcm08-book.woff2") && cssSrc.includes("source-han-serif-sc-regular.woff2"));
+step('7.4: font refs point ../fonts/ (CSS-relative)', cssSrc.includes("url('../fonts/"));
+step('7.4: serif default mode', src.includes("lsGet(LS.font, 'serif')"));
+step('R-11: no Google Fonts anywhere', !cssSrc.includes('fonts.googleapis.com') && !cssSrc.includes('fonts.gstatic.com'));
 process.exit(ok ? 0 : 1);
 """
 probe = probe.replace('__JSPATH__', os.path.abspath(js_path).replace('\\', '/'))

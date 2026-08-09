@@ -82,13 +82,23 @@ button:focus:not(:focus-visible) { outline: none; }
   --max-reader-w: 1260px;
   --max-reader-w-split: 1900px;
 
-  --font-sans: 'Inter', 'Plus Jakarta Sans', 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif;
-  --font-serif: 'Merriweather', Georgia, 'Times New Roman', serif;
-  --font-serif-en: 'Merriweather', Georgia, 'Times New Roman', serif;
-  --font-serif-zh: 'Noto Serif SC', 'Songti SC', 'SimSun', serif;
-  --font-display: 'Cinzel', 'Times New Roman', serif;
-  --font-zh: 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+--font-sans: 'Inter', 'Plus Jakarta Sans', 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif;
+  /* 自托管出版级字体（毒舌 7.4：离线 + 出版级兼得，零 Google Fonts 请求）：
+     英文 NewCM08-Book / NewCM10-Bold（TeX 血统衬线）；中文思源宋体（按 2900 字子集化） */
+  --font-serif: 'NewCM08', 'Source Han Serif SC', 'Merriweather', Georgia, 'Times New Roman', serif;
+  --font-serif-en: 'NewCM08', 'Merriweather', Georgia, 'Times New Roman', serif;
+  --font-serif-zh: 'Source Han Serif SC', 'Noto Serif SC', 'Songti SC', 'SimSun', serif;
+  --font-display: 'NewCM08', 'Cinzel', 'Times New Roman', serif;
+  --font-zh: 'Source Han Serif SC', 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif;
 }
+
+/* 自托管 @font-face（assets/fonts/*.woff2，构建产物由 scripts/build_fonts.py 生成 · url 相对本 CSS 文件） */
+@font-face { font-family: 'NewCM08'; src: url('../fonts/newcm08-book.woff2') format('woff2'); font-weight: 400; font-style: normal; font-display: swap; }
+@font-face { font-family: 'NewCM08'; src: url('../fonts/newcm08-bookitalic.woff2') format('woff2'); font-weight: 400; font-style: italic; font-display: swap; }
+@font-face { font-family: 'NewCM08'; src: url('../fonts/newcm10-bold.woff2') format('woff2'); font-weight: 700; font-style: normal; font-display: swap; }
+@font-face { font-family: 'NewCM08'; src: url('../fonts/newcm10-bolditalic.woff2') format('woff2'); font-weight: 700; font-style: italic; font-display: swap; }
+@font-face { font-family: 'Source Han Serif SC'; src: url('../fonts/source-han-serif-sc-regular.woff2') format('woff2'); font-weight: 400; font-style: normal; font-display: swap; }
+@font-face { font-family: 'Source Han Serif SC'; src: url('../fonts/source-han-serif-sc-bold.woff2') format('woff2'); font-weight: 700; font-style: normal; font-display: swap; }
 
 /* L — 晨光白 */
 body.theme-light {
@@ -1431,6 +1441,16 @@ body.font-mode-serif .zh-text-card { font-family: var(--font-serif-zh); }
   .issue-pill-compact { display: inline; }
   .more-btn-label { display: none; }
   .view-controls .view-btn span { display: inline; }
+}
+
+@media (max-width: 1180px) {
+  .back-to-library-btn,
+  .icon-btn,
+  .more-menu-btn,
+  .audio-btn {
+    padding: 7px 9px;
+    gap: 4px;
+  }
 }
 
 @media (max-width: 900px) {

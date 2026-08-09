@@ -1583,8 +1583,8 @@
     applyTheme(initTheme);
     $$('.popover-theme-card').forEach(function (c) { c.classList.toggle('active', c.dataset.theme === initTheme); });
 
-    // 字体模式
-    if (lsGet(LS.font, 'sans') === 'serif') { isSerifMode = true; document.body.classList.add('font-mode-serif'); if (els.fontToggleBtn) els.fontToggleBtn.textContent = '🔠 典雅衬线'; }
+    // 字体模式（毒舌 7.4：自托管 NewCM08 + 思源宋体，默认即出版级衬线）
+    if (lsGet(LS.font, 'serif') === 'serif') { isSerifMode = true; document.body.classList.add('font-mode-serif'); if (els.fontToggleBtn) els.fontToggleBtn.textContent = '🔠 典雅衬线'; }
 
     // 视图 / 对齐还原
     setViewMode(lsGet(LS.view, 'interlinear'));
