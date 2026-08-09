@@ -37,6 +37,41 @@ PROJECT_ROOT = os.path.dirname(HERE)
 DEFAULT_MD_ROOT = r"D:\Desktop\reading\reading data\TheAtlantic"
 MANUAL_ASSETS = os.path.join(PROJECT_ROOT, "manual_assets")
 OUT_JSON = os.path.join(PROJECT_ROOT, "manual_issues.json")
+TRANSLATIONS_DIR = os.path.join(PROJECT_ROOT, "manual_translations")
+
+
+def load_translation(slug):
+    """读取与文章同名的译文侧车 manual_translations/<slug>.zh.json。
+
+    结构：{"paragraphs": [中文...按段落顺序], "captions": [中文图注...按嵌入式顺序]}。
+    该文件纳入 git，使译文在每次 `npm run build` 时都能被重新回填，
+    不会因 manual_issues.json 是构建产物而被覆盖丢失。
+    缺失则返回 None（文章保持 zh=null，等待 agent 翻译）。
+    """
+    p = os.path.join(TRANSLATIONS_DIR, slug + ".zh.json")
+    if not os.path.isfile(p):
+        return None
+    try:
+        with open(p, encoding="utf-8") as f:
+            return json.load(f)
+    except Exception as e:
+        print("[markdown]   ⚠ 译文侧车读取失败 %s: %s" % (p, e))
+        return None
+
+
+def apply_translation(segs, tr):
+    """按段落 / 嵌入式顺序回填 zh。返回 (填段数, 填图注数)。"""
+    para_zh = tr.get("paragraphs") or []
+    cap_zh = tr.get("captions") or []
+    pi = ci = 0
+    for s in segs:
+        if s.get("type") == "paragraph" and pi < len(para_zh):
+            s["zh"] = para_zh[pi]
+            pi += 1
+        elif s.get("type") == "embedded" and ci < len(cap_zh):
+            s["zh"] = cap_zh[ci]
+            ci += 1
+    return pi, ci
 
 
 def resolve_md_root(env_val):
@@ -282,6 +317,12 @@ def build():
                 if mm:
                     asset_folders.add(mm.group(1))
         copy_article_assets(month_dir, asset_folders)
+
+        # 回填译文侧车（若存在）：zh 按段落/嵌入式顺序填充
+        tr = load_translation(slug)
+        if tr:
+            pn, cn = apply_translation(segs, tr)
+            print("[markdown]   ✓ 译文回填 %d 段 / %d 图注" % (pn, cn))
 
         issue_id = "md-" + slug
         issues[issue_id] = {

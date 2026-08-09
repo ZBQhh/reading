@@ -1187,7 +1187,8 @@
       const fig = document.createElement("figure");
       fig.className = "embedded-figure";
       const cap = seg.caption ? toDisplayText(seg.caption) : "";
-      fig.innerHTML = '<img src="' + escHtml(seg.src) + '" class="embedded-figure-img" alt="' + escHtml(cap || seg.en || "") + '" loading="lazy" decoding="async">' + (cap ? '<figcaption class="embedded-figure-cap">' + cap + "</figcaption>" : "");
+      const capZh = seg.zh && String(seg.zh).trim() ? toDisplayText(seg.zh) : "";
+      fig.innerHTML = '<img src="' + escHtml(seg.src) + '" class="embedded-figure-img" alt="' + escHtml(cap || seg.en || "") + '" loading="lazy" decoding="async">' + (cap ? '<figcaption class="embedded-figure-cap">' + cap + (capZh ? ' <span class="embedded-figure-cap-zh" lang="zh-CN">' + capZh + "</span>" : "") + "</figcaption>" : "");
       imgWithWebFallback(fig.querySelector(".embedded-figure-img"));
       div.appendChild(fig);
       return div;

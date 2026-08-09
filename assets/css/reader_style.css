@@ -1883,3 +1883,12 @@ mark.page-highlight:hover { background: linear-gradient(180deg, transparent 45%,
   font-style: italic;
   text-align: left;
 }
+
+.embedded-figure-cap-zh {
+  display: block;
+  margin-top: 4px;
+  font-style: normal;
+  font-size: calc(var(--reader-font-scale) * 0.92);
+  line-height: 1.7;
+  color: color-mix(in srgb, var(--text-1) 70%, var(--issue-accent) 30%);
+}
