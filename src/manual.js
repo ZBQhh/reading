@@ -10,7 +10,7 @@
  * ==========================================================================*/
 
 import {
-  els, escHtml, toast, confirmDialog, lsSet, readJson,
+  els, escHtml, toast, confirmDialog, lsSet, readJson, countEnglishWords,
 } from './core.js';
 import { enterReaderRoom } from './reader.js';
 
@@ -285,6 +285,22 @@ function doExportFromEditor(node) {
   toast('⤓ 已导出 JSON');
 }
 
+// 自建文章的稳定排序：markdown 构建产物(id 字典序) 在前，应用内草稿(id 字典序) 在后。
+// 既是货架顺序，也是「ARTICLE NNN」序号依据，保证刷新后序号稳定。
+export function getManualOrder() {
+  const mdMap = (typeof window !== 'undefined' && window.MANUAL_ISSUES) ? window.MANUAL_ISSUES : {};
+  const mdIds = Object.keys(mdMap).sort();
+  const draftIds = Object.keys(loadManualArticles()).sort();
+  return mdIds.concat(draftIds);
+}
+// 返回某篇自建文章在序列中的序号 {index, total}；非自建返回 null。
+export function getManualArticleOrdinal(id) {
+  const order = getManualOrder();
+  const idx = order.indexOf(id);
+  if (idx < 0) return null;
+  return { index: idx + 1, total: order.length };
+}
+
 // 书架中手建文章分组的增量重渲染（由 ui.js 的 renderLibraryShelf 调用）
 export function renderManualShelfSection() {
   const grid = els.magazineShelfGrid;
@@ -295,14 +311,16 @@ export function renderManualShelfSection() {
   const draftMap = loadManualArticles();
   const draftIds = Object.keys(draftMap);
 
-  let section = grid.querySelector('#manual-shelf-section');
+  // 始终置顶：放在期刊网格「之前」（页面最上方、筛选器之下）。
+  // 用 getElementById 复用唯一分区，避免每次重渲染累积重复 DOM 节点（旧逻辑用 grid.querySelector 永远找不到兄弟节点）。
+  let section = document.getElementById('manual-shelf-section');
   if (!section) {
     section = document.createElement('div');
     section.id = 'manual-shelf-section';
     section.className = 'shelf-section';
-    grid.parentNode.insertBefore(section, grid.nextSibling);
+    grid.parentNode.insertBefore(section, grid);
   }
-  section.innerHTML = '<div class="shelf-section-title">📝 自建文库 · Markdown ' + mdIds.length + ' 篇 · 草稿 ' + draftIds.length + '</div>';
+  section.innerHTML = '<div class="shelf-section-title">⭐ 自选文章（置顶） · Markdown ' + mdIds.length + ' 篇 · 草稿 ' + draftIds.length + '</div>';
   const frag = document.createDocumentFragment();
 
   // —— Project B：markdown 自建文章（文件驱动，无删除/编辑，仅阅读 + 导出备份）——
@@ -324,6 +342,7 @@ export function renderManualShelfSection() {
       '<h3>' + escHtml(a.displayName || id) + '</h3>' +
       '<p>' + escHtml(a.author ? ('作者：' + a.author) : (a.website || '自建文章')) + '</p>' +
       '<div class="shelf-meta-tags">' +
+      '<span class="meta-tag">🔤 ' + countEnglishWords(a) + ' 词</span>' +
       '<span class="meta-tag">📄 单页流式</span>' +
       (a.source ? '<span class="meta-tag">🔗 来源</span>' : '') +
       '</div></div>' +
@@ -352,7 +371,8 @@ export function renderManualShelfSection() {
       '<h3>' + escHtml(a.displayName || id) + '</h3>' +
       '<p>' + escHtml(a.author ? ('作者：' + a.author) : '手动录入文章') + '</p>' +
       '<div class="shelf-meta-tags">' +
-      '<span class="meta-tag">🔤 单语/双语</span>' +
+      '<span class="meta-tag">🔤 ' + countEnglishWords(a) + ' 词</span>' +
+      '<span class="meta-tag">✎ 单语/双语</span>' +
       (a.sourceUrl ? '<span class="meta-tag">🔗 来源</span>' : '') +
       '</div></div>' +
       '<div class="shelf-manual-actions">' +

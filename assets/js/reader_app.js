@@ -211,6 +211,19 @@
     if (typeof window === "undefined" || !window.MANUAL_ISSUES) return null;
     return window.MANUAL_ISSUES[id] || null;
   }
+  function countEnglishWords(issue) {
+    if (!issue || !Array.isArray(issue.pages)) return 0;
+    let total = 0;
+    issue.pages.forEach(function(page) {
+      (page.segments || []).forEach(function(seg) {
+        const en = seg && seg.en;
+        if (!en) return;
+        const m = String(en).match(/[A-Za-z]+(?:'[A-Za-z]+)*/g);
+        if (m) total += m.length;
+      });
+    });
+    return total;
+  }
 
   // src/speech.js
   function pickVoice() {
@@ -907,6 +920,18 @@
     saveManualArticles(map);
     toast("⤓ 已导出 JSON");
   }
+  function getManualOrder() {
+    const mdMap = typeof window !== "undefined" && window.MANUAL_ISSUES ? window.MANUAL_ISSUES : {};
+    const mdIds = Object.keys(mdMap).sort();
+    const draftIds = Object.keys(loadManualArticles()).sort();
+    return mdIds.concat(draftIds);
+  }
+  function getManualArticleOrdinal(id) {
+    const order = getManualOrder();
+    const idx = order.indexOf(id);
+    if (idx < 0) return null;
+    return { index: idx + 1, total: order.length };
+  }
   function renderManualShelfSection() {
     const grid = els.magazineShelfGrid;
     if (!grid) return;
@@ -914,14 +939,14 @@
     const mdIds = Object.keys(mdMap);
     const draftMap = loadManualArticles();
     const draftIds = Object.keys(draftMap);
-    let section = grid.querySelector("#manual-shelf-section");
+    let section = document.getElementById("manual-shelf-section");
     if (!section) {
       section = document.createElement("div");
       section.id = "manual-shelf-section";
       section.className = "shelf-section";
-      grid.parentNode.insertBefore(section, grid.nextSibling);
+      grid.parentNode.insertBefore(section, grid);
     }
-    section.innerHTML = '<div class="shelf-section-title">📝 自建文库 · Markdown ' + mdIds.length + " 篇 · 草稿 " + draftIds.length + "</div>";
+    section.innerHTML = '<div class="shelf-section-title">⭐ 自选文章（置顶） · Markdown ' + mdIds.length + " 篇 · 草稿 " + draftIds.length + "</div>";
     const frag = document.createDocumentFragment();
     mdIds.forEach(function(id) {
       const a = mdMap[id];
@@ -935,7 +960,7 @@
       const hasZh = segs.some(function(s) {
         return s.zh && String(s.zh).trim();
       });
-      card.innerHTML = '<div class="shelf-cover-wrap shelf-manual-cover" style="background:' + escHtml(color) + ';"><span class="shelf-manual-monogram">M</span></div><div class="shelf-details"><div class="shelf-details-top"><span class="issue-date-tag">Markdown · ' + segs.length + " 段" + (hasZh ? " · 已译" : " · 待译") + "</span><h3>" + escHtml(a.displayName || id) + "</h3><p>" + escHtml(a.author ? "作者：" + a.author : a.website || "自建文章") + '</p><div class="shelf-meta-tags"><span class="meta-tag">📄 单页流式</span>' + (a.source ? '<span class="meta-tag">🔗 来源</span>' : "") + '</div></div><div class="shelf-manual-actions"><button class="shelf-enter-btn" data-issue="' + escHtml(id) + '"><span>开始阅读</span></button><button class="manual-mini-btn" data-act="md-export" data-issue="' + escHtml(id) + '" aria-label="导出 JSON 备份">⤓</button></div></div>';
+      card.innerHTML = '<div class="shelf-cover-wrap shelf-manual-cover" style="background:' + escHtml(color) + ';"><span class="shelf-manual-monogram">M</span></div><div class="shelf-details"><div class="shelf-details-top"><span class="issue-date-tag">Markdown · ' + segs.length + " 段" + (hasZh ? " · 已译" : " · 待译") + "</span><h3>" + escHtml(a.displayName || id) + "</h3><p>" + escHtml(a.author ? "作者：" + a.author : a.website || "自建文章") + '</p><div class="shelf-meta-tags"><span class="meta-tag">🔤 ' + countEnglishWords(a) + ' 词</span><span class="meta-tag">📄 单页流式</span>' + (a.source ? '<span class="meta-tag">🔗 来源</span>' : "") + '</div></div><div class="shelf-manual-actions"><button class="shelf-enter-btn" data-issue="' + escHtml(id) + '"><span>开始阅读</span></button><button class="manual-mini-btn" data-act="md-export" data-issue="' + escHtml(id) + '" aria-label="导出 JSON 备份">⤓</button></div></div>';
       frag.appendChild(card);
     });
     draftIds.forEach(function(id) {
@@ -947,7 +972,7 @@
       card.dataset.issue = id;
       const segs = a.pages && a.pages[0] && a.pages[0].segments || [];
       const color = a.themeColor || DEFAULT_THEME;
-      card.innerHTML = '<div class="shelf-cover-wrap shelf-manual-cover" style="background:' + escHtml(color) + ';"><span class="shelf-manual-monogram">✎</span></div><div class="shelf-details"><div class="shelf-details-top"><span class="issue-date-tag">草稿 · ' + segs.length + " 段</span><h3>" + escHtml(a.displayName || id) + "</h3><p>" + escHtml(a.author ? "作者：" + a.author : "手动录入文章") + '</p><div class="shelf-meta-tags"><span class="meta-tag">🔤 单语/双语</span>' + (a.sourceUrl ? '<span class="meta-tag">🔗 来源</span>' : "") + '</div></div><div class="shelf-manual-actions"><button class="shelf-enter-btn" data-issue="' + escHtml(id) + '"><span>开始阅读</span></button><button class="manual-mini-btn" data-act="edit" data-issue="' + escHtml(id) + '" aria-label="编辑">✎</button><button class="manual-mini-btn" data-act="export" data-issue="' + escHtml(id) + '" aria-label="导出">⤓</button><button class="manual-mini-btn manual-mini-danger" data-act="delete" data-issue="' + escHtml(id) + '" aria-label="删除">🗑</button></div></div>';
+      card.innerHTML = '<div class="shelf-cover-wrap shelf-manual-cover" style="background:' + escHtml(color) + ';"><span class="shelf-manual-monogram">✎</span></div><div class="shelf-details"><div class="shelf-details-top"><span class="issue-date-tag">草稿 · ' + segs.length + " 段</span><h3>" + escHtml(a.displayName || id) + "</h3><p>" + escHtml(a.author ? "作者：" + a.author : "手动录入文章") + '</p><div class="shelf-meta-tags"><span class="meta-tag">🔤 ' + countEnglishWords(a) + ' 词</span><span class="meta-tag">✎ 单语/双语</span>' + (a.sourceUrl ? '<span class="meta-tag">🔗 来源</span>' : "") + '</div></div><div class="shelf-manual-actions"><button class="shelf-enter-btn" data-issue="' + escHtml(id) + '"><span>开始阅读</span></button><button class="manual-mini-btn" data-act="edit" data-issue="' + escHtml(id) + '" aria-label="编辑">✎</button><button class="manual-mini-btn" data-act="export" data-issue="' + escHtml(id) + '" aria-label="导出">⤓</button><button class="manual-mini-btn manual-mini-danger" data-act="delete" data-issue="' + escHtml(id) + '" aria-label="删除">🗑</button></div></div>';
       frag.appendChild(card);
     });
     const newCard = document.createElement("div");
@@ -982,6 +1007,9 @@
   function resolveIssue(id) {
     return allIssues[id] || getMarkdownArticle(id) || getManualArticle(id) || null;
   }
+  function isManualIssue(obj) {
+    return !!(obj && (obj.source === "manual" || obj.sourceType === "markdown"));
+  }
   function enterReaderRoom(issueId, targetPage) {
     const resolved = resolveIssue(issueId);
     if (!resolved) {
@@ -1014,7 +1042,8 @@
     const name = state.currentIssueObj.displayName || state.currentIssueObj.id;
     const full = pill.querySelector(".issue-pill-full");
     const compact = pill.querySelector(".issue-pill-compact");
-    if (full) full.textContent = "📅 " + name + " • " + state.currentIssueObj.totalPages + "P";
+    const wordCount = countEnglishWords(state.currentIssueObj);
+    if (full) full.textContent = "📅 " + name + " • " + state.currentIssueObj.totalPages + "P • 🔤 " + wordCount + " 词";
     if (compact) compact.textContent = "📅 " + String(state.currentIssueObj.id || "").replace("-", "/");
   }
   function nextIssueId() {
@@ -1082,7 +1111,7 @@
       item.className = "toc-item";
       if (p) item.dataset.page = p;
       item.setAttribute("role", "button");
-      item.innerHTML = '<div class="toc-item-header"><span>PAGE ' + String(p).padStart(3, "0") + '</span><span style="color:var(--accent-gold);">★ 书签</span></div><div class="toc-item-title">' + toDisplayText(pageObj.section) + "</div>";
+      item.innerHTML = '<div class="toc-item-header"><span>' + (isManualIssue(state.currentIssueObj) ? "ARTICLE " : "PAGE ") + String(p).padStart(3, "0") + '</span><span style="color:var(--accent-gold);">★ 书签</span></div><div class="toc-item-title">' + toDisplayText(pageObj.section) + "</div>";
       frag.appendChild(item);
     });
     listEl.appendChild(frag);
@@ -1111,7 +1140,7 @@
         li.dataset.type = isArticle ? "article" : "visual";
         li.setAttribute("role", "button");
         li.tabIndex = 0;
-        li.innerHTML = '<div class="toc-item-header"><span>PAGE ' + String(pNum).padStart(3, "0") + '</span><span class="toc-type-badge ' + badge + '">' + label + '</span></div><div class="toc-item-title">' + toDisplayText(pageObj.section) + "</div>";
+        li.innerHTML = '<div class="toc-item-header"><span>' + (isManualIssue(state.currentIssueObj) ? "ARTICLE " : "PAGE ") + String(pNum).padStart(3, "0") + '</span><span class="toc-type-badge ' + badge + '">' + label + '</span></div><div class="toc-item-title">' + toDisplayText(pageObj.section) + "</div>";
         frag.appendChild(li);
       });
       tocList.appendChild(frag);
@@ -1232,7 +1261,16 @@
     stopSpeech();
     preloadAdjacentPages(pageNum);
     const pageObj = state.data[pageNum - 1] || stubPage(pageNum);
-    if (els.currentPageBadge) els.currentPageBadge.textContent = "PAGE " + String(pageNum).padStart(3, "0") + " / " + state.currentIssueObj.totalPages;
+    if (els.currentPageBadge) {
+      if (isManualIssue(state.currentIssueObj)) {
+        const ord = getManualArticleOrdinal(state.currentIssueId);
+        const idx = ord ? ord.index : 1;
+        const tot = ord ? ord.total : 1;
+        els.currentPageBadge.textContent = "ARTICLE " + String(idx).padStart(3, "0") + " / " + String(tot).padStart(3, "0");
+      } else {
+        els.currentPageBadge.textContent = "PAGE " + String(pageNum).padStart(3, "0") + " / " + state.currentIssueObj.totalPages;
+      }
+    }
     if (els.currentSectionBadge) els.currentSectionBadge.textContent = toDisplayText(pageObj.section) || "The Atlantic (Page " + pageNum + ")";
     if (els.pageSlider) {
       els.pageSlider.max = state.currentIssueObj.totalPages;
@@ -1315,7 +1353,7 @@
       card.setAttribute("role", "button");
       card.setAttribute("tabindex", "0");
       card.dataset.issue = id;
-      card.innerHTML = '<div class="shelf-cover-wrap"><img src="' + escHtml(webpUrl(issue.coverImage)) + '" class="shelf-cover-img" alt="Cover ' + escHtml(issue.name) + '" loading="lazy" decoding="async"></div><div class="shelf-details"><div class="shelf-details-top"><span class="issue-date-tag">' + escHtml(issue.name) + " &bull; " + escHtml(issue.vol) + "</span><h3>" + escHtml(issue.pubName || "The Atlantic") + "</h3><p>" + escHtml(issue.leadArticle || "Bilingual Digital Archive") + '</p><div class="shelf-meta-tags"><span class="meta-tag">📖 ' + escHtml(issue.totalPages) + ' 页双语转录</span><span class="meta-tag">¶ ' + Math.round(state.globalFontScale) + 'px 大字逐段对照</span><span class="meta-tag">🔊 Web Speech TTS</span></div></div><button class="shelf-enter-btn" data-issue="' + escHtml(id) + '" aria-label="开始沉浸阅读 ' + escHtml(issue.name) + '"><span>开始沉浸阅读</span><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg></button></div>';
+      card.innerHTML = '<div class="shelf-cover-wrap"><img src="' + escHtml(webpUrl(issue.coverImage)) + '" class="shelf-cover-img" alt="Cover ' + escHtml(issue.name) + '" loading="lazy" decoding="async"></div><div class="shelf-details"><div class="shelf-details-top"><span class="issue-date-tag">' + escHtml(issue.name) + " &bull; " + escHtml(issue.vol) + "</span><h3>" + escHtml(issue.pubName || "The Atlantic") + "</h3><p>" + escHtml(issue.leadArticle || "Bilingual Digital Archive") + '</p><div class="shelf-meta-tags"><span class="meta-tag">🔤 ' + countEnglishWords(issue) + ' 词</span><span class="meta-tag">📖 ' + escHtml(issue.totalPages) + ' 页双语转录</span><span class="meta-tag">¶ ' + Math.round(state.globalFontScale) + 'px 大字逐段对照</span><span class="meta-tag">🔊 Web Speech TTS</span></div></div><button class="shelf-enter-btn" data-issue="' + escHtml(id) + '" aria-label="开始沉浸阅读 ' + escHtml(issue.name) + '"><span>开始沉浸阅读</span><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg></button></div>';
       const shelfCoverImg = card.querySelector(".shelf-cover-img");
       imgWithWebFallback(shelfCoverImg);
       frag.appendChild(card);

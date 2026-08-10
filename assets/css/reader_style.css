@@ -1824,7 +1824,7 @@ mark.page-highlight:hover { background: linear-gradient(180deg, transparent 45%,
   color: color-mix(in srgb, var(--accent) 80%, var(--text));
 }
 .shelf-section {
-  margin-top: 26px;
+  margin: 26px 0;
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
   gap: 22px;

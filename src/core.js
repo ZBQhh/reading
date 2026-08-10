@@ -247,3 +247,19 @@ export function getMarkdownArticle(id) {
   if (typeof window === 'undefined' || !window.MANUAL_ISSUES) return null;
   return window.MANUAL_ISSUES[id] || null;
 }
+
+// 统计一篇文章（或整刊）的英文单词总数：遍历 pages → segments → en 文本。
+// 用于书架卡片与阅读器药丸上的「🔤 N 词」统计。
+export function countEnglishWords(issue) {
+  if (!issue || !Array.isArray(issue.pages)) return 0;
+  let total = 0;
+  issue.pages.forEach(function (page) {
+    (page.segments || []).forEach(function (seg) {
+      const en = seg && seg.en;
+      if (!en) return;
+      const m = String(en).match(/[A-Za-z]+(?:'[A-Za-z]+)*/g);
+      if (m) total += m.length;
+    });
+  });
+  return total;
+}

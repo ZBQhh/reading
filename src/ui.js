@@ -4,7 +4,7 @@
  * ==========================================================================*/
 
 import {
-  state, els, LS, $, $$, allIssues, escHtml, toast, confirmDialog, readJson, lsSet,
+  state, els, LS, $, $$, allIssues, escHtml, toast, confirmDialog, readJson, lsSet, countEnglishWords,
   VIEW_MODES, THEMES, webpUrl, imgWithWebFallback,
 } from './core.js';
 import { loadHighlights, saveHighlights } from './highlight.js';
@@ -53,6 +53,7 @@ export function renderLibraryShelf() {
       '<h3>' + escHtml(issue.pubName || 'The Atlantic') + '</h3>' +
       '<p>' + escHtml(issue.leadArticle || 'Bilingual Digital Archive') + '</p>' +
       '<div class="shelf-meta-tags">' +
+      '<span class="meta-tag">🔤 ' + countEnglishWords(issue) + ' 词</span>' +
       '<span class="meta-tag">📖 ' + escHtml(issue.totalPages) + ' 页双语转录</span>' +
       '<span class="meta-tag">¶ ' + Math.round(state.globalFontScale) + 'px 大字逐段对照</span>' +
       '<span class="meta-tag">🔊 Web Speech TTS</span>' +

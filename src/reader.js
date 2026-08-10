@@ -6,18 +6,23 @@
 import {
   state, els, LS, $, $$, allIssues, escHtml, toast, lsGet, lsSet, readInt, readJson,
   webpUrl, webpSrcset, imgWithWebFallback, preloadAdjacentPages, smoothByPref, toDisplayText,
-  applyIssueAccent, getMarkdownArticle,
+  applyIssueAccent, getMarkdownArticle, countEnglishWords,
 } from './core.js';
 import { stopSpeech } from './speech.js';
 import { applyPageHighlights } from './highlight.js';
 import { recordReadingHistory } from './history.js';
 import { announce } from './a11y.js';
-import { getManualArticle } from './manual.js';
+import { getManualArticle, getManualArticleOrdinal } from './manual.js';
 
 // 三源解析：shipped 语料(ALL_ISSUES) → markdown 自建(MANUAL_ISSUES) → 应用内草稿(localStorage)
 // 两大独立数据项目（PDF 解析 / Markdown 自建）同入口、样式共用、仅数据来源不同
 export function resolveIssue(id) {
   return allIssues[id] || getMarkdownArticle(id) || getManualArticle(id) || null;
+}
+
+// 是否「自选/自建」文章：应用内草稿(source==='manual') 或 markdown 构建产物(sourceType==='markdown')
+function isManualIssue(obj) {
+  return !!(obj && (obj.source === 'manual' || obj.sourceType === 'markdown'));
 }
 
 // ==================================================================
@@ -55,7 +60,8 @@ export function refreshPill() {
   const name = state.currentIssueObj.displayName || state.currentIssueObj.id;
   const full = pill.querySelector('.issue-pill-full');
   const compact = pill.querySelector('.issue-pill-compact');
-  if (full) full.textContent = '📅 ' + name + ' • ' + state.currentIssueObj.totalPages + 'P';
+  const wordCount = countEnglishWords(state.currentIssueObj);
+  if (full) full.textContent = '📅 ' + name + ' • ' + state.currentIssueObj.totalPages + 'P • 🔤 ' + wordCount + ' 词';
   if (compact) compact.textContent = '📅 ' + String(state.currentIssueObj.id || '').replace('-', '/');
 }
 
@@ -115,7 +121,7 @@ export function renderBookmarksTab() {
     if (p) item.dataset.page = p;
     item.setAttribute('role', 'button');
     item.innerHTML =
-      '<div class="toc-item-header"><span>PAGE ' + String(p).padStart(3, '0') + '</span>' +
+      '<div class="toc-item-header"><span>' + (isManualIssue(state.currentIssueObj) ? 'ARTICLE ' : 'PAGE ') + String(p).padStart(3, '0') + '</span>' +
       '<span style="color:var(--accent-gold);">★ 书签</span></div>' +
       '<div class="toc-item-title">' + toDisplayText(pageObj.section) + '</div>';
     frag.appendChild(item);
@@ -147,7 +153,7 @@ export function initTOC() {
       li.setAttribute('role', 'button');
       li.tabIndex = 0;
       li.innerHTML =
-        '<div class="toc-item-header"><span>PAGE ' + String(pNum).padStart(3, '0') + '</span>' +
+        '<div class="toc-item-header"><span>' + (isManualIssue(state.currentIssueObj) ? 'ARTICLE ' : 'PAGE ') + String(pNum).padStart(3, '0') + '</span>' +
         '<span class="toc-type-badge ' + badge + '">' + label + '</span></div>' +
         '<div class="toc-item-title">' + toDisplayText(pageObj.section) + '</div>';
       frag.appendChild(li);
@@ -285,7 +291,17 @@ export function loadPage(pageNum) {
 
   const pageObj = state.data[pageNum - 1] || stubPage(pageNum);
 
-  if (els.currentPageBadge) els.currentPageBadge.textContent = 'PAGE ' + String(pageNum).padStart(3, '0') + ' / ' + state.currentIssueObj.totalPages;
+  if (els.currentPageBadge) {
+    if (isManualIssue(state.currentIssueObj)) {
+      // 自选/自建文章：用稳定序号显示「ARTICLE 001 / NNN」，强调它是独立的「文章」而非「某一刊的某一页」
+      const ord = getManualArticleOrdinal(state.currentIssueId);
+      const idx = ord ? ord.index : 1;
+      const tot = ord ? ord.total : 1;
+      els.currentPageBadge.textContent = 'ARTICLE ' + String(idx).padStart(3, '0') + ' / ' + String(tot).padStart(3, '0');
+    } else {
+      els.currentPageBadge.textContent = 'PAGE ' + String(pageNum).padStart(3, '0') + ' / ' + state.currentIssueObj.totalPages;
+    }
+  }
   if (els.currentSectionBadge) els.currentSectionBadge.textContent = toDisplayText(pageObj.section) || ('The Atlantic (Page ' + pageNum + ')');
   if (els.pageSlider) { els.pageSlider.max = state.currentIssueObj.totalPages; els.pageSlider.value = pageNum; }
   if (els.pageCounterText) els.pageCounterText.textContent = '第 ' + pageNum + ' / ' + state.currentIssueObj.totalPages + ' 页';
