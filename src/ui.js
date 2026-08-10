@@ -12,6 +12,9 @@ import { loadWordbook } from './wordbook.js';
 import { loadPage, enterReaderRoom } from './reader.js';
 import { renderManualShelfSection } from './manual.js';
 
+// 序号补零：1 → "01"，用于货架卡片角标（杂志 / 自选共用）。
+function padIndex(n) { return String(n).padStart(2, '0'); }
+
 // ==================================================================
 // 期刊馆
 // ==================================================================
@@ -27,6 +30,9 @@ export function renderLibraryShelf() {
     if (state.currentPubFilter === 'the-atlantic') return issue.pubId === 'the-atlantic' || !issue.pubId;
     return issue.pubId === state.currentPubFilter;
   });
+  // 杂志按 id(YYYY-MM) 升序（最早在前）；翻转时倒序（最新在前）
+  ids.sort(function (x, y) { return x < y ? -1 : (x > y ? 1 : 0); });
+  if (state.magazineNewestFirst) ids.reverse();
 
   if (ids.length === 0 && state.currentPubFilter !== 'manual') {
     grid.innerHTML =
@@ -37,16 +43,41 @@ export function renderLibraryShelf() {
     return;
   }
 
+  // 杂志标题行（位于网格顶部；筛选为「自选文库」时不渲染杂志网格）
+  if (state.currentPubFilter !== 'manual') {
+    const pubName = (state.currentPubFilter === 'all')
+      ? '杂志馆藏'
+      : ((allIssues[ids[0]] && allIssues[ids[0]].pubName) || state.currentPubFilter);
+    const flipLabel = state.magazineNewestFirst ? '⇅ 最早在前' : '⇅ 最新在前';
+    const flipActive = state.magazineNewestFirst ? ' active' : '';
+    const titleRow = document.createElement('div');
+    titleRow.className = 'shelf-section-title-row magazine-title-row';
+    titleRow.innerHTML =
+      '<span class="shelf-section-title">📚 ' + escHtml(pubName) + ' · ' + ids.length + ' 期</span>' +
+      '<div class="shelf-title-actions">' +
+      '<button type="button" class="shelf-flip-btn' + flipActive + '" data-act="flip-magazine" aria-pressed="' + String(state.magazineNewestFirst) + '">' + flipLabel + '</button>' +
+      '</div>';
+    grid.appendChild(titleRow);
+    const flipBtn = titleRow.querySelector('.shelf-flip-btn');
+    if (flipBtn) flipBtn.addEventListener('click', function (e) {
+      e.stopPropagation();
+      state.magazineNewestFirst = !state.magazineNewestFirst;
+      renderLibraryShelf();
+    });
+  }
+
   const frag = document.createDocumentFragment();
-  ids.forEach(function (id) {
+  ids.forEach(function (id, idx) {
     const issue = allIssues[id];
     const card = document.createElement('div');
     card.className = 'shelf-issue-card';
     card.setAttribute('role', 'button');
     card.setAttribute('tabindex', '0');
     card.dataset.issue = id;
+    const idxBadge = '<span class="shelf-card-index">' + padIndex(idx + 1) + '</span>';
     card.innerHTML =
       '<div class="shelf-cover-wrap">' +
+      idxBadge +
       '<img src="' + escHtml(webpUrl(issue.coverImage)) + '" class="shelf-cover-img" alt="Cover ' + escHtml(issue.name) + '" loading="lazy" decoding="async">' +
       '</div>' +
       '<div class="shelf-details"><div class="shelf-details-top">' +

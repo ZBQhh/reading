@@ -36,7 +36,7 @@ export const HELD = {
   WORDBOOK_MAX: 500,
 };
 
-export const VERSION = window.BUILD_VERSION || '2.6.17';
+export const VERSION = window.BUILD_VERSION || '2.6.18';
 export const allIssues = window.ALL_ISSUES || {};
 
 // DOM cache — populated once in main.js (ELS_BY_ID). Contents mutate; binding does not.
@@ -45,6 +45,8 @@ export const els = {};
 // Reassigned runtime state. Initialized here so every module shares one source.
 export const state = {
   currentPubFilter: 'all',
+  magazineNewestFirst: false, // 杂志列表「最新在前」翻转
+  manualNewestFirst: false,   // 自选文库「最新在前」翻转
   currentIssueId: lsGet(LS.issue, ''),
   currentIssueObj: null,
   data: [],

@@ -288,13 +288,31 @@ function doExportFromEditor(node) {
   toast('⤓ 已导出 JSON');
 }
 
-// 自建文章的稳定排序：markdown 构建产物(id 字典序) 在前，应用内草稿(id 字典序) 在后。
-// 既是货架顺序，也是「ARTICLE NNN」序号依据，保证刷新后序号稳定。
+// 自建文章排序：
+// - 默认（manualNewestFirst=false）：markdown 构建产物(id 字典序) 在前，应用内草稿(id 字典序) 在后。
+//   既是货架顺序，也是「ARTICLE NNN」序号依据，保证刷新后序号稳定。
+// - 翻转（manualNewestFirst=true）：按真实日期(YYYY-MM-DD) 统一倒序，md 与草稿交错，
+//   最新文章置顶（草稿无 date 字段时用 id 内嵌的时间戳兜底）。
 export function getManualOrder() {
   const mdMap = (typeof window !== 'undefined' && window.MANUAL_ISSUES) ? window.MANUAL_ISSUES : {};
-  const mdIds = Object.keys(mdMap).sort();
-  const draftIds = Object.keys(loadManualArticles()).sort();
-  return mdIds.concat(draftIds);
+  const draftMap = loadManualArticles();
+  const all = Object.keys(mdMap).concat(Object.keys(draftMap));
+  if (!state.manualNewestFirst) {
+    return Object.keys(mdMap).sort().concat(Object.keys(draftMap).sort());
+  }
+  const keyOf = function (id) {
+    const a = mdMap[id] || draftMap[id];
+    if (a && a.date) return a.date; // 'YYYY-MM-DD'
+    const m = /^manual-([0-9a-z]+)-/.exec(id || '');
+    if (m) { const ts = parseInt(m[1], 36); if (!isNaN(ts)) return new Date(ts).toISOString().slice(0, 10); }
+    return id || '';
+  };
+  all.sort(function (x, y) {
+    const kx = keyOf(x), ky = keyOf(y);
+    return kx < ky ? -1 : (kx > ky ? 1 : 0);
+  });
+  all.reverse();
+  return all;
 }
 // 返回某篇自建文章在序列中的序号 {index, total}；非自建返回 null。
 export function getManualArticleOrdinal(id) {
@@ -337,51 +355,25 @@ export function renderManualShelfSection() {
   const titleText = (filter === 'manual')
     ? '✍️ 自选文库（全部） · Markdown ' + mdIds.length + ' 篇 · 草稿 ' + draftIds.length
     : '⭐ 自选文章（置顶） · Markdown ' + mdIds.length + ' 篇 · 草稿 ' + draftIds.length;
+  const flipLabel = state.manualNewestFirst ? '⇅ 最早在前' : '⇅ 最新在前';
+  const flipActive = state.manualNewestFirst ? ' active' : '';
   section.innerHTML =
     '<div class="shelf-section-title-row">' +
     '<span class="shelf-section-title">' + titleText + '</span>' +
+    '<div class="shelf-title-actions">' +
+    '<button type="button" class="shelf-flip-btn' + flipActive + '" data-act="flip-manual" aria-pressed="' + String(state.manualNewestFirst) + '">' + flipLabel + '</button>' +
     '<button type="button" class="shelf-export-all-btn" data-act="export-all-self">⤓ 导出全部自选</button>' +
-    '</div>';
+    '</div></div>';
   const frag = document.createDocumentFragment();
 
-  // —— Project B：markdown 自建文章（文件驱动，无删除/编辑，仅阅读 + 导出备份）——
-  mdIds.forEach(function (id) {
-    const a = mdMap[id];
+  // 统一按 getManualOrder()（已含翻转逻辑）顺序渲染：markdown 与 草稿 交错，
+  // 卡片上的序号角标(getManualArticleOrdinal) 与视觉位置严格一致。
+  order.forEach(function (id) {
+    const isMd = !!mdMap[id];
+    const a = isMd ? mdMap[id] : draftMap[id];
+    if (!a) return;
     const card = document.createElement('div');
-    card.className = 'shelf-issue-card shelf-manual-card shelf-md-card';
-    card.setAttribute('role', 'button');
-    card.setAttribute('tabindex', '0');
-    card.dataset.issue = id;
-    const segs = (a.pages && a.pages[0] && a.pages[0].segments) || [];
-    const color = a.themeColor || DEFAULT_THEME;
-    const srcLabel = a.website || (a.source ? '外部来源' : '自建文章');
-    const ord = getManualArticleOrdinal(id);
-    const idxBadge = ord ? '<span class="shelf-manual-index">' + padIndex(ord.index) + '</span>' : '';
-    card.innerHTML =
-      '<div class="shelf-cover-wrap shelf-manual-cover" style="background:' + escHtml(color) + ';">' +
-      idxBadge +
-      '<span class="shelf-manual-monogram">M</span></div>' +
-      '<div class="shelf-details"><div class="shelf-details-top">' +
-      '<span class="issue-date-tag">Markdown · ' + segs.length + ' 段</span>' +
-      '<h3>' + escHtml(a.displayName || id) + '</h3>' +
-      '<p>' + escHtml(a.author ? ('作者：' + a.author) : ('来源：' + srcLabel)) + '</p>' +
-      '<div class="shelf-meta-tags">' +
-      '<span class="meta-tag">🔤 ' + countEnglishWords(a) + ' 词</span>' +
-      '<span class="meta-tag">📄 单页流式</span>' +
-      '<span class="meta-tag">🏷️ ' + escHtml(srcLabel) + '</span>' +
-      '</div></div>' +
-      '<div class="shelf-manual-actions">' +
-      '<button class="shelf-enter-btn" data-issue="' + escHtml(id) + '"><span>开始阅读</span></button>' +
-      '<button class="manual-mini-btn" data-act="md-export" data-issue="' + escHtml(id) + '" aria-label="导出 JSON 备份">⤓</button>' +
-      '</div></div>';
-    frag.appendChild(card);
-  });
-
-  // —— 应用内草稿（localStorage，可编辑/导出/删除）——
-  draftIds.forEach(function (id) {
-    const a = draftMap[id];
-    const card = document.createElement('div');
-    card.className = 'shelf-issue-card shelf-manual-card';
+    card.className = 'shelf-issue-card shelf-manual-card' + (isMd ? ' shelf-md-card' : '');
     card.setAttribute('role', 'button');
     card.setAttribute('tabindex', '0');
     card.dataset.issue = id;
@@ -389,25 +381,43 @@ export function renderManualShelfSection() {
     const color = a.themeColor || DEFAULT_THEME;
     const ord = getManualArticleOrdinal(id);
     const idxBadge = ord ? '<span class="shelf-manual-index">' + padIndex(ord.index) + '</span>' : '';
+    let actionsHtml, detailHtml;
+    if (isMd) {
+      const srcLabel = a.website || (a.source ? '外部来源' : '自建文章');
+      detailHtml =
+        '<span class="issue-date-tag">Markdown · ' + segs.length + ' 段</span>' +
+        '<h3>' + escHtml(a.displayName || id) + '</h3>' +
+        '<p>' + escHtml(a.author ? ('作者：' + a.author) : ('来源：' + srcLabel)) + '</p>' +
+        '<div class="shelf-meta-tags">' +
+        '<span class="meta-tag">🔤 ' + countEnglishWords(a) + ' 词</span>' +
+        '<span class="meta-tag">📄 单页流式</span>' +
+        '<span class="meta-tag">🏷️ ' + escHtml(srcLabel) + '</span>' +
+        '</div>';
+      actionsHtml =
+        '<button class="shelf-enter-btn" data-issue="' + escHtml(id) + '"><span>开始阅读</span></button>' +
+        '<button class="manual-mini-btn" data-act="md-export" data-issue="' + escHtml(id) + '" aria-label="导出 JSON 备份">⤓</button>';
+    } else {
+      detailHtml =
+        '<span class="issue-date-tag">草稿 · ' + segs.length + ' 段</span>' +
+        '<h3>' + escHtml(a.displayName || id) + '</h3>' +
+        '<p>' + escHtml(a.author ? ('作者：' + a.author) : '手动录入文章') + '</p>' +
+        '<div class="shelf-meta-tags">' +
+        '<span class="meta-tag">🔤 ' + countEnglishWords(a) + ' 词</span>' +
+        '<span class="meta-tag">🏷️ ' + escHtml(a.author || '手动录入') + '</span>' +
+        (a.sourceUrl ? '<span class="meta-tag">🔗 来源</span>' : '') +
+        '</div>';
+      actionsHtml =
+        '<button class="shelf-enter-btn" data-issue="' + escHtml(id) + '"><span>开始阅读</span></button>' +
+        '<button class="manual-mini-btn" data-act="edit" data-issue="' + escHtml(id) + '" aria-label="编辑">✎</button>' +
+        '<button class="manual-mini-btn" data-act="export" data-issue="' + escHtml(id) + '" aria-label="导出">⤓</button>' +
+        '<button class="manual-mini-btn manual-mini-danger" data-act="delete" data-issue="' + escHtml(id) + '" aria-label="删除">🗑</button>';
+    }
     card.innerHTML =
       '<div class="shelf-cover-wrap shelf-manual-cover" style="background:' + escHtml(color) + ';">' +
       idxBadge +
-      '<span class="shelf-manual-monogram">✎</span></div>' +
-      '<div class="shelf-details"><div class="shelf-details-top">' +
-      '<span class="issue-date-tag">草稿 · ' + segs.length + ' 段</span>' +
-      '<h3>' + escHtml(a.displayName || id) + '</h3>' +
-      '<p>' + escHtml(a.author ? ('作者：' + a.author) : '手动录入文章') + '</p>' +
-      '<div class="shelf-meta-tags">' +
-      '<span class="meta-tag">🔤 ' + countEnglishWords(a) + ' 词</span>' +
-      '<span class="meta-tag">🏷️ ' + escHtml(a.author || '手动录入') + '</span>' +
-      (a.sourceUrl ? '<span class="meta-tag">🔗 来源</span>' : '') +
-      '</div></div>' +
-      '<div class="shelf-manual-actions">' +
-      '<button class="shelf-enter-btn" data-issue="' + escHtml(id) + '"><span>开始阅读</span></button>' +
-      '<button class="manual-mini-btn" data-act="edit" data-issue="' + escHtml(id) + '" aria-label="编辑">✎</button>' +
-      '<button class="manual-mini-btn" data-act="export" data-issue="' + escHtml(id) + '" aria-label="导出">⤓</button>' +
-      '<button class="manual-mini-btn manual-mini-danger" data-act="delete" data-issue="' + escHtml(id) + '" aria-label="删除">🗑</button>' +
-      '</div></div>';
+      '<span class="shelf-manual-monogram">' + (isMd ? 'M' : '✎') + '</span></div>' +
+      '<div class="shelf-details"><div class="shelf-details-top">' + detailHtml + '</div>' +
+      '<div class="shelf-manual-actions">' + actionsHtml + '</div></div>';
     frag.appendChild(card);
   });
 
@@ -429,9 +439,15 @@ export function renderManualShelfSection() {
 
   section.appendChild(frag);
 
-  // 导出全部自选按钮（直接绑定，避免污染门户委托）
+  // 导出全部自选按钮 & 翻转「最新在前」按钮（直接绑定，避免污染门户委托）
   const exportBtn = section.querySelector('.shelf-export-all-btn');
   if (exportBtn) exportBtn.addEventListener('click', function (e) { e.stopPropagation(); openExportAllModal(); });
+  const flipBtn = section.querySelector('.shelf-flip-btn');
+  if (flipBtn) flipBtn.addEventListener('click', function (e) {
+    e.stopPropagation();
+    state.manualNewestFirst = !state.manualNewestFirst;
+    renderManualShelfSection();
+  });
 
   // 数量过多时折叠（排除「＋新建」入口卡，始终可见）
   applyShelfCollapse(section, { exclude: '.shelf-new-manual-card' });

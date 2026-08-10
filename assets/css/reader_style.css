@@ -1316,6 +1316,7 @@ body.font-mode-serif .zh-text-card { font-family: var(--font-serif-zh); }
   gap: 22px;
 }
 .shelf-issue-card {
+  position: relative;
   border-radius: var(--radius-lg);
   background: var(--bg-card);
   border: 1px solid var(--border);
@@ -1325,7 +1326,7 @@ body.font-mode-serif .zh-text-card { font-family: var(--font-serif-zh); }
   transition: transform var(--transition-smooth), box-shadow var(--transition-smooth);
 }
 .shelf-issue-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-lg); }
-.shelf-cover-wrap { background: var(--bg-soft); padding: 16px; }
+.shelf-cover-wrap { position: relative; background: var(--bg-soft); padding: 16px; }
 .shelf-cover-img {
   width: 100%;
   aspect-ratio: 4 / 5;
@@ -1617,10 +1618,12 @@ body.font-mode-serif .zh-text-card { font-family: var(--font-serif-zh); }
   .shelf-enter-btn, .continue-title { font-size: 13px; }
   .meta-tag { font-size: 10px; }
 
-  /* 移动端：分区标题行允许换行，导出按钮占满整行，避免与标题挤在一行溢出 */
+  /* 移动端：分区标题行允许换行，按钮组占满整行，导出/翻转按钮并列不溢出 */
   .shelf-section-title-row { flex-wrap: wrap; gap: 8px; }
-  .shelf-export-all-btn { flex: 1 1 100%; text-align: center; }
-  .shelf-manual-index { font-size: 12px; padding: 3px 7px; top: 6px; left: 8px; }
+  .shelf-title-actions { flex: 1 1 100%; }
+  .shelf-title-actions .shelf-export-all-btn,
+  .shelf-title-actions .shelf-flip-btn { flex: 1 1 auto; text-align: center; }
+  .shelf-manual-index, .shelf-card-index { font-size: 12px; padding: 3px 7px; top: 6px; left: 8px; }
 
   .nav-page-btn .key-hint { display: none; }
   .nav-page-btn { padding: 8px 12px; }
@@ -1917,8 +1920,23 @@ mark.page-highlight:hover { background: linear-gradient(180deg, transparent 45%,
 }
 .shelf-export-all-btn:hover { background: var(--accent); color: var(--on-accent, #fff); }
 
-/* 自选文章序号角标（卡片封面左上角） */
-.shelf-manual-index {
+/* 分区标题行右侧按钮组（导出 / 翻转排序 并列） */
+.shelf-title-actions { display: flex; gap: 8px; align-items: center; flex: none; }
+.shelf-flip-btn {
+  flex: none; padding: 7px 14px; border-radius: 999px;
+  border: 1px solid var(--border); background: var(--bg-card); color: var(--text-2);
+  font-size: 12.5px; font-weight: 700; cursor: pointer;
+  transition: var(--transition-fast); white-space: nowrap;
+}
+.shelf-flip-btn:hover { border-color: var(--accent); color: var(--accent); }
+.shelf-flip-btn.active {
+  border-color: var(--accent); color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 12%, var(--bg-card));
+}
+
+/* 序号角标（卡片封面左上角）：自选与杂志共用样式 */
+.shelf-manual-index,
+.shelf-card-index {
   position: absolute; top: 8px; left: 10px;
   font-size: 13px; font-weight: 800; line-height: 1;
   color: #fff; background: rgba(0,0,0,0.34);
