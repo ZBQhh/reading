@@ -1,0 +1,30 @@
+# TheAtlantic Reader — 纯静态站点（SPA），不使用 Jekyll 任何特性。
+#
+# 仓库根目录已放置 .nojekyll，GitHub Pages 会据此跳过 Jekyll 直接静态发布。
+# 本文件作为「双保险」：万一 Jekyll 仍被触发（例如 Pages 源设置被改动），
+# 通过 exclude 让它不要去解析非站点文件——尤其 docs/reviews/*.md 里的
+# {{ }} JSDoc 类型注解会被 Liquid 误解析而报错，从而导致部署失败。
+title: TheAtlantic Reader
+description: 中英对照 Atlantic 阅读器
+exclude:
+  - docs/
+  - issues/
+  - "reading data/"
+  - manual_translations/
+  - scripts/
+  - src/
+  - tools/
+  - tests/
+  - node_modules/
+  - _backups/
+  - raw_pdf/
+  - "*.md"
+  - package.json
+  - package-lock.json
+  - eslint.config.mjs
+  - tsconfig.json
+  - "*.ps1"
+  - "*.mjs"
+  - .github/
+keep_files:
+  - .nojekyll

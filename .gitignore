@@ -29,7 +29,7 @@ reader_app.js
 reader_style.css
 code_review_report.html
 # Project B (markdown 自建文章) 生成产物
-manual_assets/
+# manual_assets/ 需随仓库发布（文章内联图，否则线上图片 404）；manual_issues.json 为可重建中间产物，保持忽略
 manual_issues.json
 
 # Agent / Tool Workspace & Backups
