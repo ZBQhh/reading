@@ -10,7 +10,7 @@
  * ==========================================================================*/
 
 import {
-  state, els, escHtml, toast, confirmDialog, lsSet, readJson, countEnglishWords, applyShelfCollapse,
+  state, els, LS, escHtml, toast, confirmDialog, lsSet, readJson, countEnglishWords, applyShelfCollapse,
 } from './core.js';
 import { enterReaderRoom } from './reader.js';
 
@@ -446,6 +446,7 @@ export function renderManualShelfSection() {
   if (flipBtn) flipBtn.addEventListener('click', function (e) {
     e.stopPropagation();
     state.manualNewestFirst = !state.manualNewestFirst;
+    lsSet(LS.manualNewestFirst, state.manualNewestFirst ? '1' : '0');
     renderManualShelfSection();
   });
 

@@ -62,6 +62,7 @@ export function renderLibraryShelf() {
     if (flipBtn) flipBtn.addEventListener('click', function (e) {
       e.stopPropagation();
       state.magazineNewestFirst = !state.magazineNewestFirst;
+      lsSet(LS.magazineNewestFirst, state.magazineNewestFirst ? '1' : '0');
       renderLibraryShelf();
     });
   }

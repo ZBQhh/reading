@@ -2,6 +2,17 @@
 
 本项目的历次版本变更记录。格式遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)。
 
+## [2.6.19] - 2026-08-10
+
+### 书架门户：翻转状态持久化 + 移动端折叠收紧
+
+- **「最新在前」翻转持久化**：`state.magazineNewestFirst` / `state.manualNewestFirst` 现通过 `localStorage`（`atlantic_reader_mag_newest` / `atlantic_reader_man_newest`）持久化，刷新页面后保留上次的排序选择，不再重置为默认序。
+- **移动端折叠数量收紧**：长列表在移动端（≤640px）默认展示数量由 6 篇下调至 **4 篇**（桌面端保持 12 篇），减少首屏滚动；「显示全部 N 篇 ▾」按钮不变。
+
+### 部署校验说明
+
+- 本环境无 `gh` CLI，改用 GitHub REST API（`api.github.com/repos/ZBQhh/reading/actions/runs`）经 WebFetch 校验最新 `pages build and deployment` 运行结论，无需本地 `gh`。
+
 ## [2.6.18] - 2026-08-10
 
 ### 书架门户：杂志序号 + 双栏「最新在前」翻转

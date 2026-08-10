@@ -12,7 +12,9 @@
     align: "atlantic_reader_align_mode",
     fontScale: "atlantic_reader_font_scale",
     highlights: "atlantic_reader_highlights",
-    wordbook: "atlantic_reader_wordbook"
+    wordbook: "atlantic_reader_wordbook",
+    magazineNewestFirst: "atlantic_reader_mag_newest",
+    manualNewestFirst: "atlantic_reader_man_newest"
   };
   var VIEW_MODES = ["interlinear", "split", "en-only", "zh-only"];
   var THEMES = ["light", "sepia", "beach", "academic", "forest", "dark"];
@@ -26,15 +28,15 @@
     SWIPE_THRESHOLD_PX: 60,
     WORDBOOK_MAX: 500
   };
-  var VERSION = window.BUILD_VERSION || "2.6.18";
+  var VERSION = window.BUILD_VERSION || "2.6.19";
   var allIssues = window.ALL_ISSUES || {};
   var els = {};
   var state = {
     currentPubFilter: "all",
-    magazineNewestFirst: false,
-    // 杂志列表「最新在前」翻转
-    manualNewestFirst: false,
-    // 自选文库「最新在前」翻转
+    magazineNewestFirst: lsGet(LS.magazineNewestFirst, "0") === "1",
+    // 杂志「最新在前」翻转（持久化）
+    manualNewestFirst: lsGet(LS.manualNewestFirst, "0") === "1",
+    // 自选文库「最新在前」翻转（持久化）
     currentIssueId: lsGet(LS.issue, ""),
     currentIssueObj: null,
     data: [],
@@ -223,7 +225,7 @@
     Array.prototype.forEach.call(container.children, function(c) {
       if (c.classList && c.classList.contains("shelf-issue-card") && (!exclude || !c.matches(exclude))) cards.push(c);
     });
-    const limit = typeof window !== "undefined" && window.innerWidth <= 640 ? 6 : 12;
+    const limit = typeof window !== "undefined" && window.innerWidth <= 640 ? 4 : 12;
     const expanded = container.getAttribute("data-expanded") === "1";
     cards.forEach(function(c, i) {
       c.style.display = expanded || i < limit ? "" : "none";
@@ -1059,6 +1061,7 @@
     if (flipBtn) flipBtn.addEventListener("click", function(e) {
       e.stopPropagation();
       state.manualNewestFirst = !state.manualNewestFirst;
+      lsSet(LS.manualNewestFirst, state.manualNewestFirst ? "1" : "0");
       renderManualShelfSection();
     });
     applyShelfCollapse(section, { exclude: ".shelf-new-manual-card" });
@@ -1572,6 +1575,7 @@
       if (flipBtn) flipBtn.addEventListener("click", function(e) {
         e.stopPropagation();
         state.magazineNewestFirst = !state.magazineNewestFirst;
+        lsSet(LS.magazineNewestFirst, state.magazineNewestFirst ? "1" : "0");
         renderLibraryShelf();
       });
     }
