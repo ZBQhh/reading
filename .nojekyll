@@ -1,0 +1,2 @@
+# 本项目是纯静态 Web 应用（index.html + assets/ 的 HTML/CSS/JS），不使用 Jekyll。
+# 此文件通知 GitHub Pages 跳过 Jekyll 构建、直接以静态文件发布，避免 Jekyll 处理 issues/ 等 .md 时因 front matter 报错导致部署失败。
