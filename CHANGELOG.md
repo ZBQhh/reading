@@ -2,6 +2,14 @@
 
 本项目的历次版本变更记录。格式遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)。
 
+## [2.6.14] - 2026-08-10
+
+### 体验（移动端标题段 h3/h4 内边距修正）
+
+- 用户截图对比：同一页面中，**上方框**（"OF NO PARTY OR CLIQUE"，h3 标题段）文字几乎贴左边缘，而**下方框**（普通段落）左右间距舒适——两者视觉不一致。
+- **根因**：CSS 第 977 行 `.segment-h3 .en-text { padding: 0 }` 特异性高于移动端通用 `.en-text { padding: 12px 24px 6px }`，导致 h3/h4 标题段的 en-text 被清零，实际间距仅靠父容器 `.segment-h3 { padding: 8px 14px }`（桌面端值，**移动端从未覆盖**），仅 14px。
+- **修复**：在 `@media (max-width: 640px)` 中新增 `.segment-h3 { padding: 10px 24px; }` 和 `.segment-h4 { padding: 7px 24px; }`，使标题段水平内边距与普通段落的 24px **严格一致**。
+
 ## [2.6.13] - 2026-08-10
 
 ### 体验（移动端英文左间距再加大 + 返回键回首页）

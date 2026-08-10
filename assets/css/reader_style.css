@@ -1604,6 +1604,11 @@ body.font-mode-serif .zh-text-card { font-family: var(--font-serif-zh); }
   .zh-text-card { font-size: max(13.5px, calc(var(--reader-font-scale) * 0.8)); padding: 5px 24px 13px; }
   .segment-block { padding: 0; }
 
+  /* 标题段移动端内边距加大（桌面端 .segment-h3 仅 14px 太贴边，与普通段落的 24px 对齐） */
+  .segment-h3 { padding: 10px 24px; }
+  .segment-h4 { padding: 7px 24px; }
+  .segment-h3 .en-text, .segment-h4 .en-text, .segment-caption .en-text { padding: 0; }
+
   .portal-header { flex-direction: column; align-items: flex-start; }
   .portal-controls { width: 100%; }
   .shelf-enter-btn { flex: 1; justify-content: center; }
