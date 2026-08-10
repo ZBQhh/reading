@@ -2,6 +2,17 @@
 
 本项目的历次版本变更记录。格式遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)。
 
+## [2.6.16] - 2026-08-10
+
+### 自选文库：8 篇全文翻译 + 通读核对
+
+- **翻译回填（本轮核心）**：对 2026-08 批次全部 8 篇自选文章完成中文翻译并写入译文侧车 `manual_translations/<slug>.zh.json`，经 `npm run build:md` 回填至 `manual_issues.json`：
+  - `the-mysterious-art-of-conducting`（35 段 + 1 图注，历史译文本轮通读核对）
+  - `a-culture-war-in-the-bedroom`（15）、`are-raccoons-evolving-into-pets`（35）、`someone-is-mysteriously-snapping-up-used-books-around-the-wo`（18）、`the-color-recession-may-be-permanent`（30）、`the-internet-is-more-image-focused-than-ever`（172，播客文字稿含对话署名）、`the-watchdogs-are-barking-themselves-hoarse`（20）、`why-i-quit-the-tenure-track`（108）。
+- **翻译质量约定**：通顺流畅、语义准确，专有名词（人名/刊名/作品名/术语）保留英文或附通用译名；历史译文统一核对流畅度，本轮新增篇目全文翻译并通读核对。
+- **`docs/translation-log.md`**：状态表 8 篇全部更新为「已翻译+已核对」（本轮译者记为当前 agent，日期 2026-08-10），并固化「只核对本轮新增/改动篇目、不重复核对历史已核验」的工作流。
+- `src/core.js` 版本号 bump 至 2.6.16；`npm run build` + `npm run smoke`（12/0 通过、无 JS 异常）+ `npm run lint` 均通过。
+
 ## [2.6.15] - 2026-08-10
 
 ### 数据（自选文库批量同步）+ 工程化文档

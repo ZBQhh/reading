@@ -26,7 +26,7 @@
     SWIPE_THRESHOLD_PX: 60,
     WORDBOOK_MAX: 500
   };
-  var VERSION = window.BUILD_VERSION || "2.6.15";
+  var VERSION = window.BUILD_VERSION || "2.6.16";
   var allIssues = window.ALL_ISSUES || {};
   var els = {};
   var state = {
