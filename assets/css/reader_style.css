@@ -1599,9 +1599,9 @@ body.font-mode-serif .zh-text-card { font-family: var(--font-serif-zh); }
   .back-to-library-btn { padding: 7px 9px; }
 
   /* 移动端阅读舒适区：字号整体收小（下限 13.5px，按 0.8 缩放 A± 仍生效） */
-  /* 中英文同框：左右内边距统一为 20px（接近桌面 22px 比例，避免英文贴左缘）；压缩中英文之间的垂直空行（en底 6 + 分隔线 2 + zh顶 5 ≈ 13px） */
-  .en-text { font-size: max(13.5px, calc(var(--reader-font-scale) * 0.8)); padding: 12px 20px 6px; }
-  .zh-text-card { font-size: max(13.5px, calc(var(--reader-font-scale) * 0.8)); padding: 5px 20px 13px; }
+  /* 中英文同框：左右内边距统一为 17px（比 15px 略宽松防英文贴边，又比 20px 紧凑，中英严格一致不偏宽）；压缩中英文之间的垂直空行（en底 6 + 分隔线 2 + zh顶 5 ≈ 13px） */
+  .en-text { font-size: max(13.5px, calc(var(--reader-font-scale) * 0.8)); padding: 12px 17px 6px; }
+  .zh-text-card { font-size: max(13.5px, calc(var(--reader-font-scale) * 0.8)); padding: 5px 17px 13px; }
   .segment-block { padding: 0; }
 
   .portal-header { flex-direction: column; align-items: flex-start; }
