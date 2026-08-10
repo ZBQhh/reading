@@ -2,6 +2,15 @@
 
 本项目的历次版本变更记录。格式遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)。
 
+## [2.6.15] - 2026-08-10
+
+### 数据（自选文库批量同步）+ 工程化文档
+
+- **自选文章数据同步**：运行 `npm run build:md` 读取数据源 `D:\Desktop\reading\reading data\TheAtlantic\2026-08\` 的 8 篇 Markdown 文章（此前仅 1 篇），生成 `manual_issues.json`（8 篇）并复制 8 个 `manual_assets/` 资源目录；其中 `2026-08-09-the-mysterious-art-of-conducting` 已回填 35 段 + 1 图注译文侧车，其余 7 篇 `zh=null` 待翻译。
+- **仓库清理**：移除上一轮误提交进仓库的调试文件（`_debug*.js` / `_verify*.js` / `debug_*.png` / `scripts/_tmp_menu_verify.js`）及 `test_mobile_padding.png`。
+- **新增 `AGENTS.md`（开发者 / Agent 上手指南）**：固化项目架构、三大数据源与合并模型、构建管线、自选文章增改与译文回填工作流、渲染 DOM 契约、主题与移动端适配约定、CI 红线、测试与 SafeGit 推送全流程，便于后续任意 agent 快速接手。
+- `README.md`「维护与变更记录」新增 `AGENTS.md` 入口链接；版本号 bump 至 2.6.15。
+
 ## [2.6.14] - 2026-08-10
 
 ### 体验（移动端标题段 h3/h4 内边距修正）
