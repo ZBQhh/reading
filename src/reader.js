@@ -21,7 +21,7 @@ export function resolveIssue(id) {
 }
 
 // 是否「自选/自建」文章：应用内草稿(source==='manual') 或 markdown 构建产物(sourceType==='markdown')
-function isManualIssue(obj) {
+export function isManualIssue(obj) {
   return !!(obj && (obj.source === 'manual' || obj.sourceType === 'markdown'));
 }
 
@@ -303,9 +303,26 @@ export function loadPage(pageNum) {
     }
   }
   if (els.currentSectionBadge) els.currentSectionBadge.textContent = toDisplayText(pageObj.section) || ('The Atlantic (Page ' + pageNum + ')');
-  if (els.pageSlider) { els.pageSlider.max = state.currentIssueObj.totalPages; els.pageSlider.value = pageNum; }
-  if (els.pageCounterText) els.pageCounterText.textContent = '第 ' + pageNum + ' / ' + state.currentIssueObj.totalPages + ' 页';
-  announce('已翻到第 ' + pageNum + ' 页，共 ' + state.currentIssueObj.totalPages + ' 页');
+  const isManual = isManualIssue(state.currentIssueObj);
+  if (els.pageSlider) {
+    // 自选/自建文章是「单篇流式长文」而非「书」：底部进度条改为阅读百分比，而非页码
+    if (isManual) {
+      els.pageSlider.min = 0;
+      els.pageSlider.max = 100;
+      els.pageSlider.value = 0;
+    } else {
+      els.pageSlider.min = 1;
+      els.pageSlider.max = state.currentIssueObj.totalPages;
+      els.pageSlider.value = pageNum;
+    }
+  }
+  if (els.pageCounterText) {
+    els.pageCounterText.textContent = isManual ? '进度 0%' : ('第 ' + pageNum + ' / ' + state.currentIssueObj.totalPages + ' 页');
+  }
+  // 单篇流式文章没有「翻页」概念：禁用上/下页按钮，避免固定停在 1 页的误导
+  if (els.prevPageBtn) els.prevPageBtn.disabled = isManual;
+  if (els.nextPageBtn) els.nextPageBtn.disabled = isManual;
+  announce(isManual ? '已打开文章，可滚动阅读' : ('已翻到第 ' + pageNum + ' 页，共 ' + state.currentIssueObj.totalPages + ' 页'));
 
   updateBookmarkButton(pageNum);
 

@@ -1280,12 +1280,24 @@
       }
     }
     if (els.currentSectionBadge) els.currentSectionBadge.textContent = toDisplayText(pageObj.section) || "The Atlantic (Page " + pageNum + ")";
+    const isManual = isManualIssue(state.currentIssueObj);
     if (els.pageSlider) {
-      els.pageSlider.max = state.currentIssueObj.totalPages;
-      els.pageSlider.value = pageNum;
+      if (isManual) {
+        els.pageSlider.min = 0;
+        els.pageSlider.max = 100;
+        els.pageSlider.value = 0;
+      } else {
+        els.pageSlider.min = 1;
+        els.pageSlider.max = state.currentIssueObj.totalPages;
+        els.pageSlider.value = pageNum;
+      }
     }
-    if (els.pageCounterText) els.pageCounterText.textContent = "第 " + pageNum + " / " + state.currentIssueObj.totalPages + " 页";
-    announce("已翻到第 " + pageNum + " 页，共 " + state.currentIssueObj.totalPages + " 页");
+    if (els.pageCounterText) {
+      els.pageCounterText.textContent = isManual ? "进度 0%" : "第 " + pageNum + " / " + state.currentIssueObj.totalPages + " 页";
+    }
+    if (els.prevPageBtn) els.prevPageBtn.disabled = isManual;
+    if (els.nextPageBtn) els.nextPageBtn.disabled = isManual;
+    announce(isManual ? "已打开文章，可滚动阅读" : "已翻到第 " + pageNum + " 页，共 " + state.currentIssueObj.totalPages + " 页");
     updateBookmarkButton(pageNum);
     if (els.pageOriginalImg) {
       els.pageOriginalImg.src = webpUrl(pageObj.image);
@@ -2281,7 +2293,7 @@
           horiz = false;
           return;
         }
-        const commit = horiz && (Math.abs(dx) > window.innerWidth * 0.33 || Math.abs(v) > VELOCITY_FLIP);
+        const commit = horiz && !isManualIssue(state.currentIssueObj) && (Math.abs(dx) > window.innerWidth * 0.33 || Math.abs(v) > VELOCITY_FLIP);
         vp.style.transition = "transform " + FLIP_MS + "ms cubic-bezier(.22,.61,.36,1)";
         if (commit) {
           const dir = dx < 0 ? 1 : -1;
@@ -2482,7 +2494,7 @@
     } else if (code === "KeyM" || key === "m") {
       e.preventDefault();
       switchIssue(nextIssueId());
-    } else if (code === "KeyJ" || code === "ArrowRight" || code === "PageDown") {
+    } else if ((code === "KeyJ" || code === "ArrowRight" || code === "PageDown") && !isManualIssue(state.currentIssueObj)) {
       e.preventDefault();
       if (!state.isNavigating) {
         state.isNavigating = true;
@@ -2491,7 +2503,7 @@
           state.isNavigating = false;
         }, HELD.JUMP_LOCK_MS);
       }
-    } else if (code === "KeyK" || code === "ArrowLeft" || code === "PageUp") {
+    } else if ((code === "KeyK" || code === "ArrowLeft" || code === "PageUp") && !isManualIssue(state.currentIssueObj)) {
       e.preventDefault();
       if (!state.isNavigating) {
         state.isNavigating = true;
@@ -2609,12 +2621,53 @@
     refreshPill();
     if (els.pageSlider) {
       els.pageSlider.addEventListener("input", function() {
-        if (els.pageCounterText) els.pageCounterText.textContent = "第 " + els.pageSlider.value + " / " + state.currentIssueObj.totalPages + " 页";
+        if (state.currentIssueObj && isManualIssue(state.currentIssueObj)) {
+          const pct = parseInt(els.pageSlider.value, 10) || 0;
+          if (els.pageCounterText) els.pageCounterText.textContent = "进度 " + pct + "%";
+          sliderProgrammatic = true;
+          scrollViewportToPercent(pct);
+          scheduleSliderRelease();
+        } else {
+          if (els.pageCounterText) els.pageCounterText.textContent = "第 " + els.pageSlider.value + " / " + state.currentIssueObj.totalPages + " 页";
+        }
       });
       els.pageSlider.addEventListener("change", function() {
         const v = parseInt(els.pageSlider.value, 10);
-        if (v && v !== state.currentPage) loadPage(v);
+        if (state.currentIssueObj && isManualIssue(state.currentIssueObj)) {
+          scrollViewportToPercent(v);
+        } else if (v && v !== state.currentPage) {
+          loadPage(v);
+        }
       });
+    }
+    let sliderProgrammatic = false;
+    function scrollViewportToPercent(pct) {
+      const vp = els.readerViewport;
+      if (!vp) return;
+      const max = vp.scrollHeight - vp.clientHeight;
+      if (max <= 0) return;
+      vp.scrollTop = Math.max(0, Math.min(max, Math.round(max * (pct / 100))));
+    }
+    function scheduleSliderRelease() {
+      requestAnimationFrame(function() {
+        requestAnimationFrame(function() {
+          sliderProgrammatic = false;
+        });
+      });
+    }
+    function updateManualScrollProgress() {
+      if (!state.currentIssueObj || !isManualIssue(state.currentIssueObj)) return;
+      const vp = els.readerViewport;
+      if (!vp || !els.pageSlider) return;
+      const max = vp.scrollHeight - vp.clientHeight;
+      const pct = max > 0 ? Math.max(0, Math.min(100, Math.round(vp.scrollTop / max * 100))) : 100;
+      if (!sliderProgrammatic) els.pageSlider.value = pct;
+      if (els.pageCounterText) els.pageCounterText.textContent = "进度 " + pct + "%";
+    }
+    if (els.readerViewport) {
+      els.readerViewport.addEventListener("scroll", function() {
+        updateManualScrollProgress();
+      }, { passive: true });
     }
     if (els.searchInput) {
       bindSearchResultKeys(els.searchInput, "#search-results-list .toc-item", function(el) {

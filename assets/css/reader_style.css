@@ -1032,6 +1032,9 @@ body.font-mode-serif .zh-text-card { font-family: var(--font-serif-zh); }
   white-space: nowrap;
 }
 .nav-page-btn:hover { border-color: var(--accent); color: var(--accent); transform: translateY(-1px); box-shadow: var(--shadow-sm); }
+/* 单篇流式文章（自选/自建）无翻页概念：禁用上/下页按钮并弱化显示 */
+.nav-page-btn:disabled { opacity: 0.38; cursor: not-allowed; transform: none; box-shadow: none; border-color: var(--border); color: var(--text-muted); }
+.nav-page-btn:disabled:hover { border-color: var(--border); color: var(--text-muted); transform: none; }
 
 .page-slider {
   width: 100%;

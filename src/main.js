@@ -18,7 +18,7 @@ import {
   exportAllMarkdown, exportHighlightsMd,
 } from './highlight.js';
 import {
-  applyFontScale, loadPage, switchIssue, nextIssueId, enterReaderRoom, openLibraryShelf,
+  applyFontScale, loadPage, switchIssue, nextIssueId, enterReaderRoom, openLibraryShelf, isManualIssue,
   initTOC, refreshPill, renderBookmarksTab, toggleBookmark, syncSidebarActiveState,
   openLightboxImage, zoomBy, resetImageZoom,
 } from './reader.js';
@@ -399,7 +399,7 @@ function bindStaticEvents() {
         vp.style.transition = 'transform ' + FLIP_MS + 'ms ease';
         vp.style.transform = 'translateX(0)'; horiz = false; return;
       }
-      const commit = horiz && (Math.abs(dx) > window.innerWidth * 0.33 || Math.abs(v) > VELOCITY_FLIP);
+      const commit = horiz && !isManualIssue(state.currentIssueObj) && (Math.abs(dx) > window.innerWidth * 0.33 || Math.abs(v) > VELOCITY_FLIP);
       vp.style.transition = 'transform ' + FLIP_MS + 'ms cubic-bezier(.22,.61,.36,1)';
       if (commit) {
         const dir = dx < 0 ? 1 : -1;
@@ -586,10 +586,10 @@ function handleGlobalKeyDown(e) {
   else if (code === 'Digit3' || key === '3') { e.preventDefault(); setViewMode('en-only'); }
   else if (code === 'Digit4' || key === '4') { e.preventDefault(); setViewMode('zh-only'); }
   else if (code === 'KeyM' || key === 'm') { e.preventDefault(); switchIssue(nextIssueId()); }
-  else if (code === 'KeyJ' || code === 'ArrowRight' || code === 'PageDown') {
+  else if ((code === 'KeyJ' || code === 'ArrowRight' || code === 'PageDown') && !isManualIssue(state.currentIssueObj)) {
     e.preventDefault();
     if (!state.isNavigating) { state.isNavigating = true; loadPage(state.currentPage + 1); setTimeout(function () { state.isNavigating = false; }, HELD.JUMP_LOCK_MS); }
-  } else if (code === 'KeyK' || code === 'ArrowLeft' || code === 'PageUp') {
+  } else if ((code === 'KeyK' || code === 'ArrowLeft' || code === 'PageUp') && !isManualIssue(state.currentIssueObj)) {
     e.preventDefault();
     if (!state.isNavigating) { state.isNavigating = true; loadPage(state.currentPage - 1); setTimeout(function () { state.isNavigating = false; }, HELD.JUMP_LOCK_MS); }
   } else if (code === 'KeyT' || key === 't') { e.preventDefault(); toggleSidebar(e); }
@@ -677,15 +677,52 @@ function boot() {
   initTOC();
   refreshPill();
 
-  // 滑块：拖动只更新文本，松手才决定
+  // 滑块：杂志=翻页；单篇流式文章（自选/自建）= 阅读百分比指示器
   if (els.pageSlider) {
     els.pageSlider.addEventListener('input', function () {
-      if (els.pageCounterText) els.pageCounterText.textContent = '第 ' + els.pageSlider.value + ' / ' + state.currentIssueObj.totalPages + ' 页';
+      if (state.currentIssueObj && isManualIssue(state.currentIssueObj)) {
+        const pct = parseInt(els.pageSlider.value, 10) || 0;
+        if (els.pageCounterText) els.pageCounterText.textContent = '进度 ' + pct + '%';
+        sliderProgrammatic = true;
+        scrollViewportToPercent(pct);
+        scheduleSliderRelease();
+      } else {
+        if (els.pageCounterText) els.pageCounterText.textContent = '第 ' + els.pageSlider.value + ' / ' + state.currentIssueObj.totalPages + ' 页';
+      }
     });
     els.pageSlider.addEventListener('change', function () {
       const v = parseInt(els.pageSlider.value, 10);
-      if (v && v !== state.currentPage) loadPage(v);
+      if (state.currentIssueObj && isManualIssue(state.currentIssueObj)) {
+        scrollViewportToPercent(v);
+      } else if (v && v !== state.currentPage) {
+        loadPage(v);
+      }
     });
+  }
+
+  // 单篇流式文章（自选/自建）：底部滑块改为「阅读百分比」指示器，随滚动实时更新
+  let sliderProgrammatic = false;
+  function scrollViewportToPercent(pct) {
+    const vp = els.readerViewport;
+    if (!vp) return;
+    const max = vp.scrollHeight - vp.clientHeight;
+    if (max <= 0) return;
+    vp.scrollTop = Math.max(0, Math.min(max, Math.round(max * (pct / 100))));
+  }
+  function scheduleSliderRelease() {
+    requestAnimationFrame(function () { requestAnimationFrame(function () { sliderProgrammatic = false; }); });
+  }
+  function updateManualScrollProgress() {
+    if (!state.currentIssueObj || !isManualIssue(state.currentIssueObj)) return;
+    const vp = els.readerViewport;
+    if (!vp || !els.pageSlider) return;
+    const max = vp.scrollHeight - vp.clientHeight;
+    const pct = max > 0 ? Math.max(0, Math.min(100, Math.round((vp.scrollTop / max) * 100))) : 100;
+    if (!sliderProgrammatic) els.pageSlider.value = pct;
+    if (els.pageCounterText) els.pageCounterText.textContent = '进度 ' + pct + '%';
+  }
+  if (els.readerViewport) {
+    els.readerViewport.addEventListener('scroll', function () { updateManualScrollProgress(); }, { passive: true });
   }
 
   // 侧栏检索（防抖 + 索引）
