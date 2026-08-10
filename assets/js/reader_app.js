@@ -26,7 +26,7 @@
     SWIPE_THRESHOLD_PX: 60,
     WORDBOOK_MAX: 500
   };
-  var VERSION = window.BUILD_VERSION || "2.6.16";
+  var VERSION = window.BUILD_VERSION || "2.6.17";
   var allIssues = window.ALL_ISSUES || {};
   var els = {};
   var state = {
@@ -210,6 +210,36 @@
   function getMarkdownArticle(id) {
     if (typeof window === "undefined" || !window.MANUAL_ISSUES) return null;
     return window.MANUAL_ISSUES[id] || null;
+  }
+  function applyShelfCollapse(container, opts) {
+    if (!container) return;
+    opts = opts || {};
+    const exclude = opts.exclude || null;
+    const cards = [];
+    Array.prototype.forEach.call(container.children, function(c) {
+      if (c.classList && c.classList.contains("shelf-issue-card") && (!exclude || !c.matches(exclude))) cards.push(c);
+    });
+    const limit = typeof window !== "undefined" && window.innerWidth <= 640 ? 6 : 12;
+    const expanded = container.getAttribute("data-expanded") === "1";
+    cards.forEach(function(c, i) {
+      c.style.display = expanded || i < limit ? "" : "none";
+    });
+    const oldToggle = container.querySelector(".shelf-collapse-toggle");
+    if (oldToggle) oldToggle.remove();
+    if (cards.length <= limit) {
+      container.removeAttribute("data-expanded");
+      return;
+    }
+    const toggle = document.createElement("button");
+    toggle.type = "button";
+    toggle.className = "shelf-collapse-toggle";
+    toggle.textContent = expanded ? "△ 收起" : "显示全部 " + cards.length + " 篇 ▾";
+    toggle.addEventListener("click", function(e) {
+      e.stopPropagation();
+      container.setAttribute("data-expanded", container.getAttribute("data-expanded") === "1" ? "0" : "1");
+      applyShelfCollapse(container, opts);
+    });
+    container.appendChild(toggle);
   }
   function countEnglishWords(issue) {
     if (!issue || !Array.isArray(issue.pages)) return 0;
@@ -663,6 +693,9 @@
   // src/manual.js
   var MANUAL_LS = "atlantic_manual_articles";
   var DEFAULT_THEME = "#b3802f";
+  function padIndex(n) {
+    return String(n).padStart(2, "0");
+  }
   function loadManualArticles() {
     const list = readJson(MANUAL_LS, []);
     const map = {};
@@ -943,9 +976,14 @@
       return;
     }
     const mdMap = typeof window !== "undefined" && window.MANUAL_ISSUES ? window.MANUAL_ISSUES : {};
-    const mdIds = Object.keys(mdMap);
     const draftMap = loadManualArticles();
-    const draftIds = Object.keys(draftMap);
+    const order = getManualOrder();
+    const mdIds = order.filter(function(id) {
+      return mdMap[id];
+    });
+    const draftIds = order.filter(function(id) {
+      return draftMap[id];
+    });
     if (!section) {
       section = document.createElement("div");
       section.id = "manual-shelf-section";
@@ -953,7 +991,7 @@
       grid.parentNode.insertBefore(section, grid);
     }
     const titleText = filter === "manual" ? "✍️ 自选文库（全部） · Markdown " + mdIds.length + " 篇 · 草稿 " + draftIds.length : "⭐ 自选文章（置顶） · Markdown " + mdIds.length + " 篇 · 草稿 " + draftIds.length;
-    section.innerHTML = '<div class="shelf-section-title">' + titleText + "</div>";
+    section.innerHTML = '<div class="shelf-section-title-row"><span class="shelf-section-title">' + titleText + '</span><button type="button" class="shelf-export-all-btn" data-act="export-all-self">⤓ 导出全部自选</button></div>';
     const frag = document.createDocumentFragment();
     mdIds.forEach(function(id) {
       const a = mdMap[id];
@@ -964,11 +1002,10 @@
       card.dataset.issue = id;
       const segs = a.pages && a.pages[0] && a.pages[0].segments || [];
       const color = a.themeColor || DEFAULT_THEME;
-      const hasZh = segs.some(function(s) {
-        return s.zh && String(s.zh).trim();
-      });
       const srcLabel = a.website || (a.source ? "外部来源" : "自建文章");
-      card.innerHTML = '<div class="shelf-cover-wrap shelf-manual-cover" style="background:' + escHtml(color) + ';"><span class="shelf-manual-monogram">M</span></div><div class="shelf-details"><div class="shelf-details-top"><span class="issue-date-tag">Markdown · ' + segs.length + " 段" + (hasZh ? " · 已译" : " · 待译") + "</span><h3>" + escHtml(a.displayName || id) + "</h3><p>" + escHtml(a.author ? "作者：" + a.author : "来源：" + srcLabel) + '</p><div class="shelf-meta-tags"><span class="meta-tag">🔤 ' + countEnglishWords(a) + ' 词</span><span class="meta-tag">📄 单页流式</span><span class="meta-tag">🏷️ ' + escHtml(srcLabel) + '</span></div></div><div class="shelf-manual-actions"><button class="shelf-enter-btn" data-issue="' + escHtml(id) + '"><span>开始阅读</span></button><button class="manual-mini-btn" data-act="md-export" data-issue="' + escHtml(id) + '" aria-label="导出 JSON 备份">⤓</button></div></div>';
+      const ord = getManualArticleOrdinal(id);
+      const idxBadge = ord ? '<span class="shelf-manual-index">' + padIndex(ord.index) + "</span>" : "";
+      card.innerHTML = '<div class="shelf-cover-wrap shelf-manual-cover" style="background:' + escHtml(color) + ';">' + idxBadge + '<span class="shelf-manual-monogram">M</span></div><div class="shelf-details"><div class="shelf-details-top"><span class="issue-date-tag">Markdown · ' + segs.length + " 段</span><h3>" + escHtml(a.displayName || id) + "</h3><p>" + escHtml(a.author ? "作者：" + a.author : "来源：" + srcLabel) + '</p><div class="shelf-meta-tags"><span class="meta-tag">🔤 ' + countEnglishWords(a) + ' 词</span><span class="meta-tag">📄 单页流式</span><span class="meta-tag">🏷️ ' + escHtml(srcLabel) + '</span></div></div><div class="shelf-manual-actions"><button class="shelf-enter-btn" data-issue="' + escHtml(id) + '"><span>开始阅读</span></button><button class="manual-mini-btn" data-act="md-export" data-issue="' + escHtml(id) + '" aria-label="导出 JSON 备份">⤓</button></div></div>';
       frag.appendChild(card);
     });
     draftIds.forEach(function(id) {
@@ -980,7 +1017,9 @@
       card.dataset.issue = id;
       const segs = a.pages && a.pages[0] && a.pages[0].segments || [];
       const color = a.themeColor || DEFAULT_THEME;
-      card.innerHTML = '<div class="shelf-cover-wrap shelf-manual-cover" style="background:' + escHtml(color) + ';"><span class="shelf-manual-monogram">✎</span></div><div class="shelf-details"><div class="shelf-details-top"><span class="issue-date-tag">草稿 · ' + segs.length + " 段</span><h3>" + escHtml(a.displayName || id) + "</h3><p>" + escHtml(a.author ? "作者：" + a.author : "手动录入文章") + '</p><div class="shelf-meta-tags"><span class="meta-tag">🔤 ' + countEnglishWords(a) + ' 词</span><span class="meta-tag">🏷️ ' + escHtml(a.author || "手动录入") + "</span>" + (a.sourceUrl ? '<span class="meta-tag">🔗 来源</span>' : "") + '</div></div><div class="shelf-manual-actions"><button class="shelf-enter-btn" data-issue="' + escHtml(id) + '"><span>开始阅读</span></button><button class="manual-mini-btn" data-act="edit" data-issue="' + escHtml(id) + '" aria-label="编辑">✎</button><button class="manual-mini-btn" data-act="export" data-issue="' + escHtml(id) + '" aria-label="导出">⤓</button><button class="manual-mini-btn manual-mini-danger" data-act="delete" data-issue="' + escHtml(id) + '" aria-label="删除">🗑</button></div></div>';
+      const ord = getManualArticleOrdinal(id);
+      const idxBadge = ord ? '<span class="shelf-manual-index">' + padIndex(ord.index) + "</span>" : "";
+      card.innerHTML = '<div class="shelf-cover-wrap shelf-manual-cover" style="background:' + escHtml(color) + ';">' + idxBadge + '<span class="shelf-manual-monogram">✎</span></div><div class="shelf-details"><div class="shelf-details-top"><span class="issue-date-tag">草稿 · ' + segs.length + " 段</span><h3>" + escHtml(a.displayName || id) + "</h3><p>" + escHtml(a.author ? "作者：" + a.author : "手动录入文章") + '</p><div class="shelf-meta-tags"><span class="meta-tag">🔤 ' + countEnglishWords(a) + ' 词</span><span class="meta-tag">🏷️ ' + escHtml(a.author || "手动录入") + "</span>" + (a.sourceUrl ? '<span class="meta-tag">🔗 来源</span>' : "") + '</div></div><div class="shelf-manual-actions"><button class="shelf-enter-btn" data-issue="' + escHtml(id) + '"><span>开始阅读</span></button><button class="manual-mini-btn" data-act="edit" data-issue="' + escHtml(id) + '" aria-label="编辑">✎</button><button class="manual-mini-btn" data-act="export" data-issue="' + escHtml(id) + '" aria-label="导出">⤓</button><button class="manual-mini-btn manual-mini-danger" data-act="delete" data-issue="' + escHtml(id) + '" aria-label="删除">🗑</button></div></div>';
       frag.appendChild(card);
     });
     const newCard = document.createElement("div");
@@ -991,6 +1030,12 @@
     newCard.innerHTML = '<div class="shelf-cover-wrap shelf-new-manual-cover"><span class="shelf-new-manual-plus">＋</span></div><div class="shelf-details"><div class="shelf-details-top"><span class="issue-date-tag">自建 · 快速草稿</span><h3>新建单篇文章</h3><p>粘贴英文（可附中文），或导入 JSON。也可直接往 md 数据源文件夹放 .md 由构建生成。</p><div class="shelf-meta-tags"><span class="meta-tag">✎ 对照 / 整篇录入</span><span class="meta-tag">🔤 纯英文亦可</span></div></div></div>';
     frag.appendChild(newCard);
     section.appendChild(frag);
+    const exportBtn = section.querySelector(".shelf-export-all-btn");
+    if (exportBtn) exportBtn.addEventListener("click", function(e) {
+      e.stopPropagation();
+      openExportAllModal();
+    });
+    applyShelfCollapse(section, { exclude: ".shelf-new-manual-card" });
   }
   function handleManualCardAction(act, id) {
     let a = getManualArticle(id);
@@ -1009,6 +1054,119 @@
         }
       });
     }
+  }
+  function downloadBlob(blob, filename) {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(function() {
+      URL.revokeObjectURL(url);
+    }, 1e3);
+  }
+  function exportAllManualArticles(format) {
+    format = format || "bilingual";
+    const order = getManualOrder();
+    const mdMap = typeof window !== "undefined" && window.MANUAL_ISSUES ? window.MANUAL_ISSUES : {};
+    const draftMap = loadManualArticles();
+    const arts = [];
+    order.forEach(function(id) {
+      const a = mdMap[id] || draftMap[id];
+      if (a) arts.push(a);
+    });
+    if (arts.length === 0) {
+      toast("⚠️ 暂无自选文章可导出", "warn");
+      return;
+    }
+    const stamp = (/* @__PURE__ */ new Date()).toISOString().slice(0, 10);
+    if (format === "json") {
+      const blob2 = new Blob([JSON.stringify(arts, null, 2)], { type: "application/json" });
+      downloadBlob(blob2, "自选文章合集_" + stamp + ".json");
+      toast("🧾 已导出 " + arts.length + " 篇（JSON）");
+      return;
+    }
+    const lines = [];
+    lines.push("# 自选文章合集（" + (format === "zh-only" ? "纯中文" : "双语") + "导出）");
+    lines.push("");
+    lines.push("> 导出时间：" + (/* @__PURE__ */ new Date()).toLocaleString("zh-CN"));
+    lines.push("> 共 " + arts.length + " 篇");
+    lines.push("");
+    arts.forEach(function(a, i) {
+      const segs = a.pages && a.pages[0] && a.pages[0].segments || [];
+      lines.push("## [" + padIndex(i + 1) + "] " + (a.displayName || a.name || "未命名文章"));
+      if (a.author) lines.push("**作者：** " + a.author);
+      if (a.website) lines.push("**来源：** " + a.website);
+      else if (a.source) lines.push("**来源：** " + a.source);
+      if (a.sourceUrl) lines.push("**链接：** " + a.sourceUrl);
+      lines.push("");
+      let anyZh = false;
+      segs.forEach(function(s) {
+        if (format === "zh-only") {
+          const zh = (s.zh || "").trim();
+          if (zh) {
+            lines.push(zh);
+            anyZh = true;
+          }
+        } else {
+          if (s.en) lines.push(s.en);
+          const zh = (s.zh || "").trim();
+          if (zh) {
+            lines.push("> " + zh);
+            anyZh = true;
+          } else lines.push("> _（暂无译文）_");
+        }
+        lines.push("");
+      });
+      if (format === "zh-only" && !anyZh) lines.push("（本篇暂无中文译文）");
+      lines.push("---");
+      lines.push("");
+    });
+    const blob = new Blob([lines.join("\n")], { type: "text/markdown;charset=utf-8" });
+    downloadBlob(blob, "自选文章合集_" + stamp + (format === "zh-only" ? "_中文" : "") + ".md");
+    toast("⤓ 已导出 " + arts.length + " 篇（" + (format === "zh-only" ? "纯中文" : "双语") + " Markdown）");
+  }
+  var exportModalNode = null;
+  function closeExportAllModal() {
+    if (exportModalNode) {
+      exportModalNode.remove();
+      exportModalNode = null;
+    }
+  }
+  function openExportAllModal() {
+    closeExportAllModal();
+    const n = getManualOrder().length;
+    if (n === 0) {
+      toast("⚠️ 暂无自选文章可导出", "warn");
+      return;
+    }
+    const node = document.createElement("div");
+    node.className = "manual-export-modal";
+    node.setAttribute("role", "dialog");
+    node.setAttribute("aria-modal", "true");
+    node.innerHTML = '<div class="manual-export-card"><div class="manual-export-head"><h3>⤓ 导出全部自选文章</h3><button class="manual-export-close" aria-label="关闭">✕</button></div><p class="manual-export-desc">共 ' + n + ' 篇，选择导出格式：</p><div class="manual-export-opts"><button class="manual-export-opt" data-fmt="bilingual"><span class="ico">📄</span><span><b>双语 Markdown</b><br><small>英文逐段 + 中文逐段对照</small></span></button><button class="manual-export-opt" data-fmt="zh-only"><span class="ico">🇨🇳</span><span><b>纯中文 Markdown</b><br><small>仅中文译文（无则标注）</small></span></button><button class="manual-export-opt" data-fmt="json"><span class="ico">🧾</span><span><b>JSON 完整数据</b><br><small>含全部段落与元数据</small></span></button></div><button class="manual-export-cancel" data-act="cancel">取消</button></div>';
+    exportModalNode = node;
+    document.body.appendChild(node);
+    node.addEventListener("click", function(e) {
+      if (e.target === node) {
+        closeExportAllModal();
+        return;
+      }
+      if (e.target.getAttribute && e.target.getAttribute("data-act") === "cancel") {
+        closeExportAllModal();
+        return;
+      }
+      const fmtBtn = e.target.closest("[data-fmt]");
+      if (fmtBtn) {
+        const fmt = fmtBtn.getAttribute("data-fmt");
+        closeExportAllModal();
+        exportAllManualArticles(fmt);
+      }
+    });
+    const closeBtn = node.querySelector(".manual-export-close");
+    if (closeBtn) closeBtn.addEventListener("click", closeExportAllModal);
   }
 
   // src/reader.js
@@ -1383,6 +1541,7 @@
       frag.appendChild(card);
     });
     grid.appendChild(frag);
+    applyShelfCollapse(grid, {});
     renderManualShelfSection();
   }
   function setViewMode(mode) {
@@ -2034,6 +2193,12 @@
         enterReaderRoom(card.dataset.issue, 1);
       });
     }
+    window.addEventListener("resize", debounce(function() {
+      const grid = els.magazineShelfGrid;
+      if (grid) applyShelfCollapse(grid, {});
+      const sec = document.getElementById("manual-shelf-section");
+      if (sec) applyShelfCollapse(sec, { exclude: ".shelf-new-manual-card" });
+    }, 200));
     const filterBar = els.tocFilterBar;
     if (filterBar && !filterBar.dataset.bound) {
       filterBar.dataset.bound = "1";

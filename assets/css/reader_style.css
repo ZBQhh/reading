@@ -1617,6 +1617,11 @@ body.font-mode-serif .zh-text-card { font-family: var(--font-serif-zh); }
   .shelf-enter-btn, .continue-title { font-size: 13px; }
   .meta-tag { font-size: 10px; }
 
+  /* 移动端：分区标题行允许换行，导出按钮占满整行，避免与标题挤在一行溢出 */
+  .shelf-section-title-row { flex-wrap: wrap; gap: 8px; }
+  .shelf-export-all-btn { flex: 1 1 100%; text-align: center; }
+  .shelf-manual-index { font-size: 12px; padding: 3px 7px; top: 6px; left: 8px; }
+
   .nav-page-btn .key-hint { display: none; }
   .nav-page-btn { padding: 8px 12px; }
   .page-jump-input-wrap input { font-size: 16px; }
@@ -1847,8 +1852,9 @@ mark.page-highlight:hover { background: linear-gradient(180deg, transparent 45%,
 .manual-btn-primary:hover { filter: brightness(1.06); }
 
 .shelf-manual-cover {
+  position: relative;
   display: flex; align-items: center; justify-content: center;
-  background: var(--accent); border-radius: 10px; min-height: 96px;
+  background: var(--accent); border-radius: 10px; min-height: 96px; overflow: hidden;
 }
 .shelf-manual-monogram { font-size: 38px; color: #fff; opacity: 0.92; }
 .shelf-manual-actions { display: flex; align-items: center; gap: 6px; margin-top: 12px; }
@@ -1889,12 +1895,79 @@ mark.page-highlight:hover { background: linear-gradient(180deg, transparent 45%,
   box-shadow: 0 4px 18px rgba(0,0,0,0.06);
 }
 .shelf-section-title {
-  grid-column: 1 / -1;
+  grid-column: auto;
   font-size: 14px; font-weight: 700; letter-spacing: 0.05em;
   color: var(--accent);
-  margin: 0 0 6px; padding: 0 2px 12px;
-  border-bottom: 1px solid var(--border-soft);
+  margin: 0; padding: 0;
+  border-bottom: none;
   text-transform: uppercase;
+}
+/* 分区标题行：标题 + 「导出全部自选」按钮，随主题强调色变化 */
+.shelf-section-title-row {
+  grid-column: 1 / -1;
+  display: flex; justify-content: space-between; align-items: center;
+  gap: 12px; margin: 0 0 6px; padding: 0 2px 12px;
+  border-bottom: 1px solid var(--border-soft);
+}
+.shelf-export-all-btn {
+  flex: none; padding: 7px 14px; border-radius: 999px;
+  border: 1px solid var(--accent); background: color-mix(in srgb, var(--accent) 12%, var(--bg-card));
+  color: var(--accent); font-size: 12.5px; font-weight: 700; cursor: pointer;
+  transition: var(--transition-fast); white-space: nowrap;
+}
+.shelf-export-all-btn:hover { background: var(--accent); color: var(--on-accent, #fff); }
+
+/* 自选文章序号角标（卡片封面左上角） */
+.shelf-manual-index {
+  position: absolute; top: 8px; left: 10px;
+  font-size: 13px; font-weight: 800; line-height: 1;
+  color: #fff; background: rgba(0,0,0,0.34);
+  padding: 4px 8px; border-radius: 8px; letter-spacing: 0.04em;
+  backdrop-filter: blur(2px); -webkit-backdrop-filter: blur(2px); pointer-events: none;
+  z-index: 2;
+}
+
+/* 列表折叠「显示全部 N 篇 ▾ / 收起」按钮 */
+.shelf-collapse-toggle {
+  grid-column: 1 / -1;
+  justify-self: center;
+  margin: 4px auto 0; padding: 10px 22px;
+  border-radius: 999px; border: 1px solid var(--border);
+  background: var(--bg-card); color: var(--accent);
+  font-size: 13px; font-weight: 700; cursor: pointer;
+  box-shadow: var(--shadow-sm); transition: var(--transition-fast);
+}
+.shelf-collapse-toggle:hover { border-color: var(--accent); filter: brightness(1.02); }
+
+/* 导出全部自选 · 格式选择弹窗 */
+.manual-export-modal {
+  position: fixed; inset: 0; z-index: 80;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(0,0,0,0.45); padding: 16px;
+}
+.manual-export-card {
+  width: min(420px, 100%); background: var(--bg-card);
+  border: 1px solid var(--border); border-radius: 16px;
+  padding: 20px; box-shadow: var(--shadow-lg);
+}
+.manual-export-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+.manual-export-head h3 { margin: 0; font-size: 16px; color: var(--text); }
+.manual-export-close { background: none; border: none; font-size: 18px; cursor: pointer; color: var(--text-2); line-height: 1; }
+.manual-export-desc { font-size: 13px; color: var(--text-2); margin: 4px 0 14px; }
+.manual-export-opts { display: flex; flex-direction: column; gap: 10px; margin-bottom: 14px; }
+.manual-export-opt {
+  display: flex; align-items: center; gap: 12px; text-align: left;
+  padding: 12px 14px; border-radius: 12px; cursor: pointer;
+  border: 1px solid var(--border); background: var(--bg-soft); color: var(--text);
+  transition: var(--transition-fast);
+}
+.manual-export-opt:hover { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 8%, var(--bg-soft)); }
+.manual-export-opt .ico { font-size: 22px; flex: none; }
+.manual-export-opt b { font-size: 14px; }
+.manual-export-opt small { color: var(--text-2); font-size: 11.5px; }
+.manual-export-cancel {
+  width: 100%; padding: 10px; border-radius: 10px; cursor: pointer;
+  border: 1px solid var(--border-soft); background: var(--bg-hover); color: var(--text-2); font-size: 13px;
 }
 
 /* 自建文库 markdown 卡与草稿卡的细微区分 */

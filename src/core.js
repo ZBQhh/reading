@@ -36,7 +36,7 @@ export const HELD = {
   WORDBOOK_MAX: 500,
 };
 
-export const VERSION = window.BUILD_VERSION || '2.6.16';
+export const VERSION = window.BUILD_VERSION || '2.6.17';
 export const allIssues = window.ALL_ISSUES || {};
 
 // DOM cache — populated once in main.js (ELS_BY_ID). Contents mutate; binding does not.
@@ -246,6 +246,41 @@ export function applyIssueAccent() {
 export function getMarkdownArticle(id) {
   if (typeof window === 'undefined' || !window.MANUAL_ISSUES) return null;
   return window.MANUAL_ISSUES[id] || null;
+}
+
+// 书架列表折叠：当卡片数量超过阈值时，只展示前 N 张，其余隐藏，
+// 并追加一个「显示全部 N 篇 ▾ / 收起」切换按钮（作为容器最后一个子元素，
+// 自动跨满整行）。响应式阈值：桌面 12、移动(≤640) 6。
+// opts.exclude：不参与折叠/计数的选择器（如「＋新建」入口卡，始终可见）。
+export function applyShelfCollapse(container, opts) {
+  if (!container) return;
+  opts = opts || {};
+  const exclude = opts.exclude || null;
+  const cards = [];
+  Array.prototype.forEach.call(container.children, function (c) {
+    if (c.classList && c.classList.contains('shelf-issue-card') && (!exclude || !c.matches(exclude))) cards.push(c);
+  });
+  const limit = (typeof window !== 'undefined' && window.innerWidth <= 640) ? 6 : 12;
+  const expanded = container.getAttribute('data-expanded') === '1';
+  cards.forEach(function (c, i) {
+    c.style.display = (expanded || i < limit) ? '' : 'none';
+  });
+  const oldToggle = container.querySelector('.shelf-collapse-toggle');
+  if (oldToggle) oldToggle.remove();
+  if (cards.length <= limit) {
+    container.removeAttribute('data-expanded');
+    return;
+  }
+  const toggle = document.createElement('button');
+  toggle.type = 'button';
+  toggle.className = 'shelf-collapse-toggle';
+  toggle.textContent = expanded ? '△ 收起' : ('显示全部 ' + cards.length + ' 篇 ▾');
+  toggle.addEventListener('click', function (e) {
+    e.stopPropagation();
+    container.setAttribute('data-expanded', container.getAttribute('data-expanded') === '1' ? '0' : '1');
+    applyShelfCollapse(container, opts);
+  });
+  container.appendChild(toggle);
 }
 
 // 统计一篇文章（或整刊）的英文单词总数：遍历 pages → segments → en 文本。

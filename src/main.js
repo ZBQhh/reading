@@ -10,7 +10,7 @@
 import {
   state, els, LS, lsGet, $, $$, allIssues, escHtml, toast, confirmDialog,
   debounce, stripInvisibles, readFloat, readInt, HELD, THEMES, VERSION, scrollPage,
-  applyIssueAccent,
+  applyIssueAccent, applyShelfCollapse,
 } from './core.js';
 import { pickVoice, playPageSpeech, stopSpeech, playParagraphSpeech } from './speech.js';
 import {
@@ -162,6 +162,14 @@ function bindStaticEvents() {
       enterReaderRoom(card.dataset.issue, 1);
     });
   }
+
+  // 窗口尺寸变化（跨 640px 阈值）时，重新计算书架折叠阈值（桌面 12 / 移动 6）
+  window.addEventListener('resize', debounce(function () {
+    const grid = els.magazineShelfGrid;
+    if (grid) applyShelfCollapse(grid, {});
+    const sec = document.getElementById('manual-shelf-section');
+    if (sec) applyShelfCollapse(sec, { exclude: '.shelf-new-manual-card' });
+  }, 200));
 
   // 目录过滤条（委托）
   const filterBar = els.tocFilterBar;

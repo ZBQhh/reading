@@ -4,7 +4,7 @@
  * ==========================================================================*/
 
 import {
-  state, els, LS, $, $$, allIssues, escHtml, toast, confirmDialog, readJson, lsSet, countEnglishWords,
+  state, els, LS, $, $$, allIssues, escHtml, toast, confirmDialog, readJson, lsSet, countEnglishWords, applyShelfCollapse,
   VIEW_MODES, THEMES, webpUrl, imgWithWebFallback,
 } from './core.js';
 import { loadHighlights, saveHighlights } from './highlight.js';
@@ -69,6 +69,9 @@ export function renderLibraryShelf() {
   });
 
   grid.appendChild(frag);
+
+  // 数量过多时折叠（默认桌面 12 / 移动 6，超出显示「显示全部 N 篇」）
+  applyShelfCollapse(grid, {});
 
   // 刷新手建文库分组（位于期刊网格下方）：Markdown 文章 + 应用内草稿 + 新建入口
   renderManualShelfSection();

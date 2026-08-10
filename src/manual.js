@@ -10,12 +10,15 @@
  * ==========================================================================*/
 
 import {
-  state, els, escHtml, toast, confirmDialog, lsSet, readJson, countEnglishWords,
+  state, els, escHtml, toast, confirmDialog, lsSet, readJson, countEnglishWords, applyShelfCollapse,
 } from './core.js';
 import { enterReaderRoom } from './reader.js';
 
 const MANUAL_LS = 'atlantic_manual_articles';
 const DEFAULT_THEME = '#b3802f';
+
+// 序号补零：1 → "01"，12 → "12"，用于货架卡片角标。
+function padIndex(n) { return String(n).padStart(2, '0'); }
 
 // ---------------------------------------------------------------- 存储
 export function loadManualArticles() {
@@ -315,10 +318,13 @@ export function renderManualShelfSection() {
     return;
   }
   // 合并两大自建来源：markdown 构建产物(window.MANUAL_ISSUES) + 应用内草稿(localStorage)
+  // 关键：渲染顺序必须与 getManualOrder()（字典序 md 在前、草稿在后）一致，
+  // 否则卡片上的序号角标（getManualArticleOrdinal）与视觉位置会错位。
   const mdMap = (typeof window !== 'undefined' && window.MANUAL_ISSUES) ? window.MANUAL_ISSUES : {};
-  const mdIds = Object.keys(mdMap);
   const draftMap = loadManualArticles();
-  const draftIds = Object.keys(draftMap);
+  const order = getManualOrder();
+  const mdIds = order.filter(function (id) { return mdMap[id]; });
+  const draftIds = order.filter(function (id) { return draftMap[id]; });
 
   // 始终置顶：放在期刊网格「之前」（页面最上方、筛选器之下）。
   // 用 getElementById 复用唯一分区，避免每次重渲染累积重复 DOM 节点（旧逻辑用 grid.querySelector 永远找不到兄弟节点）。
@@ -331,7 +337,11 @@ export function renderManualShelfSection() {
   const titleText = (filter === 'manual')
     ? '✍️ 自选文库（全部） · Markdown ' + mdIds.length + ' 篇 · 草稿 ' + draftIds.length
     : '⭐ 自选文章（置顶） · Markdown ' + mdIds.length + ' 篇 · 草稿 ' + draftIds.length;
-  section.innerHTML = '<div class="shelf-section-title">' + titleText + '</div>';
+  section.innerHTML =
+    '<div class="shelf-section-title-row">' +
+    '<span class="shelf-section-title">' + titleText + '</span>' +
+    '<button type="button" class="shelf-export-all-btn" data-act="export-all-self">⤓ 导出全部自选</button>' +
+    '</div>';
   const frag = document.createDocumentFragment();
 
   // —— Project B：markdown 自建文章（文件驱动，无删除/编辑，仅阅读 + 导出备份）——
@@ -344,13 +354,15 @@ export function renderManualShelfSection() {
     card.dataset.issue = id;
     const segs = (a.pages && a.pages[0] && a.pages[0].segments) || [];
     const color = a.themeColor || DEFAULT_THEME;
-    const hasZh = segs.some(function (s) { return s.zh && String(s.zh).trim(); });
     const srcLabel = a.website || (a.source ? '外部来源' : '自建文章');
+    const ord = getManualArticleOrdinal(id);
+    const idxBadge = ord ? '<span class="shelf-manual-index">' + padIndex(ord.index) + '</span>' : '';
     card.innerHTML =
       '<div class="shelf-cover-wrap shelf-manual-cover" style="background:' + escHtml(color) + ';">' +
+      idxBadge +
       '<span class="shelf-manual-monogram">M</span></div>' +
       '<div class="shelf-details"><div class="shelf-details-top">' +
-      '<span class="issue-date-tag">Markdown · ' + segs.length + ' 段' + (hasZh ? ' · 已译' : ' · 待译') + '</span>' +
+      '<span class="issue-date-tag">Markdown · ' + segs.length + ' 段</span>' +
       '<h3>' + escHtml(a.displayName || id) + '</h3>' +
       '<p>' + escHtml(a.author ? ('作者：' + a.author) : ('来源：' + srcLabel)) + '</p>' +
       '<div class="shelf-meta-tags">' +
@@ -375,8 +387,11 @@ export function renderManualShelfSection() {
     card.dataset.issue = id;
     const segs = (a.pages && a.pages[0] && a.pages[0].segments) || [];
     const color = a.themeColor || DEFAULT_THEME;
+    const ord = getManualArticleOrdinal(id);
+    const idxBadge = ord ? '<span class="shelf-manual-index">' + padIndex(ord.index) + '</span>' : '';
     card.innerHTML =
       '<div class="shelf-cover-wrap shelf-manual-cover" style="background:' + escHtml(color) + ';">' +
+      idxBadge +
       '<span class="shelf-manual-monogram">✎</span></div>' +
       '<div class="shelf-details"><div class="shelf-details-top">' +
       '<span class="issue-date-tag">草稿 · ' + segs.length + ' 段</span>' +
@@ -413,6 +428,13 @@ export function renderManualShelfSection() {
   frag.appendChild(newCard);
 
   section.appendChild(frag);
+
+  // 导出全部自选按钮（直接绑定，避免污染门户委托）
+  const exportBtn = section.querySelector('.shelf-export-all-btn');
+  if (exportBtn) exportBtn.addEventListener('click', function (e) { e.stopPropagation(); openExportAllModal(); });
+
+  // 数量过多时折叠（排除「＋新建」入口卡，始终可见）
+  applyShelfCollapse(section, { exclude: '.shelf-new-manual-card' });
 }
 
 // 手建文章卡片上的 编辑/导出/删除 委托处理（由 main.js 的门户委托调用）
@@ -425,10 +447,116 @@ export function handleManualCardAction(act, id) {
   if (!a) return;
   if (act === 'edit') openManualEditor(a);
   else if (act === 'export' || act === 'md-export') exportArticleJson(a);
-  else if (act === 'delete') {
+  else   if (act === 'delete') {
     confirmDialog({ title: '删除这篇文章？', message: '《' + a.displayName + '》将被永久删除，不可撤销。', okText: '删除', danger: true })
       .then(function (ok) {
         if (ok) { deleteManualArticle(id); toast('🗑 已删除'); if (els.magazineShelfGrid) renderManualShelfSection(); }
       });
   }
+}
+
+// ---------------------------------------------------------------- 导出全部自选文章（格式可选）
+function downloadBlob(blob, filename) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+}
+
+// format: 'bilingual'（英文+中文逐段） | 'zh-only'（仅中文） | 'json'（完整数据）
+export function exportAllManualArticles(format) {
+  format = format || 'bilingual';
+  const order = getManualOrder();
+  const mdMap = (typeof window !== 'undefined' && window.MANUAL_ISSUES) ? window.MANUAL_ISSUES : {};
+  const draftMap = loadManualArticles();
+  const arts = [];
+  order.forEach(function (id) { const a = mdMap[id] || draftMap[id]; if (a) arts.push(a); });
+  if (arts.length === 0) { toast('⚠️ 暂无自选文章可导出', 'warn'); return; }
+  const stamp = new Date().toISOString().slice(0, 10);
+
+  if (format === 'json') {
+    const blob = new Blob([JSON.stringify(arts, null, 2)], { type: 'application/json' });
+    downloadBlob(blob, '自选文章合集_' + stamp + '.json');
+    toast('🧾 已导出 ' + arts.length + ' 篇（JSON）');
+    return;
+  }
+
+  const lines = [];
+  lines.push('# 自选文章合集（' + (format === 'zh-only' ? '纯中文' : '双语') + '导出）');
+  lines.push('');
+  lines.push('> 导出时间：' + new Date().toLocaleString('zh-CN'));
+  lines.push('> 共 ' + arts.length + ' 篇');
+  lines.push('');
+  arts.forEach(function (a, i) {
+    const segs = (a.pages && a.pages[0] && a.pages[0].segments) || [];
+    lines.push('## [' + padIndex(i + 1) + '] ' + (a.displayName || a.name || '未命名文章'));
+    if (a.author) lines.push('**作者：** ' + a.author);
+    if (a.website) lines.push('**来源：** ' + a.website);
+    else if (a.source) lines.push('**来源：** ' + a.source);
+    if (a.sourceUrl) lines.push('**链接：** ' + a.sourceUrl);
+    lines.push('');
+    let anyZh = false;
+    segs.forEach(function (s) {
+      if (format === 'zh-only') {
+        const zh = (s.zh || '').trim();
+        if (zh) { lines.push(zh); anyZh = true; }
+      } else {
+        if (s.en) lines.push(s.en);
+        const zh = (s.zh || '').trim();
+        if (zh) { lines.push('> ' + zh); anyZh = true; }
+        else lines.push('> _（暂无译文）_');
+      }
+      lines.push('');
+    });
+    if (format === 'zh-only' && !anyZh) lines.push('（本篇暂无中文译文）');
+    lines.push('---');
+    lines.push('');
+  });
+  const blob = new Blob([lines.join('\n')], { type: 'text/markdown;charset=utf-8' });
+  downloadBlob(blob, '自选文章合集_' + stamp + (format === 'zh-only' ? '_中文' : '') + '.md');
+  toast('⤓ 已导出 ' + arts.length + ' 篇（' + (format === 'zh-only' ? '纯中文' : '双语') + ' Markdown）');
+}
+
+let exportModalNode = null;
+export function closeExportAllModal() {
+  if (exportModalNode) { exportModalNode.remove(); exportModalNode = null; }
+}
+export function openExportAllModal() {
+  closeExportAllModal();
+  const n = getManualOrder().length;
+  if (n === 0) { toast('⚠️ 暂无自选文章可导出', 'warn'); return; }
+  const node = document.createElement('div');
+  node.className = 'manual-export-modal';
+  node.setAttribute('role', 'dialog');
+  node.setAttribute('aria-modal', 'true');
+  node.innerHTML =
+    '<div class="manual-export-card">' +
+    '<div class="manual-export-head"><h3>⤓ 导出全部自选文章</h3>' +
+    '<button class="manual-export-close" aria-label="关闭">✕</button></div>' +
+    '<p class="manual-export-desc">共 ' + n + ' 篇，选择导出格式：</p>' +
+    '<div class="manual-export-opts">' +
+    '<button class="manual-export-opt" data-fmt="bilingual"><span class="ico">📄</span><span><b>双语 Markdown</b><br><small>英文逐段 + 中文逐段对照</small></span></button>' +
+    '<button class="manual-export-opt" data-fmt="zh-only"><span class="ico">🇨🇳</span><span><b>纯中文 Markdown</b><br><small>仅中文译文（无则标注）</small></span></button>' +
+    '<button class="manual-export-opt" data-fmt="json"><span class="ico">🧾</span><span><b>JSON 完整数据</b><br><small>含全部段落与元数据</small></span></button>' +
+    '</div>' +
+    '<button class="manual-export-cancel" data-act="cancel">取消</button>' +
+    '</div>';
+  exportModalNode = node;
+  document.body.appendChild(node);
+  node.addEventListener('click', function (e) {
+    if (e.target === node) { closeExportAllModal(); return; }
+    if (e.target.getAttribute && e.target.getAttribute('data-act') === 'cancel') { closeExportAllModal(); return; }
+    const fmtBtn = e.target.closest('[data-fmt]');
+    if (fmtBtn) {
+      const fmt = fmtBtn.getAttribute('data-fmt');
+      closeExportAllModal();
+      exportAllManualArticles(fmt);
+    }
+  });
+  const closeBtn = node.querySelector('.manual-export-close');
+  if (closeBtn) closeBtn.addEventListener('click', closeExportAllModal);
 }
