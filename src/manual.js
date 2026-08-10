@@ -10,7 +10,7 @@
  * ==========================================================================*/
 
 import {
-  els, escHtml, toast, confirmDialog, lsSet, readJson, countEnglishWords,
+  state, els, escHtml, toast, confirmDialog, lsSet, readJson, countEnglishWords,
 } from './core.js';
 import { enterReaderRoom } from './reader.js';
 
@@ -305,6 +305,15 @@ export function getManualArticleOrdinal(id) {
 export function renderManualShelfSection() {
   const grid = els.magazineShelfGrid;
   if (!grid) return;
+  // 自建文章作为独立「来源」分类：仅在「全部」或「自选文库」筛选下展示；
+  // 点具体刊物（大西洋/经济学人…）时隐藏，避免被误并入杂志筛选结果。
+  const filter = state.currentPubFilter;
+  const showManual = (filter === 'all' || filter === 'manual');
+  let section = document.getElementById('manual-shelf-section');
+  if (!showManual) {
+    if (section) section.remove();
+    return;
+  }
   // 合并两大自建来源：markdown 构建产物(window.MANUAL_ISSUES) + 应用内草稿(localStorage)
   const mdMap = (typeof window !== 'undefined' && window.MANUAL_ISSUES) ? window.MANUAL_ISSUES : {};
   const mdIds = Object.keys(mdMap);
@@ -313,14 +322,16 @@ export function renderManualShelfSection() {
 
   // 始终置顶：放在期刊网格「之前」（页面最上方、筛选器之下）。
   // 用 getElementById 复用唯一分区，避免每次重渲染累积重复 DOM 节点（旧逻辑用 grid.querySelector 永远找不到兄弟节点）。
-  let section = document.getElementById('manual-shelf-section');
   if (!section) {
     section = document.createElement('div');
     section.id = 'manual-shelf-section';
     section.className = 'shelf-section';
     grid.parentNode.insertBefore(section, grid);
   }
-  section.innerHTML = '<div class="shelf-section-title">⭐ 自选文章（置顶） · Markdown ' + mdIds.length + ' 篇 · 草稿 ' + draftIds.length + '</div>';
+  const titleText = (filter === 'manual')
+    ? '✍️ 自选文库（全部） · Markdown ' + mdIds.length + ' 篇 · 草稿 ' + draftIds.length
+    : '⭐ 自选文章（置顶） · Markdown ' + mdIds.length + ' 篇 · 草稿 ' + draftIds.length;
+  section.innerHTML = '<div class="shelf-section-title">' + titleText + '</div>';
   const frag = document.createDocumentFragment();
 
   // —— Project B：markdown 自建文章（文件驱动，无删除/编辑，仅阅读 + 导出备份）——
@@ -334,17 +345,18 @@ export function renderManualShelfSection() {
     const segs = (a.pages && a.pages[0] && a.pages[0].segments) || [];
     const color = a.themeColor || DEFAULT_THEME;
     const hasZh = segs.some(function (s) { return s.zh && String(s.zh).trim(); });
+    const srcLabel = a.website || (a.source ? '外部来源' : '自建文章');
     card.innerHTML =
       '<div class="shelf-cover-wrap shelf-manual-cover" style="background:' + escHtml(color) + ';">' +
       '<span class="shelf-manual-monogram">M</span></div>' +
       '<div class="shelf-details"><div class="shelf-details-top">' +
       '<span class="issue-date-tag">Markdown · ' + segs.length + ' 段' + (hasZh ? ' · 已译' : ' · 待译') + '</span>' +
       '<h3>' + escHtml(a.displayName || id) + '</h3>' +
-      '<p>' + escHtml(a.author ? ('作者：' + a.author) : (a.website || '自建文章')) + '</p>' +
+      '<p>' + escHtml(a.author ? ('作者：' + a.author) : ('来源：' + srcLabel)) + '</p>' +
       '<div class="shelf-meta-tags">' +
       '<span class="meta-tag">🔤 ' + countEnglishWords(a) + ' 词</span>' +
       '<span class="meta-tag">📄 单页流式</span>' +
-      (a.source ? '<span class="meta-tag">🔗 来源</span>' : '') +
+      '<span class="meta-tag">🏷️ ' + escHtml(srcLabel) + '</span>' +
       '</div></div>' +
       '<div class="shelf-manual-actions">' +
       '<button class="shelf-enter-btn" data-issue="' + escHtml(id) + '"><span>开始阅读</span></button>' +
@@ -372,7 +384,7 @@ export function renderManualShelfSection() {
       '<p>' + escHtml(a.author ? ('作者：' + a.author) : '手动录入文章') + '</p>' +
       '<div class="shelf-meta-tags">' +
       '<span class="meta-tag">🔤 ' + countEnglishWords(a) + ' 词</span>' +
-      '<span class="meta-tag">✎ 单语/双语</span>' +
+      '<span class="meta-tag">🏷️ ' + escHtml(a.author || '手动录入') + '</span>' +
       (a.sourceUrl ? '<span class="meta-tag">🔗 来源</span>' : '') +
       '</div></div>' +
       '<div class="shelf-manual-actions">' +

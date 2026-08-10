@@ -23,11 +23,12 @@ export function renderLibraryShelf() {
   const ids = Object.keys(allIssues).filter(function (id) {
     const issue = allIssues[id];
     if (state.currentPubFilter === 'all') return true;
+    if (state.currentPubFilter === 'manual') return false; // 自选文库单独成类，不混入杂志网格
     if (state.currentPubFilter === 'the-atlantic') return issue.pubId === 'the-atlantic' || !issue.pubId;
     return issue.pubId === state.currentPubFilter;
   });
 
-  if (ids.length === 0) {
+  if (ids.length === 0 && state.currentPubFilter !== 'manual') {
     grid.innerHTML =
       '<div style="grid-column:1/-1;padding:36px;text-align:center;background:var(--bg-card);border:1px solid var(--border-color);border-radius:16px;">' +
       '<h3 style="font-size:17px;color:var(--text-primary);margin-bottom:8px;">该刊物待入库</h3>' +

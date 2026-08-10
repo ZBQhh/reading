@@ -97,6 +97,7 @@ def build_portal():
       <!-- Multi-Publication Brand Matrix Filter Pills -->
       <div class="portal-pub-filters">
         <button class="pub-filter-btn active" data-pub="all">🏛️ 全部典藏 ALL</button>
+        <button class="pub-filter-btn" data-pub="manual">✍️ 自选文库 (My Articles)</button>
         <button class="pub-filter-btn" data-pub="the-atlantic">📜 大西洋月刊 (The Atlantic)</button>
         <button class="pub-filter-btn" data-pub="the-economist">📈 经济学人 (The Economist)</button>
         <button class="pub-filter-btn" data-pub="the-new-yorker">✍️ 纽约客 (The New Yorker)</button>

@@ -1823,16 +1823,27 @@ mark.page-highlight:hover { background: linear-gradient(180deg, transparent 45%,
   font-size: 46px; font-weight: 300; line-height: 1;
   color: color-mix(in srgb, var(--accent) 80%, var(--text));
 }
+/* 自建文库分区：作为独立「来源」面板，与下方期刊网格明显分隔。
+   采用跟随阅读主题的强调色描边 + 浅色底，确保切换主题时分隔线颜色同步变化。 */
 .shelf-section {
-  margin: 26px 0;
+  margin: 10px 0 30px;
+  padding: 20px 22px 24px;
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
   gap: 22px;
+  background: color-mix(in srgb, var(--accent) 6%, var(--bg-card));
+  border: 1px solid var(--border-color);
+  border-left: 4px solid var(--accent);
+  border-radius: 16px;
+  box-shadow: 0 4px 18px rgba(0,0,0,0.06);
 }
 .shelf-section-title {
   grid-column: 1 / -1;
-  font-size: 13px; font-weight: 600; letter-spacing: 0.06em; color: var(--text-2);
-  margin: 0 0 12px; padding-left: 2px; text-transform: uppercase;
+  font-size: 14px; font-weight: 700; letter-spacing: 0.05em;
+  color: var(--accent);
+  margin: 0 0 6px; padding: 0 2px 12px;
+  border-bottom: 1px solid var(--border-soft);
+  text-transform: uppercase;
 }
 
 /* 自建文库 markdown 卡与草稿卡的细微区分 */

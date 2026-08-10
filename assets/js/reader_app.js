@@ -935,18 +935,25 @@
   function renderManualShelfSection() {
     const grid = els.magazineShelfGrid;
     if (!grid) return;
+    const filter = state.currentPubFilter;
+    const showManual = filter === "all" || filter === "manual";
+    let section = document.getElementById("manual-shelf-section");
+    if (!showManual) {
+      if (section) section.remove();
+      return;
+    }
     const mdMap = typeof window !== "undefined" && window.MANUAL_ISSUES ? window.MANUAL_ISSUES : {};
     const mdIds = Object.keys(mdMap);
     const draftMap = loadManualArticles();
     const draftIds = Object.keys(draftMap);
-    let section = document.getElementById("manual-shelf-section");
     if (!section) {
       section = document.createElement("div");
       section.id = "manual-shelf-section";
       section.className = "shelf-section";
       grid.parentNode.insertBefore(section, grid);
     }
-    section.innerHTML = '<div class="shelf-section-title">⭐ 自选文章（置顶） · Markdown ' + mdIds.length + " 篇 · 草稿 " + draftIds.length + "</div>";
+    const titleText = filter === "manual" ? "✍️ 自选文库（全部） · Markdown " + mdIds.length + " 篇 · 草稿 " + draftIds.length : "⭐ 自选文章（置顶） · Markdown " + mdIds.length + " 篇 · 草稿 " + draftIds.length;
+    section.innerHTML = '<div class="shelf-section-title">' + titleText + "</div>";
     const frag = document.createDocumentFragment();
     mdIds.forEach(function(id) {
       const a = mdMap[id];
@@ -960,7 +967,8 @@
       const hasZh = segs.some(function(s) {
         return s.zh && String(s.zh).trim();
       });
-      card.innerHTML = '<div class="shelf-cover-wrap shelf-manual-cover" style="background:' + escHtml(color) + ';"><span class="shelf-manual-monogram">M</span></div><div class="shelf-details"><div class="shelf-details-top"><span class="issue-date-tag">Markdown · ' + segs.length + " 段" + (hasZh ? " · 已译" : " · 待译") + "</span><h3>" + escHtml(a.displayName || id) + "</h3><p>" + escHtml(a.author ? "作者：" + a.author : a.website || "自建文章") + '</p><div class="shelf-meta-tags"><span class="meta-tag">🔤 ' + countEnglishWords(a) + ' 词</span><span class="meta-tag">📄 单页流式</span>' + (a.source ? '<span class="meta-tag">🔗 来源</span>' : "") + '</div></div><div class="shelf-manual-actions"><button class="shelf-enter-btn" data-issue="' + escHtml(id) + '"><span>开始阅读</span></button><button class="manual-mini-btn" data-act="md-export" data-issue="' + escHtml(id) + '" aria-label="导出 JSON 备份">⤓</button></div></div>';
+      const srcLabel = a.website || (a.source ? "外部来源" : "自建文章");
+      card.innerHTML = '<div class="shelf-cover-wrap shelf-manual-cover" style="background:' + escHtml(color) + ';"><span class="shelf-manual-monogram">M</span></div><div class="shelf-details"><div class="shelf-details-top"><span class="issue-date-tag">Markdown · ' + segs.length + " 段" + (hasZh ? " · 已译" : " · 待译") + "</span><h3>" + escHtml(a.displayName || id) + "</h3><p>" + escHtml(a.author ? "作者：" + a.author : "来源：" + srcLabel) + '</p><div class="shelf-meta-tags"><span class="meta-tag">🔤 ' + countEnglishWords(a) + ' 词</span><span class="meta-tag">📄 单页流式</span><span class="meta-tag">🏷️ ' + escHtml(srcLabel) + '</span></div></div><div class="shelf-manual-actions"><button class="shelf-enter-btn" data-issue="' + escHtml(id) + '"><span>开始阅读</span></button><button class="manual-mini-btn" data-act="md-export" data-issue="' + escHtml(id) + '" aria-label="导出 JSON 备份">⤓</button></div></div>';
       frag.appendChild(card);
     });
     draftIds.forEach(function(id) {
@@ -972,7 +980,7 @@
       card.dataset.issue = id;
       const segs = a.pages && a.pages[0] && a.pages[0].segments || [];
       const color = a.themeColor || DEFAULT_THEME;
-      card.innerHTML = '<div class="shelf-cover-wrap shelf-manual-cover" style="background:' + escHtml(color) + ';"><span class="shelf-manual-monogram">✎</span></div><div class="shelf-details"><div class="shelf-details-top"><span class="issue-date-tag">草稿 · ' + segs.length + " 段</span><h3>" + escHtml(a.displayName || id) + "</h3><p>" + escHtml(a.author ? "作者：" + a.author : "手动录入文章") + '</p><div class="shelf-meta-tags"><span class="meta-tag">🔤 ' + countEnglishWords(a) + ' 词</span><span class="meta-tag">✎ 单语/双语</span>' + (a.sourceUrl ? '<span class="meta-tag">🔗 来源</span>' : "") + '</div></div><div class="shelf-manual-actions"><button class="shelf-enter-btn" data-issue="' + escHtml(id) + '"><span>开始阅读</span></button><button class="manual-mini-btn" data-act="edit" data-issue="' + escHtml(id) + '" aria-label="编辑">✎</button><button class="manual-mini-btn" data-act="export" data-issue="' + escHtml(id) + '" aria-label="导出">⤓</button><button class="manual-mini-btn manual-mini-danger" data-act="delete" data-issue="' + escHtml(id) + '" aria-label="删除">🗑</button></div></div>';
+      card.innerHTML = '<div class="shelf-cover-wrap shelf-manual-cover" style="background:' + escHtml(color) + ';"><span class="shelf-manual-monogram">✎</span></div><div class="shelf-details"><div class="shelf-details-top"><span class="issue-date-tag">草稿 · ' + segs.length + " 段</span><h3>" + escHtml(a.displayName || id) + "</h3><p>" + escHtml(a.author ? "作者：" + a.author : "手动录入文章") + '</p><div class="shelf-meta-tags"><span class="meta-tag">🔤 ' + countEnglishWords(a) + ' 词</span><span class="meta-tag">🏷️ ' + escHtml(a.author || "手动录入") + "</span>" + (a.sourceUrl ? '<span class="meta-tag">🔗 来源</span>' : "") + '</div></div><div class="shelf-manual-actions"><button class="shelf-enter-btn" data-issue="' + escHtml(id) + '"><span>开始阅读</span></button><button class="manual-mini-btn" data-act="edit" data-issue="' + escHtml(id) + '" aria-label="编辑">✎</button><button class="manual-mini-btn" data-act="export" data-issue="' + escHtml(id) + '" aria-label="导出">⤓</button><button class="manual-mini-btn manual-mini-danger" data-act="delete" data-issue="' + escHtml(id) + '" aria-label="删除">🗑</button></div></div>';
       frag.appendChild(card);
     });
     const newCard = document.createElement("div");
@@ -1338,10 +1346,11 @@
     const ids = Object.keys(allIssues).filter(function(id) {
       const issue = allIssues[id];
       if (state.currentPubFilter === "all") return true;
+      if (state.currentPubFilter === "manual") return false;
       if (state.currentPubFilter === "the-atlantic") return issue.pubId === "the-atlantic" || !issue.pubId;
       return issue.pubId === state.currentPubFilter;
     });
-    if (ids.length === 0) {
+    if (ids.length === 0 && state.currentPubFilter !== "manual") {
       grid.innerHTML = '<div style="grid-column:1/-1;padding:36px;text-align:center;background:var(--bg-card);border:1px solid var(--border-color);border-radius:16px;"><h3 style="font-size:17px;color:var(--text-primary);margin-bottom:8px;">该刊物待入库</h3><p style="font-size:12.5px;color:var(--text-secondary);">可用 <code>python scripts/ingest_magazine.py --pdf raw_pdf/xxx.pdf --pub ' + escHtml(state.currentPubFilter) + ' --issue 2026-09 --name "2026年9月刊"</code> 一键入库</p></div>';
       return;
     }
