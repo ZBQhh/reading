@@ -2,6 +2,15 @@
 
 本项目的历次版本变更记录。格式遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)。
 
+## [2.6.9] - 2026-08-10
+
+### 工程（CI 修复：ESLint no-undef）
+
+- **根因**：2.6.7 把日期胶囊/键盘 `M` 改为调用 `openIssueSwitcher()`，但该函数定义在 `init` 作用域内；模块级 `handleGlobalKeyDown` 调用它时 ESLint 报 `no-undef`，导致 CI `npm run lint` 失败（CI 红）。
+- **修复**：将 `openIssueSwitcher` 及其依赖（`onSwitcherOutside`/`onSwitcherKey`/`closeIssueSwitcher`/`makeSwitcherItem`）整体提升到模块级（这些函数只依赖模块级的 `els`/`allIssues`/`state` 与导入的 `getManualOrder`/`resolveIssue`/`switchIssue`）。
+- 顺手移除不再使用的 `nextIssueId` 导入（消除 warning）。
+- 本地复现：`lint` 0 问题 / `build` / `test` 26·26 / `smoke` 12·12 全绿；无头 Edge 确认 `M` 键菜单正常打开、含「自选文库」分组、Esc 关闭。
+
 ## [2.6.8] - 2026-08-10
 
 ### 体验（移动端中英文间距 + 全端强调色分隔线修复）

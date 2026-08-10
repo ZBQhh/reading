@@ -2110,7 +2110,7 @@
     bindOne("fullscreenBtn", toggleFullscreen);
     bindOne("copyPageBtn", copyPageMarkdown);
     bindOne("quickJumpBtn", jumpFromInput);
-    bindOne("issueSwitcherPill", openIssueSwitcher2);
+    bindOne("issueSwitcherPill", openIssueSwitcher);
     bindOne("topAudioSpeedBtn", cycleAudioSpeed);
     bindOne("audioSpeedBtn", cycleAudioSpeed);
     bindOne("zoomInBtn", function() {
@@ -2129,92 +2129,6 @@
     if (openLightboxNode) openLightboxNode.addEventListener("click", function() {
       if (els.pageOriginalImg) openLightboxImage(els.pageOriginalImg.src);
     });
-    function onSwitcherOutside(e) {
-      const menu = document.getElementById("issue-switcher-menu");
-      if (!menu) return;
-      if (menu.contains(e.target)) return;
-      if (els.issueSwitcherPill && els.issueSwitcherPill.contains(e.target)) return;
-      closeIssueSwitcher();
-    }
-    function onSwitcherKey(e) {
-      if (e.key === "Escape") closeIssueSwitcher();
-    }
-    function closeIssueSwitcher() {
-      const old = document.getElementById("issue-switcher-menu");
-      if (old) old.remove();
-      document.removeEventListener("click", onSwitcherOutside, true);
-      document.removeEventListener("keydown", onSwitcherKey, true);
-    }
-    function makeSwitcherItem(id, label, isManual, current) {
-      const item = document.createElement("button");
-      item.type = "button";
-      item.className = "issue-switcher-item" + (isManual ? " is-manual" : "") + (current ? " is-current" : "");
-      const ic = document.createElement("span");
-      ic.className = "sw-ic";
-      ic.textContent = isManual ? "✍️" : "📜";
-      const tx = document.createElement("span");
-      tx.className = "sw-tx";
-      tx.textContent = label;
-      item.appendChild(ic);
-      item.appendChild(tx);
-      if (current) {
-        const ok = document.createElement("span");
-        ok.className = "sw-cur";
-        ok.textContent = "✓ 当前";
-        item.appendChild(ok);
-      }
-      item.addEventListener("click", function() {
-        closeIssueSwitcher();
-        if (id !== state.currentIssueId) switchIssue(id);
-      });
-      return item;
-    }
-    function openIssueSwitcher2() {
-      closeIssueSwitcher();
-      const pill = els.issueSwitcherPill;
-      if (!pill) return;
-      const menu = document.createElement("div");
-      menu.className = "issue-switcher-menu";
-      menu.id = "issue-switcher-menu";
-      const curId = state.currentIssueObj && state.currentIssueObj.id || state.currentIssueId;
-      const manualIds = typeof getManualOrder === "function" ? getManualOrder() : [];
-      const magIds = Object.keys(allIssues);
-      if (manualIds.length) {
-        const g = document.createElement("div");
-        g.className = "sw-group-label";
-        g.textContent = "✍️ 自选文库（" + manualIds.length + "）";
-        menu.appendChild(g);
-        manualIds.forEach(function(id) {
-          const obj = resolveIssue(id) || { displayName: id };
-          menu.appendChild(makeSwitcherItem(id, obj.displayName || id, true, id === curId));
-        });
-      }
-      if (magIds.length) {
-        const g = document.createElement("div");
-        g.className = "sw-group-label";
-        g.textContent = "📜 杂志期刊（" + magIds.length + "）";
-        menu.appendChild(g);
-        magIds.forEach(function(id) {
-          const obj = allIssues[id];
-          menu.appendChild(makeSwitcherItem(id, obj.displayName || id, false, id === curId));
-        });
-      }
-      document.body.appendChild(menu);
-      const r = pill.getBoundingClientRect();
-      menu.style.position = "fixed";
-      menu.style.top = r.bottom + 6 + "px";
-      menu.style.left = Math.max(8, r.left) + "px";
-      menu.style.minWidth = Math.max(r.width, 200) + "px";
-      menu.style.maxWidth = Math.min(window.innerWidth - 16, 380) + "px";
-      const rect = menu.getBoundingClientRect();
-      if (rect.right > window.innerWidth - 8) menu.style.left = Math.max(8, window.innerWidth - 8 - rect.width) + "px";
-      const maxH = window.innerHeight - rect.top - 12;
-      if (menu.scrollHeight > maxH) menu.style.maxHeight = maxH + "px";
-      setTimeout(function() {
-        document.addEventListener("click", onSwitcherOutside, true);
-        document.addEventListener("keydown", onSwitcherKey, true);
-      }, 0);
-    }
     $$(".view-btn").forEach(function(b) {
       b.addEventListener("click", function() {
         setViewMode(b.dataset.view);
@@ -2575,6 +2489,92 @@
       renderBookmarksTab();
     });
     renderAllHighlightsCounts();
+  }
+  function onSwitcherOutside(e) {
+    const menu = document.getElementById("issue-switcher-menu");
+    if (!menu) return;
+    if (menu.contains(e.target)) return;
+    if (els.issueSwitcherPill && els.issueSwitcherPill.contains(e.target)) return;
+    closeIssueSwitcher();
+  }
+  function onSwitcherKey(e) {
+    if (e.key === "Escape") closeIssueSwitcher();
+  }
+  function closeIssueSwitcher() {
+    const old = document.getElementById("issue-switcher-menu");
+    if (old) old.remove();
+    document.removeEventListener("click", onSwitcherOutside, true);
+    document.removeEventListener("keydown", onSwitcherKey, true);
+  }
+  function makeSwitcherItem(id, label, isManual, current) {
+    const item = document.createElement("button");
+    item.type = "button";
+    item.className = "issue-switcher-item" + (isManual ? " is-manual" : "") + (current ? " is-current" : "");
+    const ic = document.createElement("span");
+    ic.className = "sw-ic";
+    ic.textContent = isManual ? "✍️" : "📜";
+    const tx = document.createElement("span");
+    tx.className = "sw-tx";
+    tx.textContent = label;
+    item.appendChild(ic);
+    item.appendChild(tx);
+    if (current) {
+      const ok = document.createElement("span");
+      ok.className = "sw-cur";
+      ok.textContent = "✓ 当前";
+      item.appendChild(ok);
+    }
+    item.addEventListener("click", function() {
+      closeIssueSwitcher();
+      if (id !== state.currentIssueId) switchIssue(id);
+    });
+    return item;
+  }
+  function openIssueSwitcher() {
+    closeIssueSwitcher();
+    const pill = els.issueSwitcherPill;
+    if (!pill) return;
+    const menu = document.createElement("div");
+    menu.className = "issue-switcher-menu";
+    menu.id = "issue-switcher-menu";
+    const curId = state.currentIssueObj && state.currentIssueObj.id || state.currentIssueId;
+    const manualIds = typeof getManualOrder === "function" ? getManualOrder() : [];
+    const magIds = Object.keys(allIssues);
+    if (manualIds.length) {
+      const g = document.createElement("div");
+      g.className = "sw-group-label";
+      g.textContent = "✍️ 自选文库（" + manualIds.length + "）";
+      menu.appendChild(g);
+      manualIds.forEach(function(id) {
+        const obj = resolveIssue(id) || { displayName: id };
+        menu.appendChild(makeSwitcherItem(id, obj.displayName || id, true, id === curId));
+      });
+    }
+    if (magIds.length) {
+      const g = document.createElement("div");
+      g.className = "sw-group-label";
+      g.textContent = "📜 杂志期刊（" + magIds.length + "）";
+      menu.appendChild(g);
+      magIds.forEach(function(id) {
+        const obj = allIssues[id];
+        menu.appendChild(makeSwitcherItem(id, obj.displayName || id, false, id === curId));
+      });
+    }
+    document.body.appendChild(menu);
+    const r = pill.getBoundingClientRect();
+    menu.style.position = "fixed";
+    menu.style.top = r.bottom + 6 + "px";
+    menu.style.left = Math.max(8, r.left) + "px";
+    menu.style.minWidth = Math.max(r.width, 200) + "px";
+    menu.style.maxWidth = Math.min(window.innerWidth - 16, 380) + "px";
+    const rect = menu.getBoundingClientRect();
+    if (rect.right > window.innerWidth - 8) menu.style.left = Math.max(8, window.innerWidth - 8 - rect.width) + "px";
+    const maxH = window.innerHeight - rect.top - 12;
+    if (menu.scrollHeight > maxH) menu.style.maxHeight = maxH + "px";
+    setTimeout(function() {
+      document.addEventListener("click", onSwitcherOutside, true);
+      document.addEventListener("keydown", onSwitcherKey, true);
+    }, 0);
   }
   function handleGlobalKeyDown(e) {
     const activeEl = document.activeElement;
