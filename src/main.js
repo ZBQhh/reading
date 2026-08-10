@@ -367,9 +367,8 @@ function bindStaticEvents() {
   if (els.readerViewport) {
     const vp = els.readerViewport;
     const FLIP_MS = 240;
-    const SLIDE_IN_MS = 280;
     const VELOCITY_FLIP = 0.3; // px/ms：快速甩动即翻页（≈300px/s）
-    let sx = 0, sy = 0, st = 0, active = false, locked = false, horiz = false;
+    let sx = 0, sy = 0, st = 0, active = false, locked = false, horiz = false, lastMove = 0;
     vp.addEventListener('touchstart', function (e) {
       if (e.touches.length !== 1) { active = false; return; }
       sx = e.touches[0].clientX; sy = e.touches[0].clientY; st = e.timeStamp;
@@ -392,6 +391,7 @@ function bindStaticEvents() {
       const total = state.currentIssueObj.totalPages || 0;
       if ((state.currentPage <= 1 && dx > 0) || (state.currentPage >= total && dx < 0)) move = dx * 0.35; // 边界阻尼
       vp.style.transform = 'translateX(' + move + 'px)';
+      lastMove = move;
     }, { passive: false });
     vp.addEventListener('touchend', function (e) {
       if (!active) return; active = false;
@@ -409,19 +409,48 @@ function bindStaticEvents() {
       vp.style.transition = 'transform ' + FLIP_MS + 'ms cubic-bezier(.22,.61,.36,1)';
       if (commit) {
         const goNext = dx < 0;                                   // 左滑=下一页，右滑=上一页
-        const offX = (goNext ? -1 : 1) * window.innerWidth;     // 沿滑动方向滑出（修正此前反向的别扭感）
-        vp.style.transform = 'translateX(' + offX + 'px)';
-        setTimeout(function () {
-          loadPage(state.currentPage + (goNext ? 1 : -1));
-          // 新页从对侧滑入：先置于对侧屏幕外，再过渡回 0
-          vp.style.transition = 'none';
-          vp.style.transform = 'translateX(' + (goNext ? window.innerWidth : -window.innerWidth) + 'px)';
-          void vp.offsetWidth; // 强制重排，确保起始位置生效
-          requestAnimationFrame(function () {
-            vp.style.transition = 'transform ' + SLIDE_IN_MS + 'ms cubic-bezier(.22,.61,.36,1)';
-            vp.style.transform = 'translateX(0)';
-          });
-        }, FLIP_MS);
+        const W = window.innerWidth;
+        const outX = (goNext ? -1 : 1) * W;                     // 旧页沿手指方向滑出
+        const inX = (lastMove || 0) + (goNext ? W : -W);         // 新页紧贴旧页起始处对侧进入，两层全程无缝拼合（不留缝隙）
+        // 快照当前页作为覆盖层：滑动全程由「旧页滑出 + 新页滑入」两层拼满屏幕，底层永不留白
+        const snap = vp.cloneNode(true);
+        snap.classList.add('flip-snap');
+        snap.removeAttribute('id');
+        snap.querySelectorAll('[id]').forEach(function (n) { n.removeAttribute('id'); });
+        snap.style.position = 'fixed';
+        const r = vp.getBoundingClientRect();
+        snap.style.top = r.top + 'px';
+        snap.style.left = r.left + 'px';
+        snap.style.width = r.width + 'px';
+        snap.style.height = r.height + 'px';
+        snap.style.margin = '0';
+        snap.style.zIndex = '50';
+        snap.style.pointerEvents = 'none';
+        snap.style.transition = 'none';
+        snap.style.transform = 'translateX(' + (lastMove || 0) + 'px)'; // 从手指停留处继续滑出，无缝衔接
+        snap.scrollTop = vp.scrollTop;
+        vp.parentNode.insertBefore(snap, vp.nextSibling);
+        // 立即加载新页（此刻被快照完全覆盖，无闪烁）
+        loadPage(state.currentPage + (goNext ? 1 : -1));
+        vp.style.transition = 'none';
+        vp.style.transform = 'translateX(' + inX + 'px)';
+        void vp.offsetWidth; // 强制重排，确保起始位置生效
+        requestAnimationFrame(function () {
+          const ease = 'cubic-bezier(.22,.61,.36,1)';
+          snap.style.transition = 'transform ' + FLIP_MS + 'ms ' + ease;
+          snap.style.transform = 'translateX(' + outX + 'px)';
+          vp.style.transition = 'transform ' + FLIP_MS + 'ms ' + ease;
+          vp.style.transform = 'translateX(0)';
+        });
+        let cleaned = false;
+        const cleanup = function () {
+          if (cleaned) return; cleaned = true;
+          if (snap.parentNode) snap.parentNode.removeChild(snap);
+          vp.style.transition = '';
+          vp.style.transform = '';
+        };
+        vp.addEventListener('transitionend', cleanup, { once: true });
+        setTimeout(cleanup, FLIP_MS + 90);
       } else {
         vp.style.transform = 'translateX(0)'; // 越界回弹
       }
