@@ -68,8 +68,8 @@ button:focus:not(:focus-visible) { outline: none; }
 :root {
   --reader-font-scale: 22px;
 
-  --header-h: 58px;
-  --bottom-h: 60px;
+  --header-h: calc(58px + env(safe-area-inset-top, 0px));
+  --bottom-h: calc(60px + env(safe-area-inset-bottom, 0px));
   --sidebar-w: 290px;
   --radius-sm: 6px;
   --radius-md: 12px;
@@ -268,7 +268,7 @@ body.theme-dark {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  padding: 0 14px;
+  padding: env(safe-area-inset-top, 0px) 14px 0;
   background: color-mix(in srgb, var(--bg-card) 82%, transparent);
   -webkit-backdrop-filter: blur(16px) saturate(1.4);
   backdrop-filter: blur(16px) saturate(1.4);
@@ -1007,7 +1007,7 @@ body.font-mode-serif .zh-text-card { font-family: var(--font-serif-zh); }
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 2fr) minmax(0, 1fr);
   align-items: center;
-  padding: 8px 14px;
+  padding: 8px 14px env(safe-area-inset-bottom, 0px);
   gap: 8px;
   background: color-mix(in srgb, var(--bg-card) 86%, transparent);
   -webkit-backdrop-filter: blur(16px) saturate(1.4);
@@ -1516,7 +1516,7 @@ body.font-mode-serif .zh-text-card { font-family: var(--font-serif-zh); }
   }
   .app-sidebar.collapsed { transform: translateX(-102%); width: min(320px, 86vw); border-right: 1px solid var(--border-soft); }
 
-  .reader-viewport { height: calc(100dvh - var(--header-h) - 56px - var(--bottom-h)); }
+  .reader-viewport { height: calc(100dvh - var(--header-h) - var(--bottom-h)); }
 
   body.view-split .reader-container { flex-direction: column; }
   body.view-split .image-column {
@@ -1537,9 +1537,9 @@ body.font-mode-serif .zh-text-card { font-family: var(--font-serif-zh); }
 }
 
 @media (max-width: 640px) {
-  :root { --header-h: 54px; --bottom-h: 58px; }
+  :root { --header-h: calc(54px + env(safe-area-inset-top, 0px)); --bottom-h: calc(58px + env(safe-area-inset-bottom, 0px)); }
 
-  .app-header { padding: 0 10px; gap: 6px; }
+  .app-header { padding: env(safe-area-inset-top, 0px) 10px 0; gap: 6px; }
   .masthead-logo { font-size: 13px; letter-spacing: 0.06em; }
   .header-right { gap: 4px; flex: none; }
   .icon-btn, .audio-btn, .more-menu-btn { padding: 6px 9px; }
@@ -1573,7 +1573,7 @@ body.font-mode-serif .zh-text-card { font-family: var(--font-serif-zh); }
   .nav-page-btn { padding: 8px 12px; }
   .page-jump-input-wrap input { font-size: 16px; }
 
-  .bottom-bar { grid-template-columns: minmax(0, 1fr) minmax(0, 1.7fr) minmax(0, 1fr); gap: 6px; padding: 6px 8px; }
+  .bottom-bar { grid-template-columns: minmax(0, 1fr) minmax(0, 1.7fr) minmax(0, 1fr); gap: 6px; padding: 6px 8px env(safe-area-inset-bottom, 0px); }
   .bottom-left, .bottom-right { min-width: 0; }
   .nav-page-btn { padding: 5px 8px; font-size: 12px; gap: 4px; white-space: nowrap; }
   .nav-page-btn svg { flex: none; width: 14px; height: 14px; }
