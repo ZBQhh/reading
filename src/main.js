@@ -775,6 +775,22 @@ function upgradeOnlineData() {
 // 启动
 // ==================================================================
 function boot() {
+  // ---- 移动端返回键拦截：阅读中按浏览器返回键 → 回首页，不退出网页 ----
+  var readerHistoryArmed = false;
+  // 由 reader.js 的 enterReaderRoom 在首次进入时调用
+  window.__atl_armReaderHistory = function () {
+    if (readerHistoryArmed) return;
+    readerHistoryArmed = true;
+    try { history.pushState({ _atl: 'reader' }, '', location.href); } catch (_) {}
+  };
+  window.addEventListener('popstate', function () {
+    var inReader = els.libraryPortal && els.libraryPortal.classList.contains('hidden');
+    if (inReader && readerHistoryArmed) {
+      try { history.pushState({ _atl: 'reader' }, '', location.href); } catch (_) {}
+      openLibraryShelf();
+    }
+  });
+
   // 主题初值（无记忆时跟随系统）
   const storedTheme = lsGet(LS.theme, '');
   const initTheme = THEMES.indexOf(storedTheme) >= 0 ? storedTheme

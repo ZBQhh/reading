@@ -26,7 +26,7 @@
     SWIPE_THRESHOLD_PX: 60,
     WORDBOOK_MAX: 500
   };
-  var VERSION = window.BUILD_VERSION || "2.5.0";
+  var VERSION = window.BUILD_VERSION || "2.6.13";
   var allIssues = window.ALL_ISSUES || {};
   var els = {};
   var state = {
@@ -1019,6 +1019,7 @@
     return !!(obj && (obj.source === "manual" || obj.sourceType === "markdown"));
   }
   function enterReaderRoom(issueId, targetPage) {
+    if (window.__atl_armReaderHistory) window.__atl_armReaderHistory();
     const resolved = resolveIssue(issueId);
     if (!resolved) {
       toast("未找到该文章", "error");
@@ -2722,6 +2723,25 @@
     });
   }
   function boot() {
+    var readerHistoryArmed = false;
+    window.__atl_armReaderHistory = function() {
+      if (readerHistoryArmed) return;
+      readerHistoryArmed = true;
+      try {
+        history.pushState({ _atl: "reader" }, "", location.href);
+      } catch (_) {
+      }
+    };
+    window.addEventListener("popstate", function() {
+      var inReader = els.libraryPortal && els.libraryPortal.classList.contains("hidden");
+      if (inReader && readerHistoryArmed) {
+        try {
+          history.pushState({ _atl: "reader" }, "", location.href);
+        } catch (_) {
+        }
+        openLibraryShelf();
+      }
+    });
     const storedTheme = lsGet(LS.theme, "");
     const initTheme = THEMES.indexOf(storedTheme) >= 0 ? storedTheme : matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
     applyTheme(initTheme);

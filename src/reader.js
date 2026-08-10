@@ -29,6 +29,8 @@ export function isManualIssue(obj) {
 // 阅读室
 // ==================================================================
 export function enterReaderRoom(issueId, targetPage) {
+  // 通知 main.js 激活浏览器返回键拦截（移动端：阅读中按返回 → 回首页而非退出网页）
+  if (window.__atl_armReaderHistory) window.__atl_armReaderHistory();
   const resolved = resolveIssue(issueId);
   if (!resolved) { toast('未找到该文章', 'error'); return; }
   // 手建/草稿文章编辑后再次进入时 id 不变但内容已变，需强制重载；新刊照常重载

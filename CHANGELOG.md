@@ -2,6 +2,14 @@
 
 本项目的历次版本变更记录。格式遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)。
 
+## [2.6.13] - 2026-08-10
+
+### 体验（移动端英文左间距再加大 + 返回键回首页）
+
+- 用户截图反馈：移动端 `.seg-card` 内的英文文字（如 "OF NO PARTY OR CLIQUE"）**仍然几乎贴到强调框左边缘**，2.6.12 设定的 20px 在窄屏上视觉仍偏紧。
+- **修复**：移动端 `.en-text`/`.zh-text-card` 左右内边距从 20px 增至 **24px**（文字距框线 = 1px border + 24px = 25px，视觉舒适不贴线；中英严格一致保持左对齐）。
+- **新功能**：移动端阅读文章时，按浏览器返回键（或 Android 返回键）**不再直接退出网页**，而是拦截并回到首页（library portal）。实现方式：首次 `enterReaderRoom()` 时通过 `history.pushState` 注入阅读状态，`popstate` 监听器检测到阅读中按返回则 `pushState` 回填 + 调用 `openLibraryShelf()`。
+
 ## [2.6.12] - 2026-08-10
 
 ### 体验（移动端中英左对齐 + 英文距强调框线修正）
