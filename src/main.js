@@ -363,10 +363,11 @@ function bindStaticEvents() {
     });
   }
 
-  // 触屏滑动手势翻页（P3 · 手势物理化：手指跟随 + 速度阈值 + 越界回弹）
+  // 触屏滑动手势翻页（移动端；手指跟随 + 速度阈值 + 越界回弹 + 方向修正 + 单页文章不接管）
   if (els.readerViewport) {
     const vp = els.readerViewport;
-    const FLIP_MS = 280;
+    const FLIP_MS = 240;
+    const SLIDE_IN_MS = 280;
     const VELOCITY_FLIP = 0.3; // px/ms：快速甩动即翻页（≈300px/s）
     let sx = 0, sy = 0, st = 0, active = false, locked = false, horiz = false;
     vp.addEventListener('touchstart', function (e) {
@@ -380,7 +381,10 @@ function bindStaticEvents() {
       const dx = e.touches[0].clientX - sx, dy = e.touches[0].clientY - sy;
       if (!locked) {
         if (Math.abs(dx) < 8 && Math.abs(dy) < 8) return;
-        horiz = Math.abs(dx) > Math.abs(dy); locked = true;
+        const horizontalIntent = Math.abs(dx) > Math.abs(dy);
+        // 单篇流式文章（自选/自建）无翻页概念：水平手势不接管，放行原生行为（纵向滚动等）
+        if (horizontalIntent && isManualIssue(state.currentIssueObj)) { horiz = false; locked = true; return; }
+        horiz = horizontalIntent; locked = true;
       }
       if (!horiz) return; // 纵向手势放行，保留正常滚动
       e.preventDefault();
@@ -399,14 +403,24 @@ function bindStaticEvents() {
         vp.style.transition = 'transform ' + FLIP_MS + 'ms ease';
         vp.style.transform = 'translateX(0)'; horiz = false; return;
       }
-      const commit = horiz && !isManualIssue(state.currentIssueObj) && (Math.abs(dx) > window.innerWidth * 0.33 || Math.abs(v) > VELOCITY_FLIP);
+      const total = state.currentIssueObj.totalPages || 1;
+      const atBoundary = (dx > 0 && state.currentPage <= 1) || (dx < 0 && state.currentPage >= total);
+      const commit = horiz && !isManualIssue(state.currentIssueObj) && !atBoundary && (Math.abs(dx) > window.innerWidth * 0.33 || Math.abs(v) > VELOCITY_FLIP);
       vp.style.transition = 'transform ' + FLIP_MS + 'ms cubic-bezier(.22,.61,.36,1)';
       if (commit) {
-        const dir = dx < 0 ? 1 : -1;
-        vp.style.transform = 'translateX(' + (dir * window.innerWidth) + 'px)';
+        const goNext = dx < 0;                                   // 左滑=下一页，右滑=上一页
+        const offX = (goNext ? -1 : 1) * window.innerWidth;     // 沿滑动方向滑出（修正此前反向的别扭感）
+        vp.style.transform = 'translateX(' + offX + 'px)';
         setTimeout(function () {
-          loadPage(state.currentPage + dir);
-          vp.style.transition = 'none'; vp.style.transform = '';
+          loadPage(state.currentPage + (goNext ? 1 : -1));
+          // 新页从对侧滑入：先置于对侧屏幕外，再过渡回 0
+          vp.style.transition = 'none';
+          vp.style.transform = 'translateX(' + (goNext ? window.innerWidth : -window.innerWidth) + 'px)';
+          void vp.offsetWidth; // 强制重排，确保起始位置生效
+          requestAnimationFrame(function () {
+            vp.style.transition = 'transform ' + SLIDE_IN_MS + 'ms cubic-bezier(.22,.61,.36,1)';
+            vp.style.transform = 'translateX(0)';
+          });
         }, FLIP_MS);
       } else {
         vp.style.transform = 'translateX(0)'; // 越界回弹

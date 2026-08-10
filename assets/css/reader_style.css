@@ -1556,9 +1556,9 @@ body.font-mode-serif .zh-text-card { font-family: var(--font-serif-zh); }
     .back-to-library-btn { display: none; }
   }
 
-  /* 移动端阅读舒适区：A± 依然生效（下限 15px） */
-  .en-text { font-size: max(15px, var(--reader-font-scale)); padding: 16px 16px; }
-  .zh-text-card { font-size: max(15px, var(--reader-font-scale)); }
+  /* 移动端阅读舒适区：字号整体收小（下限 13.5px，按 0.8 缩放 A± 仍生效） */
+  .en-text { font-size: max(13.5px, calc(var(--reader-font-scale) * 0.8)); padding: 14px 13px; }
+  .zh-text-card { font-size: max(13.5px, calc(var(--reader-font-scale) * 0.8)); }
   .segment-block { padding: 0; }
 
   .portal-header { flex-direction: column; align-items: flex-start; }

@@ -2250,7 +2250,8 @@
     }
     if (els.readerViewport) {
       const vp = els.readerViewport;
-      const FLIP_MS = 280;
+      const FLIP_MS = 240;
+      const SLIDE_IN_MS = 280;
       const VELOCITY_FLIP = 0.3;
       let sx = 0, sy = 0, st = 0, active = false, locked = false, horiz = false;
       vp.addEventListener("touchstart", function(e) {
@@ -2271,7 +2272,13 @@
         const dx = e.touches[0].clientX - sx, dy = e.touches[0].clientY - sy;
         if (!locked) {
           if (Math.abs(dx) < 8 && Math.abs(dy) < 8) return;
-          horiz = Math.abs(dx) > Math.abs(dy);
+          const horizontalIntent = Math.abs(dx) > Math.abs(dy);
+          if (horizontalIntent && isManualIssue(state.currentIssueObj)) {
+            horiz = false;
+            locked = true;
+            return;
+          }
+          horiz = horizontalIntent;
           locked = true;
         }
         if (!horiz) return;
@@ -2293,15 +2300,23 @@
           horiz = false;
           return;
         }
-        const commit = horiz && !isManualIssue(state.currentIssueObj) && (Math.abs(dx) > window.innerWidth * 0.33 || Math.abs(v) > VELOCITY_FLIP);
+        const total = state.currentIssueObj.totalPages || 1;
+        const atBoundary = dx > 0 && state.currentPage <= 1 || dx < 0 && state.currentPage >= total;
+        const commit = horiz && !isManualIssue(state.currentIssueObj) && !atBoundary && (Math.abs(dx) > window.innerWidth * 0.33 || Math.abs(v) > VELOCITY_FLIP);
         vp.style.transition = "transform " + FLIP_MS + "ms cubic-bezier(.22,.61,.36,1)";
         if (commit) {
-          const dir = dx < 0 ? 1 : -1;
-          vp.style.transform = "translateX(" + dir * window.innerWidth + "px)";
+          const goNext = dx < 0;
+          const offX = (goNext ? -1 : 1) * window.innerWidth;
+          vp.style.transform = "translateX(" + offX + "px)";
           setTimeout(function() {
-            loadPage(state.currentPage + dir);
+            loadPage(state.currentPage + (goNext ? 1 : -1));
             vp.style.transition = "none";
-            vp.style.transform = "";
+            vp.style.transform = "translateX(" + (goNext ? window.innerWidth : -window.innerWidth) + "px)";
+            void vp.offsetWidth;
+            requestAnimationFrame(function() {
+              vp.style.transition = "transform " + SLIDE_IN_MS + "ms cubic-bezier(.22,.61,.36,1)";
+              vp.style.transform = "translateX(0)";
+            });
           }, FLIP_MS);
         } else {
           vp.style.transform = "translateX(0)";
