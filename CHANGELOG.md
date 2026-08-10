@@ -2,6 +2,18 @@
 
 本项目的历次版本变更记录。格式遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)。
 
+## [2.6.7] - 2026-08-10
+
+### 体验（移动端：期刊切换可回自选 + 回主页按钮常驻）
+
+- **问题 1（无法回到自选）**：顶部日期胶囊原点击逻辑 `switchIssue(nextIssueId())`，而 `nextIssueId()` 只按 `Object.keys(allIssues)`（仅杂志）循环——自选文章不在 `allIssues` 里，故从自选点胶囊能跳到杂志，之后便永远回不到自选。
+- **问题 2（找不到回主页按钮）**：移动端 `@media (max-width:359px)` 里 `.back-to-library-btn { display:none }` 把返回按钮隐藏，而装饰性刊名也已在 2.6.5 隐藏——移动端实际无任何「回主页」入口。
+- **修复**：
+  - 日期胶囊的「盲循环」改为**真正的期刊切换下拉菜单**（`src/main.js` 新增 `openIssueSwitcher`/`closeIssueSwitcher`，JS 动态生成、不依赖 index.html 模板）：菜单分「✍️ 自选文库」与「📜 杂志期刊」两组，列出全部可选项并高亮当前项；点击即 `switchIssue`；点外部/Esc 关闭。当前项以 `state.currentIssueObj.id` 判定（从书架直接打开自选文章时 `currentIssueId` 未必更新，避免高亮错乱）。键盘 `M` 也改为打开此菜单。
+  - 移动端返回按钮**始终可见**：移除 `<360px` 的 `display:none`，改为仅显示图标（`.btn-label{display:none}` + 紧凑 padding），作为唯一回主页入口保留。
+  - 新增下拉菜单样式（`.issue-switcher-menu` 等）：分组标签、当前项高亮、超长列表内部滚动、弹出动画。
+- 验证：无头 Edge（iPhone 390×844）模拟——返回按钮 visible(41×40)；从自选打开菜单正确高亮自选项；自选→杂志→再点自选成功回到 `ARTICLE 001/001`；回主页后书架网格重新可见；无 JS 异常。构建 + smoke 12/12 通过。
+
 ## [2.6.6] - 2026-08-10
 
 ### 体验（修复移动端翻页动画的短暂空白）
