@@ -62,7 +62,14 @@ export function refreshPill() {
   const compact = pill.querySelector('.issue-pill-compact');
   const wordCount = countEnglishWords(state.currentIssueObj);
   if (full) full.textContent = '📅 ' + name + ' • ' + state.currentIssueObj.totalPages + 'P • 🔤 ' + wordCount + ' 词';
-  if (compact) compact.textContent = '📅 ' + String(state.currentIssueObj.id || '').replace('-', '/');
+  // 紧凑态（移动端）：自选/自建文章显示友好标题而非原始长 slug，避免头部被文件名撑破
+  let compactText;
+  if (isManualIssue(state.currentIssueObj)) {
+    compactText = '✍️ ' + name;
+  } else {
+    compactText = '📅 ' + String(state.currentIssueObj.id || '').replace('-', '/');
+  }
+  if (compact) compact.textContent = compactText;
 }
 
 export function nextIssueId() {

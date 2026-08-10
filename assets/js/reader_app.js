@@ -1052,7 +1052,13 @@
     const compact = pill.querySelector(".issue-pill-compact");
     const wordCount = countEnglishWords(state.currentIssueObj);
     if (full) full.textContent = "📅 " + name + " • " + state.currentIssueObj.totalPages + "P • 🔤 " + wordCount + " 词";
-    if (compact) compact.textContent = "📅 " + String(state.currentIssueObj.id || "").replace("-", "/");
+    let compactText;
+    if (isManualIssue(state.currentIssueObj)) {
+      compactText = "✍️ " + name;
+    } else {
+      compactText = "📅 " + String(state.currentIssueObj.id || "").replace("-", "/");
+    }
+    if (compact) compact.textContent = compactText;
   }
   function nextIssueId() {
     const ids = Object.keys(allIssues);

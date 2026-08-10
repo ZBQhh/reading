@@ -1543,13 +1543,15 @@ body.font-mode-serif .zh-text-card { font-family: var(--font-serif-zh); }
   .masthead-logo { font-size: 13px; letter-spacing: 0.06em; }
   .header-right { gap: 4px; flex: none; }
   .icon-btn, .audio-btn, .more-menu-btn { padding: 6px 9px; }
-  .issue-switcher-pill { padding: 4px 8px; font-size: 11px; flex-shrink: 1; }
+  .issue-switcher-pill { padding: 4px 8px; font-size: 11px; flex: 1 1 auto; min-width: 0; }
 
   /* 超窄屏：倍速胶囊仍常驻（压缩显示），品牌/返回按钮让位 */
   .audio-btn.speed-btn { min-width: 0; padding: 6px 7px; font-size: 11.5px; font-variant-numeric: tabular-nums; }
-  .issue-switcher-pill { flex-shrink: 0; }
+  /* 胶囊必须可收缩并按省略号截断，否则长文件名撑破头部（之前 flex-shrink:0 导致溢出） */
+  .issue-switcher-pill { flex: 1 1 auto; min-width: 0; }
   .masthead-logo { overflow: hidden; text-overflow: ellipsis; }
-  .magazine-brand { flex: 1 1 auto; }
+  /* 移动端隐藏装饰性刊名（返回按钮已承担回馆导航），把空间让给文件名胶囊 */
+  .magazine-brand { display: none; }
 
   /* <360px（iPhone SE）：返回按钮与品牌点击同效，让位于品牌 */
   @media (max-width: 359px) {
