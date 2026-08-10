@@ -82,9 +82,8 @@ button:focus:not(:focus-visible) { outline: none; }
   --max-reader-w: 1260px;
   --max-reader-w-split: 1900px;
 
-  /* 阅读框/分隔线/标题条的主题色：默认等于当前阅读主题的 --accent，
+  /* 阅读框/分隔线/标题条的主题色：在每个 body.theme-* 块里绑定为本主题的 --accent，
      故随主题切换实时变化；JS 不再注入文章固定色，避免写死。 */
-  --issue-accent: var(--accent);
 
 --font-sans: 'Inter', 'Plus Jakarta Sans', 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif;
   /* 自托管出版级字体（毒舌 7.4：离线 + 出版级兼得，零 Google Fonts 请求）：
@@ -117,6 +116,7 @@ body.theme-light {
   --text-2: #4a473f;
   --text-muted: #8a877d;
   --accent: #b3802f;
+  --issue-accent: var(--accent);
   --accent-gold: #c89a4a;
   --accent-soft: rgba(179, 128, 47, 0.14);
 --danger: #b3372d;
@@ -139,6 +139,7 @@ body.theme-sepia {
   --text-2: #6b5a38;
   --text-muted: #a2926f;
   --accent: #9c6b2b;
+  --issue-accent: var(--accent);
   --accent-gold: #b07f38;
 --accent-soft: rgba(156, 107, 43, 0.14);
    --danger: #a44a32;
@@ -160,6 +161,7 @@ body.theme-beach {
   --text-2: #3a5b71;
   --text-muted: #7c9aac;
   --accent: #2a7f9e;
+  --issue-accent: var(--accent);
   --accent-gold: #d9a34a;
 --accent-soft: rgba(42, 127, 158, 0.14);
    --danger: #b23a38;
@@ -181,6 +183,7 @@ body.theme-academic {
   --text-2: #3c4a5d;
   --text-muted: #7e8ea2;
   --accent: #4263a1;
+  --issue-accent: var(--accent);
   --accent-gold: #a88340;
 --accent-soft: rgba(66, 99, 161, 0.13);
    --danger: #b0433a;
@@ -202,6 +205,7 @@ body.theme-forest {
   --text-2: #3c5c47;
   --text-muted: #7e9a86;
   --accent: #3d7a4f;
+  --issue-accent: var(--accent);
   --accent-gold: #b08a3e;
 --accent-soft: rgba(61, 122, 79, 0.14);
    --danger: #b04538;
@@ -223,6 +227,7 @@ body.theme-dark {
   --text-2: #a9a79f;
   --text-muted: #6f6f68;
   --accent: #c9a559;
+  --issue-accent: var(--accent);
   --accent-gold: #d9b96f;
 --accent-soft: rgba(201, 165, 89, 0.16);
    --danger: #d45a4e;
@@ -1594,8 +1599,9 @@ body.font-mode-serif .zh-text-card { font-family: var(--font-serif-zh); }
   .back-to-library-btn { padding: 7px 9px; }
 
   /* 移动端阅读舒适区：字号整体收小（下限 13.5px，按 0.8 缩放 A± 仍生效） */
-  .en-text { font-size: max(13.5px, calc(var(--reader-font-scale) * 0.8)); padding: 14px 13px; }
-  .zh-text-card { font-size: max(13.5px, calc(var(--reader-font-scale) * 0.8)); }
+  /* 中英文同框：左右内边距统一为 15px；压缩中英文之间的垂直空行（en底 6 + 分隔线 2 + zh顶 5 ≈ 13px） */
+  .en-text { font-size: max(13.5px, calc(var(--reader-font-scale) * 0.8)); padding: 12px 15px 6px; }
+  .zh-text-card { font-size: max(13.5px, calc(var(--reader-font-scale) * 0.8)); padding: 5px 15px 13px; }
   .segment-block { padding: 0; }
 
   .portal-header { flex-direction: column; align-items: flex-start; }

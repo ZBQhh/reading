@@ -2,6 +2,14 @@
 
 本项目的历次版本变更记录。格式遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)。
 
+## [2.6.8] - 2026-08-10
+
+### 体验（移动端中英文间距 + 全端强调色分隔线修复）
+
+- **移动端 EN/ZH 垂直间距压缩**：英文底 6px + 分隔线 2px + 中文顶 5px ≈ 13px（此前 ~30px 空行）
+- **左右内边距统一**：`.en-text` 与 `.zh-text-card` 移动端均设 `padding-left/right: 15px`（此前 en=13 / zh=22 不一致）
+- **全端分隔线恢复**：`--issue-accent` 在每个 `body.theme-*` 块内绑定为本主题 `--accent`（此前仅在 `:root` 声明，因 `--accent` 未在 `:root` 定义导致整条 border-top 被丢弃为 none；影响所有主题、所有端）
+
 ## [2.6.7] - 2026-08-10
 
 ### 体验（移动端：期刊切换可回自选 + 回主页按钮常驻）
