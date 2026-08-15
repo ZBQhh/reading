@@ -1,3 +1,3 @@
-﻿@{
-    ExpectedRepo = "ZBQhh/reading"
+@{
+    ExpectedRepo = "Zbqhh/BilingualReader"
 }

@@ -1,4 +1,4 @@
-# AGENTS.md — TheAtlantic Reader 开发者 / Agent 上手指南
+# AGENTS.md — BilingualReader 开发者 / Agent 上手指南
 
 > 面向**后续接手本项目的任意 agent（或人类开发者）**。读完本文件即可独立完成：
 > 同步自选文章数据、翻译回填、UI/排版修改、构建、测试、部署推送。
@@ -12,16 +12,16 @@
 技术栈：Vanilla JS（ES Modules）+ esbuild（打包为 IIFE）+ 原生 CSS + 少量 Python 构建脚本。
 无后端、无框架，部署到 GitHub Pages。
 
-- 仓库：`ZBQhh/reading`（GitHub）
+- 仓库：`Zbqhh/BilingualReader`（GitHub）
 - 当前版本：`src/core.js` 中 `export const VERSION`（当前 `2.6.14`）
-- 工作树根目录：`D:\Desktop\TheAtlantic`
+- 工作树根目录：`D:\Desktop\WorkSpace\BilingualReader`
 
 ---
 
 ## 1. 仓库结构与关键文件
 
 ```
-D:\Desktop\TheAtlantic\
+D:\Desktop\WorkSpace\BilingualReader\
 ├── index.html                ← 主页门户（⚠️ 由脚本整文件重写，勿手写改动静态结构）
 ├── reader.html               ← 阅读器壳（极薄，加载打包后的 JS）
 ├── assets/

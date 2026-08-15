@@ -7,9 +7,15 @@ try {
 }
 const { chromium } = playwright;
 // 本审计需要本地 GUI 浏览器（Windows Edge）+ 本地文件路径，仅适合本地运行。
-// CI（GitHub Actions）无此环境，直接跳过；本地可用 AUDIT_BROWSER / AUDIT_TARGET 覆盖。
+const path = require('path');
+const REPO_ROOT = path.resolve(__dirname, '..');
+function toFileUrl(p) {
+  const norm = path.resolve(p).replace(/\\/g, '/');
+  if (/^[A-Za-z]:/.test(norm)) return 'file:///' + norm;
+  return 'file://' + norm;
+}
 const EDGE = process.env.AUDIT_BROWSER || 'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe';
-const TARGET = process.env.AUDIT_TARGET || 'file:///D:/Desktop/TheAtlantic/index.html';
+const TARGET = process.env.AUDIT_TARGET || toFileUrl(path.join(REPO_ROOT, 'index.html'));
 
 if (process.env.CI) {
   console.log('AUDIT SKIPPED on CI (requires a local headless browser + local file path).');

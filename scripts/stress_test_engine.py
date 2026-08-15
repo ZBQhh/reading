@@ -50,8 +50,12 @@ for issue in issues:
 
         img_path = pageObj.get('image', '')
         if not os.path.exists(img_path):
-            failed_pages.append((issue_id, pnum, f"Image file missing: {img_path}"))
-            continue
+            webp_path = os.path.splitext(img_path)[0] + '.webp'
+            if os.path.exists(webp_path):
+                img_path = webp_path
+            else:
+                failed_pages.append((issue_id, pnum, f"Image file missing: {img_path}"))
+                continue
 
         for s in segs:
             for field in ('en', 'zh'):
