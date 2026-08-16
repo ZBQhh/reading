@@ -19,8 +19,9 @@ Thumbs.db
 *.log
 *.tmp
 .idea/
-.vscode/
 # Build Artifacts & Generated Output (regenerable via scripts/)
+dist/
+build/
 output/
 full_magazine.md
 index.html
