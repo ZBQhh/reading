@@ -14,7 +14,8 @@
     highlights: "atlantic_reader_highlights",
     wordbook: "atlantic_reader_wordbook",
     magazineNewestFirst: "atlantic_reader_mag_newest",
-    manualNewestFirst: "atlantic_reader_man_newest"
+    manualNewestFirst: "atlantic_reader_man_newest",
+    manualSectionCollapsed: "atlantic_reader_man_collapsed"
   };
   var VIEW_MODES = ["interlinear", "split", "en-only", "zh-only"];
   var THEMES = ["light", "sepia", "beach", "academic", "forest", "dark"];
@@ -37,6 +38,8 @@
     // 杂志「最新在前」翻转（持久化）
     manualNewestFirst: lsGet(LS.manualNewestFirst, "0") === "1",
     // 自选文库「最新在前」翻转（持久化）
+    manualSectionCollapsed: lsGet(LS.manualSectionCollapsed, "0") === "1",
+    // 自选文库分区折叠态（持久化）
     currentIssueId: lsGet(LS.issue, ""),
     currentIssueObj: null,
     data: [],
@@ -225,7 +228,7 @@
     Array.prototype.forEach.call(container.children, function(c) {
       if (c.classList && c.classList.contains("shelf-issue-card") && (!exclude || !c.matches(exclude))) cards.push(c);
     });
-    const limit = typeof window !== "undefined" && window.innerWidth <= 640 ? 4 : 12;
+    const limit = typeof window !== "undefined" && window.innerWidth <= 640 ? 3 : 6;
     const expanded = container.getAttribute("data-expanded") === "1";
     cards.forEach(function(c, i) {
       c.style.display = expanded || i < limit ? "" : "none";
@@ -1014,10 +1017,35 @@
       section.className = "shelf-section";
       grid.parentNode.insertBefore(section, grid);
     }
+    const isCollapsed = !!state.manualSectionCollapsed;
+    section.className = "shelf-section" + (isCollapsed ? " shelf-section-collapsed" : "");
+    const totalCount = mdIds.length + draftIds.length;
     const titleText = filter === "manual" ? "✍️ 自选文库（全部） · Markdown " + mdIds.length + " 篇 · 草稿 " + draftIds.length : "⭐ 自选文章（置顶） · Markdown " + mdIds.length + " 篇 · 草稿 " + draftIds.length;
     const flipLabel = state.manualNewestFirst ? "⇅ 最早在前" : "⇅ 最新在前";
     const flipActive = state.manualNewestFirst ? " active" : "";
-    section.innerHTML = '<div class="shelf-section-title-row"><span class="shelf-section-title">' + titleText + '</span><div class="shelf-title-actions"><button type="button" class="shelf-flip-btn' + flipActive + '" data-act="flip-manual" aria-pressed="' + String(state.manualNewestFirst) + '">' + flipLabel + '</button><button type="button" class="shelf-export-all-btn" data-act="export-all-self">⤓ 导出全部自选</button></div></div>';
+    if (isCollapsed) {
+      section.innerHTML = '<div class="shelf-section-title-row"><div class="shelf-title-left"><span class="shelf-section-title">' + titleText + '</span><span class="shelf-collapsed-pill">📦 已收起 ' + totalCount + ' 篇</span></div><div class="shelf-title-actions"><button type="button" class="shelf-fold-btn" data-act="fold-manual" title="展开自选文库">▸ 展开自选 (' + totalCount + ' 篇)</button><button type="button" class="shelf-new-quick-btn" data-act="new-quick">＋ 新建草稿</button><button type="button" class="shelf-export-all-btn" data-act="export-all-self">⤓ 导出全部</button></div></div>';
+      const foldBtn2 = section.querySelector(".shelf-fold-btn");
+      if (foldBtn2) foldBtn2.addEventListener("click", function(e) {
+        e.stopPropagation();
+        state.manualSectionCollapsed = false;
+        lsSet(LS.manualSectionCollapsed, "0");
+        renderManualShelfSection();
+        toast("📖 自选文章已展开");
+      });
+      const newQuickBtn = section.querySelector(".shelf-new-quick-btn");
+      if (newQuickBtn) newQuickBtn.addEventListener("click", function(e) {
+        e.stopPropagation();
+        openManualEditor();
+      });
+      const exportBtn2 = section.querySelector(".shelf-export-all-btn");
+      if (exportBtn2) exportBtn2.addEventListener("click", function(e) {
+        e.stopPropagation();
+        openExportAllModal();
+      });
+      return;
+    }
+    section.innerHTML = '<div class="shelf-section-title-row"><div class="shelf-title-left"><span class="shelf-section-title">' + titleText + '</span></div><div class="shelf-title-actions"><button type="button" class="shelf-fold-btn active" data-act="fold-manual" title="收起自选文库">▾ 收起自选</button><button type="button" class="shelf-flip-btn' + flipActive + '" data-act="flip-manual" aria-pressed="' + String(state.manualNewestFirst) + '">' + flipLabel + '</button><button type="button" class="shelf-export-all-btn" data-act="export-all-self">⤓ 导出全部自选</button></div></div>';
     const frag = document.createDocumentFragment();
     order.forEach(function(id) {
       const isMd = !!mdMap[id];
@@ -1052,6 +1080,14 @@
     newCard.innerHTML = '<div class="shelf-cover-wrap shelf-new-manual-cover"><span class="shelf-new-manual-plus">＋</span></div><div class="shelf-details"><div class="shelf-details-top"><span class="issue-date-tag">自建 · 快速草稿</span><h3>新建单篇文章</h3><p>粘贴英文（可附中文），或导入 JSON。也可直接往 md 数据源文件夹放 .md 由构建生成。</p><div class="shelf-meta-tags"><span class="meta-tag">✎ 对照 / 整篇录入</span><span class="meta-tag">🔤 纯英文亦可</span></div></div></div>';
     frag.appendChild(newCard);
     section.appendChild(frag);
+    const foldBtn = section.querySelector(".shelf-fold-btn");
+    if (foldBtn) foldBtn.addEventListener("click", function(e) {
+      e.stopPropagation();
+      state.manualSectionCollapsed = true;
+      lsSet(LS.manualSectionCollapsed, "1");
+      renderManualShelfSection();
+      toast("📦 自选文章已收起");
+    });
     const exportBtn = section.querySelector(".shelf-export-all-btn");
     if (exportBtn) exportBtn.addEventListener("click", function(e) {
       e.stopPropagation();
@@ -2153,6 +2189,7 @@
     settingsBackdrop: "settings-backdrop",
     settingsPopover: "settings-popover-menu",
     moreSettingsBtn: "more-settings-btn",
+    portalSettingsBtn: "portal-settings-btn",
     alignModeToggle: "align-mode-toggle",
     alignModeText: "align-mode-text",
     fullscreenBtn: "fullscreen-btn",
@@ -2313,6 +2350,10 @@
     });
     bindOne("playPageAudioBtn", playPageSpeech);
     bindOne("moreSettingsBtn", function(e) {
+      e.stopPropagation();
+      toggleSettingsPopover();
+    });
+    bindOne("portalSettingsBtn", function(e) {
       e.stopPropagation();
       toggleSettingsPopover();
     });

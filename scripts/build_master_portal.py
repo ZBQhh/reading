@@ -76,6 +76,7 @@ def build_portal():
         <button class="shelf-enter-btn portal-data-btn" id="portal-wordbook-btn" title="回顾收藏的生词（双击英文单词即可收藏）"><span>📖 生词本</span></button>
         <button class="shelf-enter-btn portal-data-btn" id="portal-highlights-btn" title="回顾已收藏的高亮选段"><span>🔖 我的高亮</span></button>
         <button class="shelf-enter-btn portal-data-btn" id="portal-bookmarks-btn" title="回顾收藏的书签页"><span>🗂️ 书签</span></button>
+        <button class="shelf-enter-btn portal-data-btn" id="portal-settings-btn" title="切换排版视觉与 6 大奢华主题 (快捷键 ?)"><span>⚙️ 主题与排版</span></button>
       </div>
     </header>
 

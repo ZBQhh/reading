@@ -77,6 +77,7 @@ const ELS_BY_ID = {
   settingsBackdrop: 'settings-backdrop',
   settingsPopover: 'settings-popover-menu',
   moreSettingsBtn: 'more-settings-btn',
+  portalSettingsBtn: 'portal-settings-btn',
   alignModeToggle: 'align-mode-toggle',
   alignModeText: 'align-mode-text',
   fullscreenBtn: 'fullscreen-btn',
@@ -230,6 +231,7 @@ function bindStaticEvents() {
   bindOne('bookmarkPageBtn', function () { toggleBookmark(state.currentPage); });
   bindOne('playPageAudioBtn', playPageSpeech);
   bindOne('moreSettingsBtn', function (e) { e.stopPropagation(); toggleSettingsPopover(); });
+  bindOne('portalSettingsBtn', function (e) { e.stopPropagation(); toggleSettingsPopover(); });
   bindOne('alignModeToggle', function () { applyAlignMode(state.currentAlignModeInternal === 'flush' ? 'justify' : 'flush'); });
   bindOne('fontToggleBtn', toggleFont);
   bindOne('fontIncBtn', function () { applyFontScale(state.globalFontScale + 1.5); });

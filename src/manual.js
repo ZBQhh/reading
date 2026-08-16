@@ -352,15 +352,56 @@ export function renderManualShelfSection() {
     section.className = 'shelf-section';
     grid.parentNode.insertBefore(section, grid);
   }
+  const isCollapsed = !!state.manualSectionCollapsed;
+  section.className = 'shelf-section' + (isCollapsed ? ' shelf-section-collapsed' : '');
+
+  const totalCount = mdIds.length + draftIds.length;
   const titleText = (filter === 'manual')
     ? '✍️ 自选文库（全部） · Markdown ' + mdIds.length + ' 篇 · 草稿 ' + draftIds.length
     : '⭐ 自选文章（置顶） · Markdown ' + mdIds.length + ' 篇 · 草稿 ' + draftIds.length;
   const flipLabel = state.manualNewestFirst ? '⇅ 最早在前' : '⇅ 最新在前';
   const flipActive = state.manualNewestFirst ? ' active' : '';
+
+  if (isCollapsed) {
+    section.innerHTML =
+      '<div class="shelf-section-title-row">' +
+      '<div class="shelf-title-left">' +
+      '<span class="shelf-section-title">' + titleText + '</span>' +
+      '<span class="shelf-collapsed-pill">📦 已收起 ' + totalCount + ' 篇</span>' +
+      '</div>' +
+      '<div class="shelf-title-actions">' +
+      '<button type="button" class="shelf-fold-btn" data-act="fold-manual" title="展开自选文库">▸ 展开自选 (' + totalCount + ' 篇)</button>' +
+      '<button type="button" class="shelf-new-quick-btn" data-act="new-quick">＋ 新建草稿</button>' +
+      '<button type="button" class="shelf-export-all-btn" data-act="export-all-self">⤓ 导出全部</button>' +
+      '</div></div>';
+
+    const foldBtn = section.querySelector('.shelf-fold-btn');
+    if (foldBtn) foldBtn.addEventListener('click', function (e) {
+      e.stopPropagation();
+      state.manualSectionCollapsed = false;
+      lsSet(LS.manualSectionCollapsed, '0');
+      renderManualShelfSection();
+      toast('📖 自选文章已展开');
+    });
+
+    const newQuickBtn = section.querySelector('.shelf-new-quick-btn');
+    if (newQuickBtn) newQuickBtn.addEventListener('click', function (e) {
+      e.stopPropagation();
+      openManualEditor();
+    });
+
+    const exportBtn = section.querySelector('.shelf-export-all-btn');
+    if (exportBtn) exportBtn.addEventListener('click', function (e) { e.stopPropagation(); openExportAllModal(); });
+    return;
+  }
+
   section.innerHTML =
     '<div class="shelf-section-title-row">' +
+    '<div class="shelf-title-left">' +
     '<span class="shelf-section-title">' + titleText + '</span>' +
+    '</div>' +
     '<div class="shelf-title-actions">' +
+    '<button type="button" class="shelf-fold-btn active" data-act="fold-manual" title="收起自选文库">▾ 收起自选</button>' +
     '<button type="button" class="shelf-flip-btn' + flipActive + '" data-act="flip-manual" aria-pressed="' + String(state.manualNewestFirst) + '">' + flipLabel + '</button>' +
     '<button type="button" class="shelf-export-all-btn" data-act="export-all-self">⤓ 导出全部自选</button>' +
     '</div></div>';
@@ -438,6 +479,16 @@ export function renderManualShelfSection() {
   frag.appendChild(newCard);
 
   section.appendChild(frag);
+
+  // 展开/收起折叠按钮
+  const foldBtn = section.querySelector('.shelf-fold-btn');
+  if (foldBtn) foldBtn.addEventListener('click', function (e) {
+    e.stopPropagation();
+    state.manualSectionCollapsed = true;
+    lsSet(LS.manualSectionCollapsed, '1');
+    renderManualShelfSection();
+    toast('📦 自选文章已收起');
+  });
 
   // 导出全部自选按钮 & 翻转「最新在前」按钮（直接绑定，避免污染门户委托）
   const exportBtn = section.querySelector('.shelf-export-all-btn');

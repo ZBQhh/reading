@@ -23,6 +23,7 @@ export const LS = {
   wordbook: 'atlantic_reader_wordbook',
   magazineNewestFirst: 'atlantic_reader_mag_newest',
   manualNewestFirst: 'atlantic_reader_man_newest',
+  manualSectionCollapsed: 'atlantic_reader_man_collapsed',
 };
 
 export const VIEW_MODES = ['interlinear', 'split', 'en-only', 'zh-only'];
@@ -49,6 +50,7 @@ export const state = {
   currentPubFilter: 'all',
   magazineNewestFirst: lsGet(LS.magazineNewestFirst, '0') === '1', // 杂志「最新在前」翻转（持久化）
   manualNewestFirst: lsGet(LS.manualNewestFirst, '0') === '1',     // 自选文库「最新在前」翻转（持久化）
+  manualSectionCollapsed: lsGet(LS.manualSectionCollapsed, '0') === '1', // 自选文库分区折叠态（持久化）
   currentIssueId: lsGet(LS.issue, ''),
   currentIssueObj: null,
   data: [],
@@ -264,7 +266,7 @@ export function applyShelfCollapse(container, opts) {
   Array.prototype.forEach.call(container.children, function (c) {
     if (c.classList && c.classList.contains('shelf-issue-card') && (!exclude || !c.matches(exclude))) cards.push(c);
   });
-  const limit = (typeof window !== 'undefined' && window.innerWidth <= 640) ? 4 : 12;
+  const limit = (typeof window !== 'undefined' && window.innerWidth <= 640) ? 3 : 6;
   const expanded = container.getAttribute('data-expanded') === '1';
   cards.forEach(function (c, i) {
     c.style.display = (expanded || i < limit) ? '' : 'none';
