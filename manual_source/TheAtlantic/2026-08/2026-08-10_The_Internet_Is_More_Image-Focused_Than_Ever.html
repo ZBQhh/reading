@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Internet Is More Image-Focused Than Ever · Ladder 沉浸阅读</title>
+  <style>
+    /* 中文字符专属字体定义：自动等比缩减至 80% (约 17.5px)，字重柔和轻量 */
+    @font-face {
+      font-family: 'ChineseSoftMuted';
+      src: local('PingFang SC Light'), local('PingFang SC'), local('Microsoft YaHei Light'), local('Microsoft YaHei'), local('SimHei');
+      unicode-range: U+4E00-9FFF, U+3400-4DBF, U+20000-2A6DF, U+3000-303F, U+FF00-FFEF;
+      size-adjust: 80%;
+    }
+
+    :root {
+      --font-reader: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", "Arial Nova", 'ChineseSoftMuted', sans-serif;
+    }
+
+    /* 1. 经典羊皮纸 (Sepia / Parchment) - 默认主题 */
+    body.theme-sepia {
+      --bg: #f8f1e3;
+      --card: #ede3ce;
+      --text: #382c1e;
+      --muted: #7a6854;
+      --border: rgba(60, 44, 30, 0.12);
+      --accent: #b45309;
+      --cover-bg: #e6dac1;
+    }
+
+    /* 2. 蓝色冷静学术风 (Nordic Academic Blue) */
+    body.theme-academic {
+      --bg: #0e1726;
+      --card: #162238;
+      --text: #e2e8f0;
+      --muted: #8ba2c4;
+      --border: rgba(148, 163, 184, 0.14);
+      --accent: #38bdf8;
+      --cover-bg: #121d30;
+    }
+
+    /* 3. 清新薄荷森系 (Fresh Mint / Sage) */
+    body.theme-mint {
+      --bg: #edf5f0;
+      --card: #deebe2;
+      --text: #1b382b;
+      --muted: #4e7663;
+      --border: rgba(27, 56, 43, 0.1);
+      --accent: #059669;
+      --cover-bg: #d2e4d8;
+    }
+
+    /* 4. 夏日海滩暖阳 (Summer Beach / Warm Sand) */
+    body.theme-beach {
+      --bg: #fdf6ec;
+      --card: #f7ebd9;
+      --text: #3c2d1d;
+      --muted: #8c7155;
+      --border: rgba(217, 119, 6, 0.14);
+      --accent: #0284c7;
+      --cover-bg: #f0deca;
+    }
+
+    /* 5. 极夜深黑 (Midnight Dark) */
+    body.theme-dark {
+      --bg: #0b0f19;
+      --card: #151c2c;
+      --text: #f1f5f9;
+      --muted: #94a3b8;
+      --border: rgba(255, 255, 255, 0.08);
+      --accent: #818cf8;
+      --cover-bg: #111726;
+    }
+
+    /* 6. 月白浅色 (Pure Paper White) */
+    body.theme-light {
+      --bg: #fafafa;
+      --card: #ffffff;
+      --text: #171717;
+      --muted: #737373;
+      --border: rgba(0, 0, 0, 0.08);
+      --accent: #4f46e5;
+      --cover-bg: #f0f0f0;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-reader);
+      min-height: 100vh;
+      font-weight: 400;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      text-rendering: optimizeLegibility;
+      transition: background 0.25s ease, color 0.25s ease;
+    }
+    #progress {
+      position: fixed; top: 0; left: 0; height: 3px;
+      background: linear-gradient(90deg, var(--accent), #ec4899);
+      width: 0%; z-index: 1000;
+    }
+    header {
+      position: sticky; top: 0; z-index: 900;
+      background: var(--card); border-bottom: 1px solid var(--border);
+      padding: 12px 32px; display: flex; align-items: center; justify-content: space-between;
+      backdrop-filter: blur(16px); transition: background 0.25s ease;
+    }
+    .btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 7px 14px; border-radius: 8px; font-size: 13px; font-weight: 600;
+      cursor: pointer; text-decoration: none; border: 1px solid var(--border);
+      background: rgba(127,127,127,0.08); color: var(--text);
+      font-family: var(--font-reader); transition: all 0.2s;
+    }
+    .btn:hover { background: rgba(127,127,127,0.18); transform: translateY(-1px); }
+    .btn-green { background: #059669; color: #fff; border: none; cursor: default; }
+    
+    .theme-picker {
+      display: flex; gap: 7px; align-items: center; background: rgba(127,127,127,0.08);
+      padding: 4px 10px; border-radius: 9999px; border: 1px solid var(--border);
+    }
+    .theme-dot {
+      width: 18px; height: 18px; border-radius: 50%; display: inline-block; cursor: pointer;
+      border: 2px solid transparent; transition: transform 0.2s, border-color 0.2s;
+    }
+    .theme-dot:hover { transform: scale(1.2); }
+    .theme-dot.active { border-color: var(--accent); transform: scale(1.25); box-shadow: 0 0 8px var(--accent); }
+
+    .theme-dot.sepia { background: #f8f1e3; border: 1px solid #7a6854; }
+    .theme-dot.academic { background: #1e40af; border: 1px solid #60a5fa; }
+    .theme-dot.mint { background: #10b981; border: 1px solid #059669; }
+    .theme-dot.beach { background: #f59e0b; border: 1px solid #d97706; }
+    .theme-dot.dark { background: #000000; border: 1px solid #4b5563; }
+    .theme-dot.light { background: #ffffff; border: 1px solid #9ca3af; }
+
+    /* 超宽全屏沉浸流 (宽度 1280px / 92%，左右留白极小) */
+    main {
+      max-width: 1280px;
+      width: 92%;
+      margin: 32px auto 100px;
+      padding: 0 16px;
+    }
+    .badge {
+      display: inline-block; padding: 5px 12px; background: rgba(99,102,241,0.14);
+      color: var(--accent); font-size: 13px; font-weight: 700; border-radius: 6px; margin-bottom: 16px;
+      letter-spacing: 0.5px;
+    }
+    h1 {
+      font-size: 40px; line-height: 1.3; font-weight: 800; margin-bottom: 18px;
+      font-family: var(--font-reader); letter-spacing: -0.03em;
+    }
+    .meta {
+      color: var(--muted); font-size: 14px; margin-bottom: 32px;
+      padding-bottom: 20px; border-bottom: 1px solid var(--border);
+      display: flex; gap: 20px; align-items: center; flex-wrap: wrap;
+    }
+    
+    /* 官方同款高清大封面 (Hero Cover) */
+    .hero-cover-container {
+      margin: 24px 0 40px;
+      border-radius: 14px;
+      overflow: hidden;
+      box-shadow: 0 12px 36px rgba(0,0,0,0.25);
+      background: var(--cover-bg);
+    }
+    .hero-cover-img {
+      width: 100%;
+      max-height: 620px;
+      object-fit: cover;
+      display: block;
+    }
+    figcaption {
+      padding: 10px 16px;
+      font-size: 13px;
+      color: var(--muted);
+      background: rgba(0,0,0,0.06);
+      line-height: 1.5;
+    }
+
+    /* 纯净现代英文优先排版 (英文 22px 醒目呈现，中文半透明淡化 52% 缩小 80%) */
+    .article-content {
+      font-family: var(--font-reader);
+      font-size: 22px;
+      font-weight: 400;
+      line-height: 1.9;
+      letter-spacing: -0.015em;
+    }
+    .article-content p {
+      margin-bottom: 1.8em;
+      font-size: 22px;
+      line-height: 1.9;
+      font-weight: 400;
+    }
+    .article-content h2, .article-content h3 {
+      margin: 2.2em 0 0.9em; line-height: 1.35;
+      font-family: var(--font-reader); font-weight: 700; letter-spacing: -0.02em;
+    }
+    .article-content blockquote {
+      border-left: 4px solid var(--accent); padding: 12px 24px; margin: 1.8em 0;
+      background: rgba(127,127,127,0.05); color: var(--muted); border-radius: 0 10px 10px 0;
+      font-style: normal; font-size: 22px;
+    }
+    .article-content img {
+      max-width: 100%; height: auto; border-radius: 10px; margin: 2em auto; display: block;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.18);
+    }
+    .article-content figure { margin: 2.2em 0; }
+
+    /* 中文字符深度降权弱化（半透明淡化 52% + 等比缩小 80%） */
+    .zh-soft {
+      font-size: 0.80em !important;
+      opacity: 0.52 !important;
+      font-weight: 300 !important;
+      letter-spacing: 0.03em !important;
+      display: inline !important;
+    }
+  </style>
+</head>
+<body class="theme-sepia">
+  <div id="progress"></div>
+
+  <header>
+    <div style="display:flex; gap:12px; align-items:center;">
+      <a href="/" class="btn">🏠 历史控制中心</a>
+      <span class="btn btn-green">✅ 已持久归档</span>
+      <button class="btn" id="openLocalBtn">📂 打开本地文件</button>
+    </div>
+    <div style="display:flex; gap:10px; align-items:center;">
+      <div class="theme-picker">
+        <span class="theme-dot sepia active" onclick="setTheme('sepia')" title="📜 经典羊皮纸 (默认)"></span>
+        <span class="theme-dot academic" onclick="setTheme('academic')" title="🌊 蓝色冷静学术"></span>
+        <span class="theme-dot mint" onclick="setTheme('mint')" title="🌿 清新薄荷森系"></span>
+        <span class="theme-dot beach" onclick="setTheme('beach')" title="🏖️ 夏日海滩暖阳"></span>
+        <span class="theme-dot dark" onclick="setTheme('dark')" title="🌑 极夜深黑"></span>
+        <span class="theme-dot light" onclick="setTheme('light')" title="☀️ 月白浅色"></span>
+      </div>
+      <button class="btn" onclick="resizeFont(-2)" title="缩小字号">A-</button>
+      <span id="fSizeDisplay" style="font-size:12px; font-weight:700; opacity:0.85; min-width:34px; text-align:center;">22px</span>
+      <button class="btn" onclick="resizeFont(2)" title="放大字号">A+</button>
+      <a href="https://www.theatlantic.com/podcasts/2026/08/the-internet-is-more-image-focused-than-ever/688170/" target="_blank" class="btn">🔗 原网链接</a>
+    </div>
+  </header>
+
+  <main>
+    <div class="badge">TheAtlantic</div>
+    <h1 id="articleTitle">The Internet Is More Image-Focused Than Ever</h1>
+    <div class="meta">
+      <span>✍️ <b>Julie Beck, Natalie Brennan</b></span>
+      <span>📅 2026-08-10</span>
+      <span style="color:#059669; font-weight:600;">📁 D:\Desktop\reading\reading data\TheAtlantic\2026-08\2026-08-10_The_Internet_Is_More_Image-Focused_Than_Ever.md</span>
+    </div>
+
+    
+        <div class="hero-cover-container">
+          <img src="/assets/TheAtlantic/2026-08/assets/2026-08-10_The_Internet_Is_More_Image-Focused_Than_Ever/8ba776bd1df4.jpg" alt="The Internet Is More Image-Focused Than Ever" class="hero-cover-img" />
+          <figcaption>Illustration by The Atlantic. Source: Gallo Images / Alamy.</figcaption>
+        </div>
+        
+
+    <div class="article-content" id="content">
+      <?xml version="1.0" encoding="utf-8"?>
+<doc fingerprint="3ff7915712e484df">
+<main>
+<head rend="h1">The Internet Is More Image-Focused Than Ever</head>
+<p>Just a few years ago, the body-positivity movement was going strong. What happened?</p>
+<graphic alt="On a cream colored background there are green loops hand drawn across the middle resembling grass. In the center is a black and white photo of a woman holding a small round hand mirror. We are looking over her shoulder. In the mirror is her face looking back at us. She has a slight smile and dark lipstick. Her fingernails are also painted a dark color." src="/assets/TheAtlantic/2026-08/assets/2026-08-10_The_Internet_Is_More_Image-Focused_Than_Ever/8ba776bd1df4.jpg"></graphic>
+<graphic alt="On a cream colored background there are green loops hand drawn across the middle resembling grass. In the center is a black and white photo of a woman holding a small round hand mirror. We are looking over her shoulder. In the mirror is her face looking back at us. She has a slight smile and dark lipstick. Her fingernails are also painted a dark color." src="/assets/TheAtlantic/2026-08/assets/2026-08-10_The_Internet_Is_More_Image-Focused_Than_Ever/b02992141d7d.jpg"></graphic>
+<p>
+<hi rend="#b">Subscribe here: <ref target="https://podcasts.apple.com/us/podcast/how-to-age-up/id1587046024">Apple Podcasts</ref> | <ref target="https://open.spotify.com/show/44vtkPicxYPd5SJDvr8SCy">Spotify</ref> | <ref target="https://www.youtube.com/@TheAtlantic/podcasts">YouTube</ref><ref target="https://www.youtube.com/watch?v=uB_gpziat0w&amp;list=PLDamP-pfOskNBDk72bbeUfYq3nrs7m3TS"></ref>| <ref target="https://pca.st/vod879mf">Pocket Casts</ref></hi>
+</p>
+<p>It wasn’t that long ago that “body positivity” was all over the internet. Oppressive beauty standards hadn’t gone away by any stretch, but many people on social media were pushing against limits on what an “ideal” body could look like. Now, things have swung in the opposite direction, with the rapid uptake of GLP-1s and the resurgence of a skinny ideal, combined with a new frankness about plastic surgery. The calls for “self-love” and “health at any size” can be harder to hear these days over the roar of looksmaxxers and influencers talking about weight loss and cosmetic procedures.</p>
+<p>In this episode of <hi rend="#i">How to Touch Grass</hi>, hosts Natalie Brennan and Julie Beck talk with <hi rend="#i">Atlantic</hi> staff writer Sophie Gilbert, the author of <hi rend="#i">Girl on Girl: How Pop Culture Turned a Generation of Women Against Themselves</hi>, about how the culture of the internet got even more image-focused and the role that social-media algorithms play in distorting what people consider “normal.”</p>
+<p>
+<hi rend="#i">The following is a transcript of the episode:</hi>
+</p>
+<p>
+<hi rend="#b">[<hi rend="#i">Phone ringing</hi>]</hi>
+</p>
+<quote>
+<p><hi rend="#b">Natalie Brennan:</hi> Hi, Mom. It’s Natalie.</p>
+<p><hi rend="#b">Mom:</hi> Hey.</p>
+<p><hi rend="#b">Brennan: </hi>Can you hear me?</p>
+<p><hi rend="#b">Mom: </hi>Yeah, I can hear ya.</p>
+<p><hi rend="#b">Brennan:</hi> We’re working on an episode, it’s about bodies, and we did an interview that was all about, like, what’s happening online at this exact moment in terms of body image, etc., and I just wanted to tell you a story about something I really remember from when I was little.</p>
+<p><hi rend="#b">Mom:</hi> Okay, sure. Go ahead.</p>
+<p><hi rend="#b">Brennan: </hi>There was this day that you and I were in Stop &amp; Shop together, which was most days, I guess. (<hi rend="#i">Laughs.</hi>)</p>
+<p><hi rend="#b">Mom: </hi>That’s true. At least for me, yes. (<hi rend="#i">Laughs.</hi>)</p>
+</quote>
+<p>
+<hi rend="#b">[<hi rend="#i">Music</hi>]</hi>
+</p>
+<p><hi rend="#b">Brennan:</hi> Julie, that’s my mom.</p>
+<p><hi rend="#b">Julie Beck:</hi> Hi, Natalie’s mom.</p>
+<p><hi rend="#b">Brennan:</hi> And we are going to get back to my mom, but first, I’m Natalie Brennan, a producer at <hi rend="#i">The Atlantic</hi>.</p>
+<p><hi rend="#b">Beck:</hi> And I’m Julie Beck, a staff writer at <hi rend="#i">The Atlantic</hi>.</p>
+<p><hi rend="#b">Brennan:</hi> This is <hi rend="#i">How to Touch Grass</hi>.</p>
+<p><hi rend="#b">Brennan:</hi> Julie, this is not an uncommon scenario. I call my mom, put her on the spot with some big story or question, and ask her what she makes of all of it.</p>
+<p>
+<hi rend="#b">[<hi rend="#i">Music</hi>]</hi>
+</p>
+<quote>
+<p><hi rend="#b">Brennan:</hi> You know how there was all of the magazines at the checkout aisle?</p>
+<p><hi rend="#b">Mom:</hi> Yeah, yeah.</p>
+<p><hi rend="#b">Brennan:</hi> This was, like, the early 2000s, so I’m sure they were just covered with images of women’s bodies or celebrities’ bodies. And I was probably really longingly looking at these women and, like, sighing and being frustrated.</p>
+<p><hi rend="#b">Mom:</hi> Mm-hmm. Yes. Yeah.</p>
+<p><hi rend="#b">Brennan:</hi> And you were so direct and totally saw what I was doing and were just like, “This is these people’s jobs. Their work is making sure that they look like this. They have full-time nutritionists. They have—</p>
+<p><hi rend="#b">Mom:</hi> Cooks. Trainers. Yup. Mm-hmm.</p>
+<p><hi rend="#b">Brennan:</hi> Like, this is their life, and their lives kind of exist in these magazines, and our lives kind of exist in this different world.</p>
+<p><hi rend="#b">Mom:</hi> Right. Right.</p>
+<p><hi rend="#b">Brennan: </hi>And I remember at that age being like, <hi rend="#i">That’s a very helpful distinction for me.</hi></p>
+<p><hi rend="#b">Mom:</hi> Right.</p>
+<p><hi rend="#b">Brennan:</hi> I just feel like that conversation must be so different between parents and children today.</p>
+<p><hi rend="#b">Mom:</hi> Right.</p>
+<p><hi rend="#b">Brennan:</hi> Because I don’t know that that delineation exists anymore.</p>
+<p><hi rend="#b">Mom:</hi> Which is sad because, you know, like you on the checkout line, kids kinda look to what’s happening in society to kind of gain a little bit of a identity outside of their family, let’s say, right?</p>
+<p><hi rend="#b">Brennan:</hi> Right. Right.</p>
+<p><hi rend="#b">Mom:</hi> And it’s not just walking on the supermarket line and looking at magazines.</p>
+<p><hi rend="#b">Brennan:</hi> No.</p>
+<p><hi rend="#b">Mom:</hi> It’s on your phone. It’s on your computer. It’s everywhere. So I feel like maybe some of the good …</p>
+</quote>
+<p><hi rend="#b">Brennan:</hi> Julie, my mom and I went back and forth a bit about this memory—about how things have really changed in my lifetime from, you know, magazines to social media to the place that we are at online now.</p>
+<p><hi rend="#b">Beck:</hi> I mean, magazines to online I feel like was maybe chapter one of a transformation. Like, we’ve been online for a while now, right?</p>
+<p><hi rend="#b">Brennan:</hi> Yeah.</p>
+<p><hi rend="#b">Beck:</hi> And yet, I feel like the transformation is not over. Somehow lately we’re entering a new chapter where the pressure of the body-image stuff that we see online feels even more inescapable today than it did just a few years ago.</p>
+<p><hi rend="#b">Brennan:</hi> Well, I’m really curious about this feeling that I’ve been having lately, which is this question of yeah, is there something specific about this exact moment on the internet that is making us feel worse about ourselves? Because yes, it does feel like we’re in a new chapter, but what is it? What changed?</p>
+<p>
+<hi rend="#b">[<hi rend="#i">Music</hi>]</hi>
+</p>
+<p><hi rend="#b">Beck:</hi> Natalie, when you and I were planning this season, we knew that we wanted to talk about the effect of the internet and social-media algorithms on our relationship with our bodies. And we both knew immediately that the person we had talk to about that was our colleague Sophie Gilbert. Sophie’s a staff writer at <hi rend="#i">The Atlanti</hi>c, and she’s the author of <hi rend="#i">Girl on Girl: How Pop Culture Turned a Generation of Women Against Themselves</hi>.</p>
+<p><hi rend="#b">Beck:</hi> Sophie, am I crazy or was there actually a time not that long ago when the internet seemed to offer maybe a bit of an antidote to the relentless pressure of beauty standards?</p>
+<p><hi rend="#b">Sophie Gilbert:</hi> No, you’re not crazy at all. And I actually, I’ve been thinking about this a lot, and I really think the moment that you are referring to peaked around 2016.</p>
+<p><hi rend="#b">Beck:</hi> Okay.</p>
+<p><hi rend="#b">Gilbert:</hi> Which, uncoincidentally, was at the end of the Obama era. So—</p>
+<p><hi rend="#b">Beck:</hi> Well.</p>
+<p><hi rend="#b">Gilbert:</hi> —I mean, 2016 was the year that the Barbie doll was relaunched with different body types, and it was very much this moment where people were sort of talking a lot more about body positivity or even just body neutrality, like this idea that the beauty ideal that we’d long been aspiring to—sort of white, impossibly thin—that it was not reflective of most people.</p>
+<p><hi rend="#b">Beck: </hi>Yes.</p>
+<p><hi rend="#b">Gilbert:</hi> But there really was this sort of feeling in 2016 that we were coming to accept ourselves with more kindness and more care, and stop sort of the parade of self-loathing that I think was certainly part of my adolescence and my 20s, and particularly the era of the 2000s.</p>
+<p><hi rend="#b">Beck:</hi> And I feel like there was something, at least at first, that was relieving about social media just showing us normal people. And as you mentioned, the body-positivity movement that came along with that, that at least for a little while, was really fueled by social media.</p>
+<p><hi rend="#b">Gilbert:</hi> I mean, there were some incredible influencers who sort of came of age on Instagram and, you know, just opening the conversation, broadening it, and encouraging people to approach themselves with neutrality if they couldn’t quite get all the way to positivity. People were being blunt about how damaging fatphobia is, how much it hurts people, how completely unproductive it is. There were so many sort of positive voices coming to the fore in that moment that social media really elevated. There have been studies done on body-positivity content and the effect that it had. I think there was one study showing what being exposed to body-positive content on Facebook did to teenage girls. And teenage girls after seeing images that were body positive, they reported feeling much happier about themselves. They reported better self-esteem. It was not just talk. I know people are sort of cynical about things like the Dove campaign for Real Beauty.</p>
+<p><hi rend="#b">Beck:</hi> Yeah.</p>
+<p><hi rend="#b">Gilbert</hi>: But just because it was coming from corporations doesn’t mean that it didn’t have a positive impact, which I think is important to remember.</p>
+<p><hi rend="#b">Beck:</hi> And you can—you can still find some of that more affirming content, right? It’s not totally gone or anything.</p>
+<p><hi rend="#b">Gilbert:</hi> No, you totally can. And one place where I think it has really stuck around, which is tremendously helpful, is in parenting. Like, we do not talk to children about their bodies in the way that I remember my mother talking about her body or, God forbid, about other people’s bodies. Like we are—</p>
+<p><hi rend="#b">Beck:</hi> Yeah.</p>
+<p><hi rend="#b">Gilbert:</hi> —much more, I think, sensitive and attuned to how to raise kids to think positively about their bodies and what they can do, and how they can be, you know, strong and happy, and not be so focused on what they look like. I think the problem is when we start trying to apply that to ourselves. That’s where things get a little stickier.</p>
+<p><hi rend="#b">Beck:</hi> Yeah. So, I mean, those things still exist to some degree, but I do feel like the overall vibe of social media feels very different now. (<hi rend="#i">Laughs.</hi>)</p>
+<p><hi rend="#b">Gilbert:</hi> Yeah.</p>
+<p><hi rend="#b">Beck:</hi> How have you seen things change?</p>
+<p><hi rend="#b">Gilbert:</hi> Probably of over the last two to three years, maybe since COVID. And definitely sort of accompanying the rise of GLP-1s as a sort of cultural force, not as a, you know, as a health treatment so much, but as a cultural force. There has been a resurgence in this kind of skinny ideal on social media. There are skinny influencers, SkinnyTok, which is this influencers on TikTok who are advising people how to be skinny, how to calorie restrict, and sort of not only advising them, but also talking about why skinniness is the only thing that people should sort of aspire to. During the 2000s, there was so much criticism of women and their bodies. I’m sure you remember the magazine covers of— there was no way for women to win in that era. They were too thin; they were too fat; they were too, you know, they hadn’t bounced back from pregnancy fast enough. And I think we’re all a little wounded from that era, and so we’re very loath now to criticize anyone’s body or to talk really about anyone’s body, anyone who happens to be especially a young female celebrity in the public eye. But it’s also impossible not to notice that stars do seem to be getting a lot thinner. And it’s hard for me and I’m sure for everyone to not worry about what that is doing to us as a culture. It feels like we’re in this period again of living through the sort of heroin chic era of the ’90s as a teenager of, you know, there’s a new cultural ideal of extreme thinness, and that is not an easy thing to live through.</p>
+<p><hi rend="#b">Beck:</hi> What kinds of things are you seeing get traction online with people’s social-media algorithms that maybe reinforce that cultural ideal?</p>
+<p><hi rend="#b">Gilbert:</hi> Yeah, like I’m thinking of the influencer Liv Schmidt. I think she was banned from TikTok but is still on Instagram, and she has a diet community. She charges people to be in her sort of secret community, and she’ll give you tips. She really seems to be pushing this idea that skinniness will bring you blessings from the universe.</p>
+<p><hi rend="#b">Beck:</hi> Mm.</p>
+<p><hi rend="#b">Gilbert:</hi> But she doesn’t—she would never sort of come out and outright critique someone else’s body, I think. Everyone has adopted language that—it’s not quite that harsh. Whereas if you compare her to—there’s a diet book that came out in the 2000s called <hi rend="#i">Skinny Bitch</hi>. And it was written by two women in the modeling industry, I think, and it is an extraordinary book because it just berates the reader. It’s like, <hi rend="#i">You are a disgusting fat pig. You need to stop eating.</hi></p>
+<p><hi rend="#b">Beck:</hi> Oh my gosh.</p>
+<p><hi rend="#b">Gilbert:</hi> It’s a horrendous text, but it was a best seller. The language of skinny influencers is not as harsh, but in some ways that just makes it more insidious, I think. I just think everything now in this age that we’re currently in is so much more relentless. Back in the ’90s I would read magazines with my teenage friends, and we would have to, like, pick up a paper magazine to see pictures of very skinny models. But now, if you’re a teenager and you go on your phone, like my God, it’s everywhere. It’s all you’re exposed to. You’re sort of bombarded with imagery.</p>
+<p><hi rend="#b">Beck:</hi> Right, like <hi rend="#i">Teen Vogue</hi> wasn’t coming again ’til next month—</p>
+<p><hi rend="#b">Gilbert:</hi> (<hi rend="#i">Laughs.</hi>)</p>
+<p><hi rend="#b">Beck:</hi> —at least. Whereas, like, Instagram is all the time.</p>
+<p><hi rend="#b">Gilbert:</hi> It is all the time, yeah.</p>
+<p><hi rend="#b">Beck:</hi> I think it’s not only, you know, the extreme skinniness and the GLP-1s that we’re seeing, but there’s also sort of new honesty about altered bodies on social media, right? Like plastic surgery and fillers and Botox and other kinds of cosmetic procedures that people are getting done. There just seems to be a sort of new willingness to be honest about that—especially online—which, I guess is nice that they’re not just gaslighting you into thinking they just drink a lot of water and that’s why they look like that. But why do you think our culture’s gotten more open about that?</p>
+<p><hi rend="#b">Gilbert:</hi> We are in a moment right now of very conspicuous consumption in terms of our faces and our bodies. It’s sort of—there’s a kind of peacocking going on right now in the culture that applies in all different sort of ways, especially in beauty, especially with regard to money and power. And it’s all connected, and it seems to be getting more and more and more extreme by the day. But at the same time, you’re also monetizing your own value. You’re bringing more attention to yourself, more sort of currency for yourself as a famous person. We really were in this moment where people were questioning whether or not our worth as human beings is directly associated with how we look. And it feels like we’ve just veered all the way away from that point now, where suddenly it’s like, <hi rend="#i">Nope, nope</hi>, ’cause we’re in this sort of heavy image-centric, like pivot-to-video era where everything is images all the time. Suddenly everyone is just like, <hi rend="#i">No, it’s how you look is everything. </hi></p>
+<p><hi rend="#b">Beck: </hi>It’s interesting what you said about the sort of “pivot to video” of it all. Do you think that’s <hi rend="#i">the</hi> main thing that feels different? Like, are we even more image-focused now than we were in the era of body positivity, which also involved images, right?</p>
+<p><hi rend="#b">Gilbert:</hi> I think that’s a huge part of it. I do think certainly post-Instagram, post-TikTok, as our attention spans decline and we read less and we talk to our friends less and we spend less time in community, we are all on our phones for hours and hours and hours a day looking at images of ourselves, of each other. I don’t think anyone is supposed to see their own face as much as we do now.</p>
+<p><hi rend="#b">Beck: </hi>Yeah.</p>
+<p><hi rend="#b">Gilbert: </hi>I think about this a lot, like how our ancestors would have felt, like, catching a glance at themselves in a lake or … And instead, we’re just, like, front-facing camera, front-facing camera, front-facing camera, and it’s weird. It’s warping our brains.</p>
+<p><hi rend="#b">Beck:</hi> As someone whose preferred mediums are text and audio, it kind of bums me out, man.</p>
+<p><hi rend="#b">Gilbert:</hi> I know, man. I became a writer for a reason. I don’t wanna be camera ready.</p>
+<p><hi rend="#b">Beck:</hi> I’m curious to hear your thoughts on the similar shift that I feel like has been happening for men as well.</p>
+<p><hi rend="#b">Gilbert:</hi> Yes. No, they totally has, and this is what’s been so interesting about the last five years specifically for me, is that for the first time, you are seeing men exposed to the same sort of intensity of the beauty industry in the way that women have been for decades, and they’re not coping with it well. Obviously, you know the term <hi rend="#i">looksmaxxing</hi> and this community of men who are intent on—</p>
+<p><hi rend="#b">Beck:</hi> Regrettably, yes.</p>
+<p><hi rend="#b">Gilbert:</hi> —maximizing their handsomeness by allegedly hitting themselves in the face with hammers or doing crystal meth to keep their weight down. I mean, all these absurd things that looksmaxxing influencers talk about. Men are sort of, again, being saturated in the same kind of negative sort of hate-yourself language that women have been exposed to for years. There are higher rates of eating disorders now among men. Men are apparently now a lot more worried about their penis size, to the point where people are getting fillers. It’s like all these new anxieties that men are suddenly being encouraged to feel about themselves in a way that is profoundly depressing but also fascinating to me because they’re understanding more of what we’ve lived through all this time.</p>
+<p>
+<hi rend="#b">[<hi rend="#i">Music</hi>]</hi>
+</p>
+<p><hi rend="#b">Beck: </hi>We’re going to take a quick break. But when we come back: Are body modification and beauty trends actually as common as they seem to be online?</p>
+<p>
+<hi rend="#b">[<hi rend="#i">Break</hi>]</hi>
+</p>
+<p><hi rend="#b">Beck:</hi> Natalie, the thing that’s really interesting to me about how overt beauty standards are right now is that it’s not something you do in the shadows so that in public you can seem effortlessly hot. We’re showing off the effort.</p>
+<p><hi rend="#b">Brennan:</hi> Yes. The best way that I’ve been marking this shift is before 2015, it was such a big deal that Kylie Jenner would not admit that she had gotten her lips done.</p>
+<p><hi rend="#b">Beck:</hi> Oh my God, I remember that.</p>
+<p><hi rend="#b">Brennan:</hi> And now, recently, she commented on someone’s TikTok with the exact dimensions, material, and doctor who did her boob job.</p>
+<p><hi rend="#b">Beck: </hi>Oh my gosh.</p>
+<p><hi rend="#b">Brennan: </hi>And the comment ends, quote, “Hope this helps LOL.” Which I think just really shows there’s this proving now of how hard you worked to be this beautiful.</p>
+<p><hi rend="#b">Beck:</hi> Right. I mean, if there are two things American culture loves, it is hard work and the pursuit of individual success. (<hi rend="#i">Laughs.</hi>)</p>
+<p><hi rend="#b">Brennan:</hi> That’s correct.</p>
+<p><hi rend="#b">Beck:</hi> So I feel like beauty just ends up feeling like another way you should be self-optimizing, and you don’t have to be ashamed of your self-optimization. Like, you kind of show it off.</p>
+<p><hi rend="#b">Brennan:</hi> I feel very stuck in my algorithm, stuck as what it thinks I want as a 30-year-old woman in a city, and it doesn’t matter at this point how quickly I hover or swipe away from content regarding body optimization and alteration. There is this version of my online identity that I have both built for myself and the algorithm has built for me. And at this point, I mean, it feels like I don’t know how to escape that content without just staying off social media.</p>
+<p><hi rend="#b">Beck:</hi> Yeah, it does feel pretty inescapable. And, like, the way that cosmetic procedures get talked about, not just on social media where they’re trying to get you to buy something, but even in the news, it’s talked about, like, <hi rend="#i">Everyone is doing it.</hi><hi rend="#i">They’re doing it more.</hi><hi rend="#i">They’re doing it younger. </hi>Like, okay, listen to these headlines. These are just a few that I found recently. “The Forever-35 Face.” “The Facelift Is Better Than Ever, and Everybody Wants One.”</p>
+<p><hi rend="#b">Brennan: </hi>Mm.</p>
+<p><hi rend="#b">Beck: </hi>“The Year All My Friends Got Botox.” “Leg-Lengthening Surgery Is Gaining Popularity Among Men Seeking to Be Taller.” “How Botox Went Middle Class.” “Where Have All the Hooded Eyes Gone?” “Suddenly Everyone Is Looking Extra Wide-Eyed and Awake. Is Upper Bleph Surgery the Reason Why? “Everyone’s On Ozempic, So Why Will No One Talk About It?”</p>
+<p>
+<hi rend="#b">[<hi rend="#i">Music</hi>]</hi>
+</p>
+<p><hi rend="#b">Beck: </hi>Sophie, you shared a stat with me recently that was so fascinating about the gap between what seems normal and common online and then what the reality actually is.</p>
+<p><hi rend="#b">Gilbert:</hi> Yes. No, I like to do this because I think, especially talking about my own book over the past year, one of the things that often comes up is, like, the internet is not real life and yet it can feel very real. And so the more that we can remember that it is not real life, the healthier we can be. So the question that I asked you, I think, I asked you and some other people to guess what percentage of American women get Botox.</p>
+<p><hi rend="#b">Beck:</hi> I think I guessed at the time, like, 17 percent.</p>
+<p><hi rend="#b">Gilbert:</hi> I think someone else guessed like 15, ’cause there’s this sort of presumption when you feel like everyone you know is getting it or talking about it. It’s sort of—it’s a fair assumption, I think. And then I looked it up. It’s sort of hard exactly to quantify, but the figure seems to be somewhere between 1.5 and 2 percent.</p>
+<p><hi rend="#b">Beck: </hi>Wow.</p>
+<p><hi rend="#b">Beck: </hi>So for all we talk about Botox, for all the <hi rend="#i">Are people getting baby Botox?</hi> and <hi rend="#i">What age is best for Botox?</hi> it’s actually not that common. There are way, way, way, way, way, way more of us who don’t do it. That’s not to place a judgment value on whether someone decides to or doesn’t decide to. It’s just to say, I think there’s so much discussion online about beauty treatments, and specifically sometimes about really extreme beauty treatments, that they can feel very normalized, and it’s healthy for us to remember that it’s not that way.</p>
+<p><hi rend="#b">Beck:</hi> So is that stat, is that all adult American women of any age?</p>
+<p><hi rend="#b">Gilbert:</hi> Yes, yes.</p>
+<p><hi rend="#b">Beck:</hi> I’m still really—I’m still really surprised by that. So is it that the trend is increasing, but overall it’s still just a really small percentage of people, or what’s the deal?</p>
+<p><hi rend="#b">Gilbert:</hi> It is increasing. It’s not increasing by that much. From what I can figure out, I think Botox usage has gone up 50 percent over the last 10 years, which is not really that much considering how much it went up in the 2000s when it first was popularized in our culture. And I should say, too, that it’s expensive, so it’s very much a sort of—</p>
+<p><hi rend="#b">Beck:</hi> Yeah.</p>
+<p><hi rend="#b">Gilbert:</hi> —selective expense, and there are lots of people who can’t afford it and might want it but don’t have that in their budget. But it is, yeah, it’s a fascinating statistic.</p>
+<p><hi rend="#b">Beck:</hi> Something I’m noticing in this specific moment is that this newfound emphasis on body modification feels hard to talk about. Because it’s like we have held on to one value from the body-positivity era, which is you can talk about your own body, but don’t comment on other people’s bodies. So are we stuck in that place of having a conversation with old language, or what’s going on here?</p>
+<p><hi rend="#b">Gilbert:</hi> Yeah, it’s really difficult, right? I think because we’re sort of traumatized from this moment where there was so much relentless critique and obsessive, like, nitpicky focus on women’s bodies in the public eye, I think we’ve rightfully have recognized as extremely damaging, and we do not want to go back to that place. But it does kind of maroon us now in a place where—there’s also something about the way that women are appearing in public at the moment. We’ve seen a lot more images recently of very, very, very slender celebrities. I would say past the point of slender, even.</p>
+<p><hi rend="#b">Beck:</hi> Yeah.</p>
+<p><hi rend="#b">Gilbert: </hi>That is making us uncomfortable, and we don’t really have ways to describe it without—’cause obviously, we’re not wanting to criticize anyone for their body, because we know how damaging that can be. But also, what is really troubling to me is the cultural impact. I think there are ways maybe to critique it as a cultural trend and not without picking on anyone individually, but it’s one of the things—this sort of backlash from the 2000s—is one of the things that makes this moment so hard to talk about.</p>
+<p><hi rend="#b">Beck: </hi>Right, it’s a really hard conversation to have. Like, even right now as we’re talking about it, I’m worried people are going to think we’re saying, <hi rend="#i">Actually we should be judging and commenting on other people’s bodies more</hi>, which is not what we’re saying. But when there’s a big cultural shift toward valuing a certain type of look, when enough people are making similar choices, that does affect how people feel about their own bodies. And then if you shut down that bigger conversation by saying, <hi rend="#i">We shouldn’t talk about this at all, because it’s not appropriate to comment on other people’s bodies, and everyone should just do whatever they want</hi>, then we lose the opportunity to question this pretty damaging new collective beauty standard that is developing. For instance, the rise of GLP-1s: It’s led to this new era of “thin is in” again.</p>
+<p><hi rend="#b">Gilbert:</hi> I think what you just said is really interesting with regard to GLP-1s, right? Because they’ve been really revolutionary medical treatments for lots of people.</p>
+<p><hi rend="#b">Beck: </hi>Right.</p>
+<p><hi rend="#b">Gilbert: </hi>I have family members on them who have just had the most profound experiences, whose health has been transformed at an individual level. They’re enormously beneficial and helpful and positive for so many people. And speaking of statistics, I think one in eight Americans now is on a GLP-1, so much, much higher uptake than Botox. But we live in a society, and more than one thing can be true at the same time, right? Something can be positive at an individual level and it can also have really damaging cultural ramifications. There has been such a tendency towards extreme thinness that has accompanied this kind of Ozempic era. And that has a potentially damaging impact on the kids, the girls and the boys who are growing up in this era, and holding that up as a standard to aspire to, because it’s an impossible standard, and it’s not healthy, and it’s something that I think we need to find ways to call out while also acknowledging that everyone does have an individual choice to do whatever they need to do for their health.</p>
+<p><hi rend="#b">Beck:</hi> I think the issue for me feels like the separation of your individual choice from, like, the stew that you live in. ’Cause even if you’re not a celebrity or an influencer, your choices do still influence your friends and your family and people who see you and know you.</p>
+<p><hi rend="#b">Gilbert:</hi> I think one way that is maybe productive, or one thing that is maybe productive for people to think about is that we don’t have to opt in to these beauty standards, to these regimes, to these sort of, like, money-making enterprises. And in some ways, I think we should celebrate opting out as a form of rebellion. Like, the most radical thing you can do right now is just accept yourself exactly as you are, to refuse to have the sort of self-obsession of constantly critiquing yourself and wondering how you could change yourself. I think Naomi Wolf wrote about this in <hi rend="#i">The Beauty Myth</hi>, which, you know, she’s gone wayward since then, but I think about it all the time. It’s this idea that this is all a project of distraction, especially for women.</p>
+<p><hi rend="#b">Beck: </hi>Mm.</p>
+<p><hi rend="#b">Gilbert:</hi> Like, when we’re so focused on keeping ourselves small, it seems so conservative in some ways. If you keep women completely obsessed with themselves and the project of self-maintenance, they’re not thinking about what else they actually need or how to change the world or what they would do if they had power to organize or to demand changes at their workplace or in their homes. It’s a big, big project of distraction. And so the more that we can refuse to be swayed by it, the more that we can embrace sort of visibly aging, visibly being unkempt as a sort of, actually quite a profound choice and one that is meaningful and has meaning for lots of other women as well, not just for us, then maybe the more we can kick-start a sort of, a pushback against this movement.</p>
+<p><hi rend="#b">Beck:</hi> Yeah. You used the word <hi rend="#i">distraction</hi>, and that stood out to me because I feel like we have the greatest technologies of distraction of all time, in our pockets all the time. So maybe it makes sense that there would be an unholy alliance between the distraction of beauty standards and the distraction of the algorithm.</p>
+<p><hi rend="#b">Gilbert:</hi> There is definitely a growing, actively misogynist movement on the right that, for example, does want women to opt out of the workplace and to be completely entrenched in the domestic sphere. And it’s no coincidence to me that so many of the visible avatars for that movement who are women are so groomed. And the idea of clean-girl beauty and stuff like that, it’s all part and parcel of the same thing, which is like, <hi rend="#i">This is what you should be thinking about, ladies. Don’t worry about the other stuff. We’ll take care of that.</hi></p>
+<p><hi rend="#b">Beck:</hi> Well, and it’s also—it makes people money, right?</p>
+<p><hi rend="#b">Gilbert:</hi> Yeah.</p>
+<p><hi rend="#b">Beck:</hi> It makes the beauty companies money, and it makes the tech companies money if you keep, like, scroll, scroll, scrolling.</p>
+<p><hi rend="#b">Gilbert:</hi> Anytime anyone gets that rich off of making other people feel bad about themselves, I think we should raise an eyebrow.</p>
+<p><hi rend="#b">Beck:</hi> You know, for all of their faults, which have been enumerated many times, earlier versions of social media were at least, like, a little bit more collective, a little bit more about connection, right?</p>
+<p><hi rend="#b">Gilbert:</hi> Mm-hmm.</p>
+<p><hi rend="#b">Beck:</hi> For instance, Instagram used to show you your friends’ posts in chronological order.</p>
+<p><hi rend="#b">Gilbert:</hi> Yeah.</p>
+<p><hi rend="#b">Beck:</hi> And now it shows you individually targeted videos from accounts you never chose to follow, and your actual friends just get, like, buried in there.</p>
+<p><hi rend="#b">Gilbert:</hi> Yeah.</p>
+<p><hi rend="#b">Beck:</hi> So to me, it feels like less of a place to connect and more like a place to consume.</p>
+<p><hi rend="#b">Gilbert:</hi> It’s more of a place to be sold things. Instagram is a mall now, I think. It’s whatever can compel us to click the “Buy” button. You know, 10 years ago, there was a lot more text-based social media.There were sites like Tumblr.</p>
+<p><hi rend="#b">Beck:</hi> Mm-hmm.</p>
+<p><hi rend="#b">Gilbert:</hi> People would write long, long Facebook posts that were just text and didn’t have images or video attached. I mean, it’s that the sites—the social-media sites—have just become so, so, so, so image-heavy. It is very, very gendered and it’s very, very focused on getting us to buy things.</p>
+<p>There’s a great quote by John Berger in his 1977 book, <hi rend="#i">Ways of Seeing</hi>, about why beauty ads are damaging, and he says something like: <hi rend="#i">The beauty ad steals the woman’s love of herself as she is and sells it back to her for the price of the product</hi>. Which is so much of what’s going on. It’s this idea that we cannot be allowed to love ourselves as we are, because if we do, we simply will not buy enough.</p>
+<p><hi rend="#b">Beck:</hi> Do you have any kind of advice for how to deal with this?</p>
+<p><hi rend="#b">Gilbert:</hi> I think logging off can be profoundly effective, like having a digital detox, removing ourselves from these sort of fake people who feel like they’re real but are not. And spending more time face-to-face with real people, talking to them, and having sort of broader concerns and broader interests. It’s very strange to be saturated in visual perfection all the time. And when you go out in the real world and you see what people actually look like, it’s different. Sounds so trite and so basic, but it can be really powerful.</p>
+<p><hi rend="#b">Beck:</hi> What do you think that an individualistic social-media environment does to our ability to see collective problems or come up with collective solutions?</p>
+<p><hi rend="#b">Gilbert:</hi> We’ve been living in an individualistic culture for sort of 30 years now. Basically, the moment that third-wave feminism, which was so much about, like, improving on second-wave feminism to make it more inclusive and more successful for other women, and thinking collectively and not just think—as soon as that was replaced by post-feminism and this idea that, like, <hi rend="#i">Any woman can do anything she wants, ’cause that’s her choice, and she can make money and wear whatever she wants and have sex with anyone she wants</hi>.The minute that that shift happened, we lost, I think, all the force of—I’m speaking about feminism, but it speaks broadly to other kinds of activism and progress as well. You simply cannot change the world if you are only thinking about yourself.</p>
+<p>Again, it comes back to this project of distraction and the idea that we should all be so focused on ourselves and the project of ourselves, and how to have our revenue streams and, our side hustles and our five-to-nines. And because if we do that, we’re not actually thinking about other people. We’re not going to community board meetings or school meetings or PTA meetings. We’re losing that sense of looking beyond ourselves. I think we need so much more of that, and I hope, I hope that it comes soon.</p>
+<p><hi rend="#b">Beck:</hi> Is the solution to just get offline and touch grass, or to change the culture of the internet, or a little bit of both?</p>
+<p><hi rend="#b">Gilbert:</hi> A little bit of both, but I would say, actively remembering the force that body positivity had in the 2010s and what it was able to do and the real impact that it had in the culture, and to sort of remember that that’s possible, I think, and that it can be done again. To remember that online lives are not real, and online beauty standards are not real. The thing I keep coming back to is, again, just like divorcing this idea that our value as human beings is how we look. There’s so much that’s liberating when you learn to let that go, and it does get easier as you get older and older; I can tell you from 43. But anything that we can do to reclaim our love for ourselves and our acceptance of ourselves and our sense of value as humans is profoundly positive.</p>
+<p>
+<hi rend="#i">[Music]</hi>
+</p>
+<p><hi rend="#b">Beck:</hi> Natalie, Sophie used a phrase that I’ve heard a lot, especially since starting to work on this podcast. <hi rend="#i">The internet is not real.</hi> And I know what she means to say, but I kind of have a problem with that way of thinking about things.</p>
+<p><hi rend="#b">Brennan:</hi> Oh, interesting.</p>
+<p><hi rend="#b">Beck:</hi> Well, the internet is real. (<hi rend="#i">Laughs.</hi>) It really exists. There are real tubes under the ocean that carry data. There are massive data centers that exist in physical space, and they use up real energy. You know, I have real conversations on the internet with real people who really exist.</p>
+<p><hi rend="#b">Brennan: </hi>Yeah.</p>
+<p><hi rend="#b">Beck:</hi> And the things people look at online do have real effects on their lives, on their mental health, and even potentially on their bodies, as we were just talking about.</p>
+<p><hi rend="#b">Brennan:</hi> Yeah. I think the spirit of <hi rend="#i">The internet isn’t real</hi> is trying to connote that there’s this alternative, right? That you can opt out and embrace that which is offline. I think it’s just trying to communicate attention that a lot of us are trying to find separation from. I saw this quote from Haley Nahman on Substack recently that said, “The mirror worlds of social media and Hollywood and women’s media may present our participation as inevitable, but this is effectively an advertisement for a future that doesn’t have to exist.”</p>
+<p>And I think what people are feeling right now is that they wanna push back against that inevitability. They want to create an alternative future. You know, my mom said something to this extent. “Maybe it’s not about what is versus what isn’t inherently real, but about choosing what reality you want to exist in.”</p>
+<quote>
+<p><hi rend="#b">Mom:</hi> Your reality has to be centered inside of you, not outside of you. That’s a screen, and that screen isn’t telling you the real story of who you are. Right? And listen, I mean, even as a 60-something mom, I still fall into the trap of seeing things on my Instagram feed that make me think, <hi rend="#i">Oh, maybe I should be doing that, or maybe I should </hi>… You know? It is so easy to be influenced, but then you just always have to come back to, like, <hi rend="#i">I have to be who I am. I have to live in my own world.</hi> But you know what? It’s all in how people are talking to one another and how you’re talking to your children. And so all of that still matters. Talking matters.</p>
+<p><hi rend="#b">Brennan:</hi> Yeah. Talking def matters. Well, thanks for talking with me today.</p>
+<p><hi rend="#b">Mom:</hi> Oh, you’re so welcome. I love you.</p>
+<p><hi rend="#b">Brennan:</hi> Love you.</p>
+<p><hi rend="#b">Mom:</hi> Bye.</p>
+<p><hi rend="#b">Brennan:</hi> Bye.</p>
+</quote>
+<p><hi rend="#b">Beck: </hi>That’s all for this episode of <hi rend="#i">How to Touch Grass</hi>. This episode was hosted by me, Julie Beck, and co-hosted and produced by Natalie Brennan, with production help from Elena Schwartz. Our editors are Claudine Ebeid and Jocelyn Frank. Fact-check by Gisela Salim-Peyer. Our engineer is Rob Smierciak. Rob also composed some of the music for this show. The executive producer of audio is Claudine Ebeid, and the managing editor of audio is Andrea Valdez.</p>
+<p><hi rend="#b">Beck</hi>: Next week: When it comes to how technology is changing learning, are we thinking about things all wrong?</p>
+<quote>
+<p><hi rend="#b">Michelle Miller: </hi>We have to remind ourselves, technology, whether it is a knitting needle or it’s a social media or a chatbot, is something that, at least collectively, we human beings created because it did something that we very much wanted. So it is part of us.</p>
+</quote>
+<p><hi rend="#b">Beck: </hi>That’s next time on <hi rend="#i">How to Touch Grass</hi>.</p>
+</main>
+<comments></comments>
+</doc>
+    </div>
+  </main>
+
+  <script>
+    window.addEventListener('scroll', () => {
+      const h = document.documentElement;
+      const st = h.scrollTop || document.body.scrollTop;
+      const sh = h.scrollHeight - h.clientHeight;
+      document.getElementById('progress').style.width = ((st/sh)*100) + '%';
+    });
+
+    function setTheme(name) {
+      document.body.className = 'theme-' + name;
+      localStorage.setItem('ladder_reader_theme', name);
+      document.querySelectorAll('.theme-dot').forEach(d => d.classList.remove('active'));
+      const activeDot = document.querySelector('.theme-dot.' + name);
+      if (activeDot) activeDot.classList.add('active');
+    }
+
+    // 默认以羊皮纸 (sepia) 或用户上次记忆的主题打开
+    const savedTheme = localStorage.getItem('ladder_reader_theme') || 'sepia';
+    setTheme(savedTheme);
+
+    // 字号缩放控制与持久记忆 (以 22px 为基准)
+    let currentFSize = parseInt(localStorage.getItem('ladder_reader_fsize') || '22', 10);
+
+    function applyFontSize(sz) {
+      currentFSize = Math.max(16, Math.min(36, sz));
+      localStorage.setItem('ladder_reader_fsize', currentFSize);
+      
+      const contentElem = document.getElementById('content');
+      if (contentElem) {
+        contentElem.style.fontSize = currentFSize + 'px';
+      }
+      const allSub = document.querySelectorAll('.article-content p, .article-content li, .article-content blockquote');
+      allSub.forEach(el => {
+        el.style.fontSize = currentFSize + 'px';
+      });
+      
+      const disp = document.getElementById('fSizeDisplay');
+      if (disp) disp.innerText = currentFSize + 'px';
+    }
+
+    function resizeFont(step) {
+      applyFontSize(currentFSize + step);
+    }
+
+    applyFontSize(currentFSize);
+
+    const filePath = "D:\\Desktop\\reading\\reading data\\TheAtlantic\\2026-08\\2026-08-10_The_Internet_Is_More_Image-Focused_Than_Ever.md";
+    const openBtn = document.getElementById('openLocalBtn');
+
+    openBtn.addEventListener('click', () => {
+      openBtn.innerText = '⏳ 正在定位...';
+      fetch('/api/open-folder?path=' + encodeURIComponent(filePath))
+        .then(r => r.json())
+        .then(() => {
+          openBtn.innerText = '✅ 已在资源管理器中高亮';
+          setTimeout(() => { openBtn.innerText = '📂 打开本地文件'; }, 2500);
+        })
+        .catch(() => {
+          openBtn.innerText = '📂 打开本地文件';
+        });
+    });
+  </script>
+</body>
+</html>

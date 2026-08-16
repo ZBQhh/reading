@@ -1611,7 +1611,7 @@
     });
   }
   function applyTheme(name) {
-    if (THEMES.indexOf(name) < 0) name = "light";
+    if (THEMES.indexOf(name) < 0) name = "academic";
     THEMES.forEach(function(t) {
       document.body.classList.remove("theme-" + t);
     });
@@ -2961,7 +2961,7 @@
       }
     });
     const storedTheme = lsGet(LS.theme, "");
-    const initTheme = THEMES.indexOf(storedTheme) >= 0 ? storedTheme : matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    const initTheme = THEMES.indexOf(storedTheme) >= 0 ? storedTheme : "academic";
     applyTheme(initTheme);
     $$(".popover-theme-card").forEach(function(c) {
       c.classList.toggle("active", c.dataset.theme === initTheme);

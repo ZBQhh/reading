@@ -1,4 +1,4 @@
-﻿import os
+import os
 import json
 import re
 import secrets
@@ -53,7 +53,7 @@ def build_portal():
   <title>The Atlantic & Global Journals — Private Bespoke Reader | 顶级期刊双语私享数字典藏</title>
   <link rel="stylesheet" href="assets/css/reader_style.css">
 </head>
-<body class="theme-light view-interlinear align-mode-flush">
+<body class="theme-academic view-interlinear align-mode-flush">
 
   <!-- ==========================================================================
        1. APPLE NEWS+ DIGITAL MAGAZINE LIBRARY PORTAL (全刊库首页 + 矩阵筛选 + 全库检索 + 最近在读)
@@ -181,7 +181,7 @@ def build_portal():
     <div class="popover-section">
       <div class="popover-section-title">🎨 6 大奢华阅读主题</div>
       <div class="popover-theme-grid">
-        <div class="popover-theme-card active" data-theme="light">
+        <div class="popover-theme-card" data-theme="light">
           <span class="theme-emoji">☀️</span>
           <span>晨曦白</span>
         </div>
@@ -193,7 +193,7 @@ def build_portal():
           <span class="theme-emoji">🏖️</span>
           <span>夏日海滩</span>
         </div>
-        <div class="popover-theme-card" data-theme="academic">
+        <div class="popover-theme-card active" data-theme="academic">
           <span class="theme-emoji">🧊</span>
           <span>学术冰川</span>
         </div>

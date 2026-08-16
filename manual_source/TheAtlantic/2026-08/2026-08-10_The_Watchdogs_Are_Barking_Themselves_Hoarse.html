@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Watchdogs Are Barking Themselves Hoarse · Ladder 沉浸阅读</title>
+  <style>
+    /* 中文字符专属字体定义：自动等比缩减至 80% (约 17.5px)，字重柔和轻量 */
+    @font-face {
+      font-family: 'ChineseSoftMuted';
+      src: local('PingFang SC Light'), local('PingFang SC'), local('Microsoft YaHei Light'), local('Microsoft YaHei'), local('SimHei');
+      unicode-range: U+4E00-9FFF, U+3400-4DBF, U+20000-2A6DF, U+3000-303F, U+FF00-FFEF;
+      size-adjust: 80%;
+    }
+
+    :root {
+      --font-reader: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", "Arial Nova", 'ChineseSoftMuted', sans-serif;
+    }
+
+    /* 1. 经典羊皮纸 (Sepia / Parchment) - 默认主题 */
+    body.theme-sepia {
+      --bg: #f8f1e3;
+      --card: #ede3ce;
+      --text: #382c1e;
+      --muted: #7a6854;
+      --border: rgba(60, 44, 30, 0.12);
+      --accent: #b45309;
+      --cover-bg: #e6dac1;
+    }
+
+    /* 2. 蓝色冷静学术风 (Nordic Academic Blue) */
+    body.theme-academic {
+      --bg: #0e1726;
+      --card: #162238;
+      --text: #e2e8f0;
+      --muted: #8ba2c4;
+      --border: rgba(148, 163, 184, 0.14);
+      --accent: #38bdf8;
+      --cover-bg: #121d30;
+    }
+
+    /* 3. 清新薄荷森系 (Fresh Mint / Sage) */
+    body.theme-mint {
+      --bg: #edf5f0;
+      --card: #deebe2;
+      --text: #1b382b;
+      --muted: #4e7663;
+      --border: rgba(27, 56, 43, 0.1);
+      --accent: #059669;
+      --cover-bg: #d2e4d8;
+    }
+
+    /* 4. 夏日海滩暖阳 (Summer Beach / Warm Sand) */
+    body.theme-beach {
+      --bg: #fdf6ec;
+      --card: #f7ebd9;
+      --text: #3c2d1d;
+      --muted: #8c7155;
+      --border: rgba(217, 119, 6, 0.14);
+      --accent: #0284c7;
+      --cover-bg: #f0deca;
+    }
+
+    /* 5. 极夜深黑 (Midnight Dark) */
+    body.theme-dark {
+      --bg: #0b0f19;
+      --card: #151c2c;
+      --text: #f1f5f9;
+      --muted: #94a3b8;
+      --border: rgba(255, 255, 255, 0.08);
+      --accent: #818cf8;
+      --cover-bg: #111726;
+    }
+
+    /* 6. 月白浅色 (Pure Paper White) */
+    body.theme-light {
+      --bg: #fafafa;
+      --card: #ffffff;
+      --text: #171717;
+      --muted: #737373;
+      --border: rgba(0, 0, 0, 0.08);
+      --accent: #4f46e5;
+      --cover-bg: #f0f0f0;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-reader);
+      min-height: 100vh;
+      font-weight: 400;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      text-rendering: optimizeLegibility;
+      transition: background 0.25s ease, color 0.25s ease;
+    }
+    #progress {
+      position: fixed; top: 0; left: 0; height: 3px;
+      background: linear-gradient(90deg, var(--accent), #ec4899);
+      width: 0%; z-index: 1000;
+    }
+    header {
+      position: sticky; top: 0; z-index: 900;
+      background: var(--card); border-bottom: 1px solid var(--border);
+      padding: 12px 32px; display: flex; align-items: center; justify-content: space-between;
+      backdrop-filter: blur(16px); transition: background 0.25s ease;
+    }
+    .btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 7px 14px; border-radius: 8px; font-size: 13px; font-weight: 600;
+      cursor: pointer; text-decoration: none; border: 1px solid var(--border);
+      background: rgba(127,127,127,0.08); color: var(--text);
+      font-family: var(--font-reader); transition: all 0.2s;
+    }
+    .btn:hover { background: rgba(127,127,127,0.18); transform: translateY(-1px); }
+    .btn-green { background: #059669; color: #fff; border: none; cursor: default; }
+    
+    .theme-picker {
+      display: flex; gap: 7px; align-items: center; background: rgba(127,127,127,0.08);
+      padding: 4px 10px; border-radius: 9999px; border: 1px solid var(--border);
+    }
+    .theme-dot {
+      width: 18px; height: 18px; border-radius: 50%; display: inline-block; cursor: pointer;
+      border: 2px solid transparent; transition: transform 0.2s, border-color 0.2s;
+    }
+    .theme-dot:hover { transform: scale(1.2); }
+    .theme-dot.active { border-color: var(--accent); transform: scale(1.25); box-shadow: 0 0 8px var(--accent); }
+
+    .theme-dot.sepia { background: #f8f1e3; border: 1px solid #7a6854; }
+    .theme-dot.academic { background: #1e40af; border: 1px solid #60a5fa; }
+    .theme-dot.mint { background: #10b981; border: 1px solid #059669; }
+    .theme-dot.beach { background: #f59e0b; border: 1px solid #d97706; }
+    .theme-dot.dark { background: #000000; border: 1px solid #4b5563; }
+    .theme-dot.light { background: #ffffff; border: 1px solid #9ca3af; }
+
+    /* 超宽全屏沉浸流 (宽度 1280px / 92%，左右留白极小) */
+    main {
+      max-width: 1280px;
+      width: 92%;
+      margin: 32px auto 100px;
+      padding: 0 16px;
+    }
+    .badge {
+      display: inline-block; padding: 5px 12px; background: rgba(99,102,241,0.14);
+      color: var(--accent); font-size: 13px; font-weight: 700; border-radius: 6px; margin-bottom: 16px;
+      letter-spacing: 0.5px;
+    }
+    h1 {
+      font-size: 40px; line-height: 1.3; font-weight: 800; margin-bottom: 18px;
+      font-family: var(--font-reader); letter-spacing: -0.03em;
+    }
+    .meta {
+      color: var(--muted); font-size: 14px; margin-bottom: 32px;
+      padding-bottom: 20px; border-bottom: 1px solid var(--border);
+      display: flex; gap: 20px; align-items: center; flex-wrap: wrap;
+    }
+    
+    /* 官方同款高清大封面 (Hero Cover) */
+    .hero-cover-container {
+      margin: 24px 0 40px;
+      border-radius: 14px;
+      overflow: hidden;
+      box-shadow: 0 12px 36px rgba(0,0,0,0.25);
+      background: var(--cover-bg);
+    }
+    .hero-cover-img {
+      width: 100%;
+      max-height: 620px;
+      object-fit: cover;
+      display: block;
+    }
+    figcaption {
+      padding: 10px 16px;
+      font-size: 13px;
+      color: var(--muted);
+      background: rgba(0,0,0,0.06);
+      line-height: 1.5;
+    }
+
+    /* 纯净现代英文优先排版 (英文 22px 醒目呈现，中文半透明淡化 52% 缩小 80%) */
+    .article-content {
+      font-family: var(--font-reader);
+      font-size: 22px;
+      font-weight: 400;
+      line-height: 1.9;
+      letter-spacing: -0.015em;
+    }
+    .article-content p {
+      margin-bottom: 1.8em;
+      font-size: 22px;
+      line-height: 1.9;
+      font-weight: 400;
+    }
+    .article-content h2, .article-content h3 {
+      margin: 2.2em 0 0.9em; line-height: 1.35;
+      font-family: var(--font-reader); font-weight: 700; letter-spacing: -0.02em;
+    }
+    .article-content blockquote {
+      border-left: 4px solid var(--accent); padding: 12px 24px; margin: 1.8em 0;
+      background: rgba(127,127,127,0.05); color: var(--muted); border-radius: 0 10px 10px 0;
+      font-style: normal; font-size: 22px;
+    }
+    .article-content img {
+      max-width: 100%; height: auto; border-radius: 10px; margin: 2em auto; display: block;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.18);
+    }
+    .article-content figure { margin: 2.2em 0; }
+
+    /* 中文字符深度降权弱化（半透明淡化 52% + 等比缩小 80%） */
+    .zh-soft {
+      font-size: 0.80em !important;
+      opacity: 0.52 !important;
+      font-weight: 300 !important;
+      letter-spacing: 0.03em !important;
+      display: inline !important;
+    }
+  </style>
+</head>
+<body class="theme-sepia">
+  <div id="progress"></div>
+
+  <header>
+    <div style="display:flex; gap:12px; align-items:center;">
+      <a href="/" class="btn">🏠 历史控制中心</a>
+      <span class="btn btn-green">✅ 已持久归档</span>
+      <button class="btn" id="openLocalBtn">📂 打开本地文件</button>
+    </div>
+    <div style="display:flex; gap:10px; align-items:center;">
+      <div class="theme-picker">
+        <span class="theme-dot sepia active" onclick="setTheme('sepia')" title="📜 经典羊皮纸 (默认)"></span>
+        <span class="theme-dot academic" onclick="setTheme('academic')" title="🌊 蓝色冷静学术"></span>
+        <span class="theme-dot mint" onclick="setTheme('mint')" title="🌿 清新薄荷森系"></span>
+        <span class="theme-dot beach" onclick="setTheme('beach')" title="🏖️ 夏日海滩暖阳"></span>
+        <span class="theme-dot dark" onclick="setTheme('dark')" title="🌑 极夜深黑"></span>
+        <span class="theme-dot light" onclick="setTheme('light')" title="☀️ 月白浅色"></span>
+      </div>
+      <button class="btn" onclick="resizeFont(-2)" title="缩小字号">A-</button>
+      <span id="fSizeDisplay" style="font-size:12px; font-weight:700; opacity:0.85; min-width:34px; text-align:center;">22px</span>
+      <button class="btn" onclick="resizeFont(2)" title="放大字号">A+</button>
+      <a href="https://www.theatlantic.com/politics/2026/08/trump-ethics-corruption-crypto-watchdogs/688187/" target="_blank" class="btn">🔗 原网链接</a>
+    </div>
+  </header>
+
+  <main>
+    <div class="badge">TheAtlantic</div>
+    <h1 id="articleTitle">The Watchdogs Are Barking Themselves Hoarse</h1>
+    <div class="meta">
+      <span>✍️ <b>Marie-Rose Sheinerman</b></span>
+      <span>📅 2026-08-10</span>
+      <span style="color:#059669; font-weight:600;">📁 D:\Desktop\reading\reading data\TheAtlantic\2026-08\2026-08-10_The_Watchdogs_Are_Barking_Themselves_Hoarse.md</span>
+    </div>
+
+    
+        <div class="hero-cover-container">
+          <img src="/assets/TheAtlantic/2026-08/assets/2026-08-10_The_Watchdogs_Are_Barking_Themselves_Hoarse/a907043c4ea9.jpg" alt="The Watchdogs Are Barking Themselves Hoarse" class="hero-cover-img" />
+          <figcaption>Samuel Corum / Getty</figcaption>
+        </div>
+        
+
+    <div class="article-content" id="content">
+      <?xml version="1.0" encoding="utf-8"?>
+<doc fingerprint="22209351daaf55b5">
+<main>
+<head rend="h1">The Watchdogs Are Barking Themselves Hoarse</head>
+<p>The scandals of the president’s first term now seem quaint.</p>
+<graphic alt="A blurred image of Trump with green light behind him" src="/assets/TheAtlantic/2026-08/assets/2026-08-10_The_Watchdogs_Are_Barking_Themselves_Hoarse/a907043c4ea9.jpg"></graphic>
+<graphic alt="A blurred image of Trump with green light behind him" src="/assets/TheAtlantic/2026-08/assets/2026-08-10_The_Watchdogs_Are_Barking_Themselves_Hoarse/abbbe84a744a.jpg"></graphic>
+<p>Last May, President Trump held an <ref target="https://www.nytimes.com/2025/04/23/technology/trump-private-dinner-crypto-memecoin.html">“intimate” dinner</ref> at his members-only golf club in Virginia for the top-220 investors in $TRUMP, a meme coin he launched days before the start of his second term that, by the end of 2025, would generate <ref target="https://www.nytimes.com/interactive/2026/07/23/us/politics/president-trump-profits.html">$636 million</ref> for him. About 100 protesters gathered outside in rain jackets, baseball caps, and muddy sneakers to confront the dinner guests arriving in shiny dress shoes, tuxedos, and black Cadillac SUVs. They pointed to the dinner as the encapsulation of the troublesome grift of Trump’s second term: trading personal access to the president in exchange for cash and funneling money to a Trump-owned property. “This is like the Mount Everest of corruption,” Senator Jeff Merkley of Oregon, a Democrat, said that night, standing before a crowd spotted with signs reading GRIFTER IN CHIEF and DON THE CON.</p>
+<p>But a year later, when Trump hosted the winners of the <ref target="https://www.cnbc.com/2026/04/25/trump-hosts-crypto-contest-winners-at-mar-a-lago-as-his-coin-languishes.html">second iteration</ref> of the so-called crypto contest at a luncheon gala in Mar-a-Lago in Florida, no large group of protesters greeted the attendees. The private Florida resort is a logistically more challenging location for a protest than a golf club 45 minutes from downtown Washington. But the ever intensifying rush of ethics concerns had also made the crypto contest fade into the background, even for activists who closely follow each allegation. The Mar-a-Lago edition of the feast didn’t make headlines the way the first had done. “I think maybe it is because people have become more inured to some of what was going on, and it wasn’t breaking through in the same way,” Lisa Gilbert, a co-president of Public Citizen, a consumer-rights group that helped organize the protest last year, told me. “As profiteering becomes the norm, it’s harder to explain why it’s outrageous.”</p>
+<p>Washington’s ethics watchdog groups thought they were prepared for Trump’s second term. During his first four years in the White House, they had quickly learned which possible misuses of taxpayer funds to focus on, which apparent case of profiteering off the presidency to anchor a report around, and which allegations of nepotism or self-dealing to try to pitch to journalists as worthy of a story. Most such allegations frequently generated shock and anger, and some <ref target="https://www.americanprogress.org/wp-content/uploads/sites/2/2018/05/TrustInGovernment-report1.pdf">surveys</ref> of Trump voters found that they were outraged at several of his Cabinet secretaries for spending millions in taxpayer dollars on first-class air travel and personal security, or Trump’s family businesses making millions while he was in office. Sometimes, the backlash prompted accountability: Three of Trump’s Cabinet members were forced out, lawmakers from both parties launched inquiries into alleged ethics violations, and top officials reimbursed the government for travel originally paid for by taxpayers.</p>
+<p>This term, the watchdogs are even more alarmed by what they’re witnessing, and they are racing to keep up. Public Citizen added litigators and researchers, and Citizens for Responsibility and Ethics in Washington (CREW) hired an expert in cryptocurrency. Last year, the Campaign Legal Center filed its highest number of ethics complaints in a single year and launched a <ref target="https://campaignlegal.org/document/tracking-trump-administrations-most-corrupt-transactions">tracker</ref> of “corrupt transactions” to ensure that “the exhaustion factor” doesn’t get in the way of keeping a careful count of such instances, even if the media no longer closely cover each one, Saurav Ghosh, the group’s director of federal-campaign-finance reform, told me.</p>
+<p>That doesn’t mean the public has grown indifferent. Although polls show that voters have long considered <ref target="https://www.searchlightinstitute.org/research/voters-want-to-put-an-end-to-corruption-in-government/">most politicians</ref> to be corrupt, a recent survey by Echelon Insights found that the share of Americans who see corruption as the biggest issue facing the nation is now 17 percent, up from 8 percent in December 2024. But there has also been a dampening of objections to possible instances of self-dealing, especially among Republicans, and the examples of accountability are scarce.</p>
+<p>Within a few days of the inauguration last year, the administration had fired 17 inspectors general, dismantling oversight of taxpayer funds, quid-pro-quo business ventures, and ethics-law violations. The president made roughly $2.2 billion last year, according to <hi rend="#i"><ref target="https://www.nytimes.com/interactive/2026/07/23/us/politics/president-trump-profits.html">The New York Times</ref></hi>, a windfall that came mostly from cryptocurrency deals, a new source of income that now forms the bulk of his net worth at a time when his administration has made eroding crypto oversight part of its economic agenda. He also booked up to $117 million in legal settlements, mostly with major tech and media companies, and $125 million from foreign golf and real-estate deals—roughly twice the revenue generated from such deals in 2017. The president has also made more than 21,000 securities trades, often in quick bursts tied to market-moving moments he sparked, according to a <ref target="https://www.bloomberg.com/news/articles/2026-07-02/trump-financial-disclosure-shows-21-000-trades-in-2025"><hi rend="#i">Bloomberg</hi> analysis</ref>. His sons’ portfolio of defensive-technology companies, meanwhile, has collectively generated more than $3 billion in direct government business since Eric and Donald Trump Jr. made their investments, <hi rend="#i"><ref target="https://www.washingtonpost.com/technology/interactive/2026/07/13/trumps-sons-invest-heavily-defense-fathers-administration-pours-money/">The Washington Post</ref></hi> found.</p>
+<p>“I think the big difference in this term is just how blatant all of it is. In the first term, there was at least a head nod towards Trump as president being separate from Trump the businessman,” Jordan Libowitz, a spokesperson for CREW, told me. “Now that’s gone.”</p>
+<p>The White House sees things differently. Anna Kelly, a White House spokesperson, told me in an email that the allegations of corruption are “the same, tired narrative that Democrats have pushed against President Trump, his family, and his administration for a decade.” She said that the president’s assets are “held in fully discretionary accounts managed by independent third-party financial institutions” and that he has no conflicts of interest.</p>
+<p>But it’s hard to deny the shift in scale from Trump’s previous four years in office. One of the many examples of how much has changed: In the fall of 2019, the administration announced that the G7 summit would be held at Trump’s golf club in Doral, Florida, which alarmed not just watchdog groups but also Republican lawmakers who didn’t think the president should award his own company a government contract. Two days later, Trump retreated and blamed “Media &amp; Democrat Crazed and Irrational Hostility” for his reversal.</p>
+<p>This March, the Doral golf club played host to the Shield of the Americas summit, a gathering of Latin American and Caribbean leaders to discuss combatting drug cartels. Trump has announced that the G20 summit later this year will be held at the same hotel because it’s “the best location” for the job. The reaction from GOP members of Congress to the news ranged from silent to “<ref target="https://www.washingtonpost.com/politics/2025/09/05/trump-hosts-g20-summit-doral-miami/">thrilled</ref>.”</p>
+<p>Many of the major ethics scandals of Trump’s first term seem almost quaint: Housing Secretary Ben Carson, or possibly his wife, spent $31,000 on a dining set. Ivanka Trump endorsed Goya beans. EPA Secretary Scott Pruitt spent $43,000 to install a phone booth.</p>
+<p>What seemed to generate a drumbeat of headlines then was the cost of Trump’s travel, especially to his own properties. Although Trump had once ridiculed President Obama for taking a 2012 vacation that cost “taxpayers millions of dollars,” he often traveled several times a month to his private properties in Florida and New Jersey. Less than two months into his first term, <hi rend="#i">The Washington Post</hi> reported that Trump had spent nearly one of every three days in office at one of his own properties. A Government Accountability Office <ref target="https://www.gao.gov/assets/gao-19-178-highlights.pdf">report</ref> found that the president’s four trips to Mar-a-Lago in one month of 2017 cost taxpayers a total of $13.6 million.</p>
+<p>A year and a half into his second term, Trump has made 270 visits to his properties, marking a 14 percent jump compared with the same point in his first term, according to the <ref target="https://www.citizensforethics.org/reports-investigations/crew-reports/tracking-trumps-visits-to-his-properties-and-other-conflicts-of-interest/">CREW tracker</ref> (which updates daily). Trump’s taxpayer tab for golfing trips hit $70 million last fall, <hi rend="#i">HuffPost</hi><ref target="https://www.huffpost.com/entry/trump-golf-300-million_n_69271f3ce4b00aca68d3d689?origin=home-whats-happening-unit">calculated</ref>. If he continues golfing and traveling at the current pace, the analysis showed, this term will run taxpayers $300 million—twice what they paid during his first term. Those costs include protecting the president and his family; the Secret Service <ref target="https://www.citizensforethics.org/reports-investigations/crew-investigations/secret-service-has-spent-nearly-100k-at-trump-properties/">spent nearly $100,000</ref> at Trump-owned properties in the first five months of the second term.</p>
+<p>A related category of recurring stories from the first term concerned Trump’s Cabinet members and their questionable taxpayer-funded travel. In the fall of 2017, Health and Human Services Secretary Tom Price became the administration’s first Cabinet member forced to resign following outcry over his use of public funds for work trips in private jets. Veterans Affairs Secretary David Shulkin’s firing followed after, among other things, the public learned of a taxpayer-funded trip to the United Kingdom he’d taken with his wife. Interior Secretary Ryan Zinke left the administration in 2018 following several scandals involving misuse of government-funded travel, including to Dallas and the Virgin Islands. And Pruitt, the EPA secretary, faced scrutiny over repeated trips home to Tulsa and abroad on the taxpayers’ dime. In Trump’s second term, the focus of outrage is rarely the trips themselves, but rather what happens on them—for example, FBI Director Kash Patel’s taxpayer-funded trip to Hawaii, where he went on a “VIP snorkel” at a Pearl Harbor memorial, and his trip to Milan for the Olympics, during which he was filmed drinking in the locker room with the U.S. men’s hockey team.</p>
+<p>One of the many scandals surrounding Kristi Noem when she led the Department of Homeland Security involved a $70 million jet supposedly intended for high-profile deportations, as well as the purchase of two luxury planes for $172 million. Her replacement, Markwayne Mullin, uses one of the planes to <ref target="https://www.theatlantic.com/politics/2026/07/markwayne-mullin-secretary-homeland-security-ice/687868/">fly home</ref> to Oklahoma most weekends, and the department says he picks up the bill, although they won’t provide details on how that’s calculated. Another is reportedly being <ref target="https://www.wsj.com/politics/policy/the-white-house-is-keeping-kristi-noems-70-million-jet-547438aa">used</ref> by Melania Trump.</p>
+<p>Yet another category of ethical issues that has gained relatively little notice is the volume of merchandise being sold by the president and those in his orbit. In February 2017, a weekslong controversy followed Kellyanne Conway, then a top aide to Trump, promoting Ivanka Trump’s clothing line during a <hi rend="#i">Fox &amp; Friends</hi> appearance. Conway faced bipartisan accusations of violating a statute that prohibits federal employees from using “their public office for their own private gain,” including through “the endorsement of any product, service, or enterprise.” The Republican chair of the House Oversight Committee pushed for a prompt review of Conway’s statements, including possible disciplinary action.</p>
+<p>Now brand promotion and trademarked gear have become so ubiquitous in the White House that the Oval Office study—a small room that past presidents have used for tasks such as reviewing speech drafts and making calls—has been <ref target="https://www.nytimes.com/2025/11/14/us/trump-oval-office-study-merch.html">transformed</ref> into a shrine for baseball caps and collectibles emblazoned with MAGA, Gulf of America, and TRUMP 2028. Officials throughout the administration are known to enjoy self-branded merchandise (maybe <ref target="https://www.theatlantic.com/politics/2026/05/kash-patel-fbi-bourbon/687066/">Patel</ref> most ardently). This past spring, the Trump Organization applied for a trademark for “Trump 250” images to allow the president to profit from clothing or knickknack sales tied to America’s 250th birthday. The Trump Organization’s flagship store launched 168 new products in time for Trump’s second Inauguration Day, according to a count by CREW. Truth Social, Trump’s primary form of communication with the public, is his own company as well—meaning that anyone who wants to hear directly from the president must do so on an app where their clicks and page views generate ad revenue for Trump. (Many of those ads are for his own products.) The company recently launched a service selling to Wall Street early access to the president’s digital communications, which frequently move markets.</p>
+<p>But perhaps the most significant category of self-dealing allegations is the one with no first-term analogue. A few days before Trump’s second inauguration, an Emirati royal backed a deal to purchase a 49 percent stake in World Liberty Financial, the Trump family’s primary crypto venture, for half a billion dollars. The deal, reportedly signed by Eric Trump, included $187 million up front and at least $31 million set to go toward entities linked to the family of Steve Witkoff, a lead Middle East negotiator for the administration and a co-founder of the crypto firm. A majority of the wealth that Trump has amassed this term, according to financial disclosures, comes from his family’s cryptocurrency businesses. World Liberty Financial applied for a national-trust bank charter in January and is expected to receive permission to operate like a bank in the near future, <hi rend="#i">NOTUS</hi><ref target="https://www.notus.org/economy/trump-family-crypto-firm-federal-banking-charter">reported</ref> this summer, a move that could give executives yet another way to direct money toward the president.</p>
+<p>For Trump’s birthday, in June, a bloody spectacle arrived on the White House South Lawn, courtesy of UFC Freedom 250; World Liberty Financial was an “official partner,” and fighters were paid bonuses in “stablecoins,” cryptocurrency issued by the company. The Trump family also used the fight as an opportunity to sell physical silver and gold coins—some priced as high as $12,000—featuring Trump’s face and purportedly “designed by President Trump” through a collaboration between UFC and the Trump Organization. The Public Integrity Project, a legal nonprofit, sued to try to stop the event, calling it “a volcano of corruption,” but failed. Several other groups, including CREW and Public Citizen, raised questions and condemned the festivities. But the fights continued as planned.</p>
+</main>
+<comments></comments>
+</doc>
+    </div>
+  </main>
+
+  <script>
+    window.addEventListener('scroll', () => {
+      const h = document.documentElement;
+      const st = h.scrollTop || document.body.scrollTop;
+      const sh = h.scrollHeight - h.clientHeight;
+      document.getElementById('progress').style.width = ((st/sh)*100) + '%';
+    });
+
+    function setTheme(name) {
+      document.body.className = 'theme-' + name;
+      localStorage.setItem('ladder_reader_theme', name);
+      document.querySelectorAll('.theme-dot').forEach(d => d.classList.remove('active'));
+      const activeDot = document.querySelector('.theme-dot.' + name);
+      if (activeDot) activeDot.classList.add('active');
+    }
+
+    // 默认以羊皮纸 (sepia) 或用户上次记忆的主题打开
+    const savedTheme = localStorage.getItem('ladder_reader_theme') || 'sepia';
+    setTheme(savedTheme);
+
+    // 字号缩放控制与持久记忆 (以 22px 为基准)
+    let currentFSize = parseInt(localStorage.getItem('ladder_reader_fsize') || '22', 10);
+
+    function applyFontSize(sz) {
+      currentFSize = Math.max(16, Math.min(36, sz));
+      localStorage.setItem('ladder_reader_fsize', currentFSize);
+      
+      const contentElem = document.getElementById('content');
+      if (contentElem) {
+        contentElem.style.fontSize = currentFSize + 'px';
+      }
+      const allSub = document.querySelectorAll('.article-content p, .article-content li, .article-content blockquote');
+      allSub.forEach(el => {
+        el.style.fontSize = currentFSize + 'px';
+      });
+      
+      const disp = document.getElementById('fSizeDisplay');
+      if (disp) disp.innerText = currentFSize + 'px';
+    }
+
+    function resizeFont(step) {
+      applyFontSize(currentFSize + step);
+    }
+
+    applyFontSize(currentFSize);
+
+    const filePath = "D:\\Desktop\\reading\\reading data\\TheAtlantic\\2026-08\\2026-08-10_The_Watchdogs_Are_Barking_Themselves_Hoarse.md";
+    const openBtn = document.getElementById('openLocalBtn');
+
+    openBtn.addEventListener('click', () => {
+      openBtn.innerText = '⏳ 正在定位...';
+      fetch('/api/open-folder?path=' + encodeURIComponent(filePath))
+        .then(r => r.json())
+        .then(() => {
+          openBtn.innerText = '✅ 已在资源管理器中高亮';
+          setTimeout(() => { openBtn.innerText = '📂 打开本地文件'; }, 2500);
+        })
+        .catch(() => {
+          openBtn.innerText = '📂 打开本地文件';
+        });
+    });
+  </script>
+</body>
+</html>

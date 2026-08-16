@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Someone Is Mysteriously Snapping Up Used Books Around the World · Ladder 沉浸阅读</title>
+  <style>
+    /* 中文字符专属字体定义：自动等比缩减至 80% (约 17.5px)，字重柔和轻量 */
+    @font-face {
+      font-family: 'ChineseSoftMuted';
+      src: local('PingFang SC Light'), local('PingFang SC'), local('Microsoft YaHei Light'), local('Microsoft YaHei'), local('SimHei');
+      unicode-range: U+4E00-9FFF, U+3400-4DBF, U+20000-2A6DF, U+3000-303F, U+FF00-FFEF;
+      size-adjust: 80%;
+    }
+
+    :root {
+      --font-reader: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", "Arial Nova", 'ChineseSoftMuted', sans-serif;
+    }
+
+    /* 1. 经典羊皮纸 (Sepia / Parchment) - 默认主题 */
+    body.theme-sepia {
+      --bg: #f8f1e3;
+      --card: #ede3ce;
+      --text: #382c1e;
+      --muted: #7a6854;
+      --border: rgba(60, 44, 30, 0.12);
+      --accent: #b45309;
+      --cover-bg: #e6dac1;
+    }
+
+    /* 2. 蓝色冷静学术风 (Nordic Academic Blue) */
+    body.theme-academic {
+      --bg: #0e1726;
+      --card: #162238;
+      --text: #e2e8f0;
+      --muted: #8ba2c4;
+      --border: rgba(148, 163, 184, 0.14);
+      --accent: #38bdf8;
+      --cover-bg: #121d30;
+    }
+
+    /* 3. 清新薄荷森系 (Fresh Mint / Sage) */
+    body.theme-mint {
+      --bg: #edf5f0;
+      --card: #deebe2;
+      --text: #1b382b;
+      --muted: #4e7663;
+      --border: rgba(27, 56, 43, 0.1);
+      --accent: #059669;
+      --cover-bg: #d2e4d8;
+    }
+
+    /* 4. 夏日海滩暖阳 (Summer Beach / Warm Sand) */
+    body.theme-beach {
+      --bg: #fdf6ec;
+      --card: #f7ebd9;
+      --text: #3c2d1d;
+      --muted: #8c7155;
+      --border: rgba(217, 119, 6, 0.14);
+      --accent: #0284c7;
+      --cover-bg: #f0deca;
+    }
+
+    /* 5. 极夜深黑 (Midnight Dark) */
+    body.theme-dark {
+      --bg: #0b0f19;
+      --card: #151c2c;
+      --text: #f1f5f9;
+      --muted: #94a3b8;
+      --border: rgba(255, 255, 255, 0.08);
+      --accent: #818cf8;
+      --cover-bg: #111726;
+    }
+
+    /* 6. 月白浅色 (Pure Paper White) */
+    body.theme-light {
+      --bg: #fafafa;
+      --card: #ffffff;
+      --text: #171717;
+      --muted: #737373;
+      --border: rgba(0, 0, 0, 0.08);
+      --accent: #4f46e5;
+      --cover-bg: #f0f0f0;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-reader);
+      min-height: 100vh;
+      font-weight: 400;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      text-rendering: optimizeLegibility;
+      transition: background 0.25s ease, color 0.25s ease;
+    }
+    #progress {
+      position: fixed; top: 0; left: 0; height: 3px;
+      background: linear-gradient(90deg, var(--accent), #ec4899);
+      width: 0%; z-index: 1000;
+    }
+    header {
+      position: sticky; top: 0; z-index: 900;
+      background: var(--card); border-bottom: 1px solid var(--border);
+      padding: 12px 32px; display: flex; align-items: center; justify-content: space-between;
+      backdrop-filter: blur(16px); transition: background 0.25s ease;
+    }
+    .btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 7px 14px; border-radius: 8px; font-size: 13px; font-weight: 600;
+      cursor: pointer; text-decoration: none; border: 1px solid var(--border);
+      background: rgba(127,127,127,0.08); color: var(--text);
+      font-family: var(--font-reader); transition: all 0.2s;
+    }
+    .btn:hover { background: rgba(127,127,127,0.18); transform: translateY(-1px); }
+    .btn-green { background: #059669; color: #fff; border: none; cursor: default; }
+    
+    .theme-picker {
+      display: flex; gap: 7px; align-items: center; background: rgba(127,127,127,0.08);
+      padding: 4px 10px; border-radius: 9999px; border: 1px solid var(--border);
+    }
+    .theme-dot {
+      width: 18px; height: 18px; border-radius: 50%; display: inline-block; cursor: pointer;
+      border: 2px solid transparent; transition: transform 0.2s, border-color 0.2s;
+    }
+    .theme-dot:hover { transform: scale(1.2); }
+    .theme-dot.active { border-color: var(--accent); transform: scale(1.25); box-shadow: 0 0 8px var(--accent); }
+
+    .theme-dot.sepia { background: #f8f1e3; border: 1px solid #7a6854; }
+    .theme-dot.academic { background: #1e40af; border: 1px solid #60a5fa; }
+    .theme-dot.mint { background: #10b981; border: 1px solid #059669; }
+    .theme-dot.beach { background: #f59e0b; border: 1px solid #d97706; }
+    .theme-dot.dark { background: #000000; border: 1px solid #4b5563; }
+    .theme-dot.light { background: #ffffff; border: 1px solid #9ca3af; }
+
+    /* 超宽全屏沉浸流 (宽度 1280px / 92%，左右留白极小) */
+    main {
+      max-width: 1280px;
+      width: 92%;
+      margin: 32px auto 100px;
+      padding: 0 16px;
+    }
+    .badge {
+      display: inline-block; padding: 5px 12px; background: rgba(99,102,241,0.14);
+      color: var(--accent); font-size: 13px; font-weight: 700; border-radius: 6px; margin-bottom: 16px;
+      letter-spacing: 0.5px;
+    }
+    h1 {
+      font-size: 40px; line-height: 1.3; font-weight: 800; margin-bottom: 18px;
+      font-family: var(--font-reader); letter-spacing: -0.03em;
+    }
+    .meta {
+      color: var(--muted); font-size: 14px; margin-bottom: 32px;
+      padding-bottom: 20px; border-bottom: 1px solid var(--border);
+      display: flex; gap: 20px; align-items: center; flex-wrap: wrap;
+    }
+    
+    /* 官方同款高清大封面 (Hero Cover) */
+    .hero-cover-container {
+      margin: 24px 0 40px;
+      border-radius: 14px;
+      overflow: hidden;
+      box-shadow: 0 12px 36px rgba(0,0,0,0.25);
+      background: var(--cover-bg);
+    }
+    .hero-cover-img {
+      width: 100%;
+      max-height: 620px;
+      object-fit: cover;
+      display: block;
+    }
+    figcaption {
+      padding: 10px 16px;
+      font-size: 13px;
+      color: var(--muted);
+      background: rgba(0,0,0,0.06);
+      line-height: 1.5;
+    }
+
+    /* 纯净现代英文优先排版 (英文 22px 醒目呈现，中文半透明淡化 52% 缩小 80%) */
+    .article-content {
+      font-family: var(--font-reader);
+      font-size: 22px;
+      font-weight: 400;
+      line-height: 1.9;
+      letter-spacing: -0.015em;
+    }
+    .article-content p {
+      margin-bottom: 1.8em;
+      font-size: 22px;
+      line-height: 1.9;
+      font-weight: 400;
+    }
+    .article-content h2, .article-content h3 {
+      margin: 2.2em 0 0.9em; line-height: 1.35;
+      font-family: var(--font-reader); font-weight: 700; letter-spacing: -0.02em;
+    }
+    .article-content blockquote {
+      border-left: 4px solid var(--accent); padding: 12px 24px; margin: 1.8em 0;
+      background: rgba(127,127,127,0.05); color: var(--muted); border-radius: 0 10px 10px 0;
+      font-style: normal; font-size: 22px;
+    }
+    .article-content img {
+      max-width: 100%; height: auto; border-radius: 10px; margin: 2em auto; display: block;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.18);
+    }
+    .article-content figure { margin: 2.2em 0; }
+
+    /* 中文字符深度降权弱化（半透明淡化 52% + 等比缩小 80%） */
+    .zh-soft {
+      font-size: 0.80em !important;
+      opacity: 0.52 !important;
+      font-weight: 300 !important;
+      letter-spacing: 0.03em !important;
+      display: inline !important;
+    }
+  </style>
+</head>
+<body class="theme-sepia">
+  <div id="progress"></div>
+
+  <header>
+    <div style="display:flex; gap:12px; align-items:center;">
+      <a href="/" class="btn">🏠 历史控制中心</a>
+      <span class="btn btn-green">✅ 已持久归档</span>
+      <button class="btn" id="openLocalBtn">📂 打开本地文件</button>
+    </div>
+    <div style="display:flex; gap:10px; align-items:center;">
+      <div class="theme-picker">
+        <span class="theme-dot sepia active" onclick="setTheme('sepia')" title="📜 经典羊皮纸 (默认)"></span>
+        <span class="theme-dot academic" onclick="setTheme('academic')" title="🌊 蓝色冷静学术"></span>
+        <span class="theme-dot mint" onclick="setTheme('mint')" title="🌿 清新薄荷森系"></span>
+        <span class="theme-dot beach" onclick="setTheme('beach')" title="🏖️ 夏日海滩暖阳"></span>
+        <span class="theme-dot dark" onclick="setTheme('dark')" title="🌑 极夜深黑"></span>
+        <span class="theme-dot light" onclick="setTheme('light')" title="☀️ 月白浅色"></span>
+      </div>
+      <button class="btn" onclick="resizeFont(-2)" title="缩小字号">A-</button>
+      <span id="fSizeDisplay" style="font-size:12px; font-weight:700; opacity:0.85; min-width:34px; text-align:center;">22px</span>
+      <button class="btn" onclick="resizeFont(2)" title="放大字号">A+</button>
+      <a href="https://www.theatlantic.com/technology/2026/08/ai-companies-buying-used-books-for-data/688167/" target="_blank" class="btn">🔗 原网链接</a>
+    </div>
+  </header>
+
+  <main>
+    <div class="badge">TheAtlantic</div>
+    <h1 id="articleTitle">Someone Is Mysteriously Snapping Up Used Books Around the World</h1>
+    <div class="meta">
+      <span>✍️ <b>Alex Reisner</b></span>
+      <span>📅 2026-08-10</span>
+      <span style="color:#059669; font-weight:600;">📁 D:\Desktop\reading\reading data\TheAtlantic\2026-08\2026-08-10_Someone_Is_Mysteriously_Snapping_Up_Used_Books_Around_the_Wo.md</span>
+    </div>
+
+    
+        <div class="hero-cover-container">
+          <img src="/assets/TheAtlantic/2026-08/assets/2026-08-10_Someone_Is_Mysteriously_Snapping_Up_Used_Books_Around_the_Wo/62908cd71968.jpg" alt="Someone Is Mysteriously Snapping Up Used Books Around the World" class="hero-cover-img" />
+          <figcaption>Illustration by Alisa Gao / The Atlantic</figcaption>
+        </div>
+        
+
+    <div class="article-content" id="content">
+      <?xml version="1.0" encoding="utf-8"?>
+<doc fingerprint="772413d54db00e80">
+<main>
+<graphic alt="A lighter-shaped book on fire" src="/assets/TheAtlantic/2026-08/assets/2026-08-10_Someone_Is_Mysteriously_Snapping_Up_Used_Books_Around_the_Wo/62908cd71968.jpg"></graphic>
+<graphic alt="A lighter-shaped book on fire" src="/assets/TheAtlantic/2026-08/assets/2026-08-10_Someone_Is_Mysteriously_Snapping_Up_Used_Books_Around_the_Wo/5c8385185440.jpg"></graphic>
+<p>Last week, the internet raged as social-media posts and news articles accused AI companies of <ref target="https://www.telegraph.co.uk/news/2026/07/30/why-ai-companies-are-destroying-millions-of-old-books/">“destroying the world’s books”</ref>—including “millions of rare” ones—by <ref target="https://www.news.com.au/technology/online/internet/ai-labs-buy-scan-shred-millions-of-rare-books/news-story/0c3b45a67093ab462a587a0348538ce9">chopping off their spines</ref> to scan them more easily, and discarding them afterward. One article said the news was “sparking concerns that the last remaining copies of out-of-print texts are being destroyed.” The investor and AI skeptic Michael Burry <ref target="https://x.com/michaeljburry/status/2081898573264834837">called</ref> the practice of sacrificing rare books “evil incarnate.” Even Elon Musk weighed in, posting that he had asked the engineers training xAI’s models to “preserve any rare books in a library and scan them the hard way.”</p>
+<p>The destruction of physical books in the process of training AI has been public knowledge for more than a year, but debate over the practice intensified after an <ref target="https://www.404media.co/ai-companies-are-buying-tons-of-old-books-because-theyre-free-of-ai-slop/">article</ref> by <hi rend="#i">404 Media</hi>, which described a large number of orders coming to booksellers, suggested that rare books might be included, and named a book-database company called ISBNdb as the possible buyer.</p>
+<p>Lost in the outrage, however, are several unanswered questions. The <hi rend="#i">404 Media</hi> story said ISBNdb had advertised bulk buying of books for AI companies, but acknowledged that no evidence directly connects the company to the recent wave of purchases that booksellers have described. And although the story calls out rare-book sellers, it’s unclear how rare most of the books being bought actually are, or whether they’re of great value.</p>
+<p>Despite that, the conversation rapidly intensified into a panic. So what is actually going on? And who is actually responsible?</p>
+<p>Many of the specifics of this situation are obscured by hard-to-trace purchasing histories and the silence of AI companies and other potential buyers, so let’s lay out what we know. We know that at least one major AI company has <ref target="https://www.washingtonpost.com/technology/2026/01/27/anthropic-ai-scan-destroy-books/">used physical books</ref> to train their models. Documents unsealed earlier this year in a lawsuit against Anthropic reveal that in the spring of 2024, the AI giant bought millions of new and used books and destroyed them in order to scan the pages to train its AI models. Anthropic and other AI companies are likely keen on books published before the launch of ChatGPT, in 2022, which are all but guaranteed to be free of AI-generated text. Although AI-generated text is readable—if often unpleasant—to humans, it can be devastating to AI models: When trained on their own output, they can <ref target="https://www.nature.com/articles/s41586-024-07566-y">degrade significantly</ref> in quality in a phenomenon known as “model collapse.”</p>
+<p>We also know that something mysterious is afoot. Someone—if not more than one group or company—has been snapping up massive volumes of books from shops around the world. “What’s with the online purchasing bonanza of used books right now?” asked one bookseller on Reddit three months ago. Several people who identified themselves as booksellers responded with their own stories of unusually large orders.</p>
+<p>Charlie Becker, the manager of Becker’s Books, in Houston, told me that 95 of the past 100 books ordered through one of his online-selling platforms went to a single buyer. One of the orders was for 70 books. (To avoid breaking the terms of service of his selling platform, Becker would not tell me the name of the buyer.)</p>
+<p>But contrary to many <ref target="https://futurism.com/artificial-intelligence/ai-companies-destroying-rare-books">news</ref><ref target="https://screenrant.com/anthropic-ai-rare-valuable-books-destroyed-controversy-explained/">reports</ref>, the old books bought from these sellers do not appear to be “rare” in the typical sense of the word. According to Becker and the online discussions I read, the books in these orders are almost entirely nonfiction, were mostly published from the 1970s to the 1990s, and were written in a variety of languages. Becker wrote in <ref target="https://charliebecker.substack.com/p/is-an-ai-company-buying-up-all-the">a blog post</ref> that he has received orders for “stuff like The Insider’s Guide to Metro Denver from 1995 or How to Use Corel WordPerfect 1991.” These belong to a category of books that you could call rare because a small number of copies remain, but they may also be out-of-date, undesirable to readers, and not valuable per se. In some cases, booksellers have noted, the cost of shipping exceeds the books’ resale value.</p>
+<p>By most accounts, AI companies want a large volume of text for as little cost as possible. It would be strange if they were intentionally paying premium prices for first editions, unusual printings of cult classics, or yellowed books of esoteric knowledge. Yet it’s possible: The pursuit of training data that their competitors don’t have could lead them to such titles.</p>
+<p>We also have a good sense of who’s behind the book buying—and it seems unlikely to be ISBNdb.com, the subject of the <hi rend="#i">404 Media</hi> story. For one thing, no bookseller I could find in online discussions had mentioned an order from ISBNdb. The company maintains a public book database and charges for access to it, but does not appear to buy or sell any books. Things get confusing because, in March, the company added a page to its website that <ref target="https://web.archive.org/web/20260727225205/https://isbndb.com/print-books-for-ai-training">offered</ref> AI developers the ability to buy physical books, “up to 1 million titles per order,” with a nondisclosure agreement to preserve anonymity.</p>
+<p>When I asked ISBNdb about the service, I received an email from a customer-support representative claiming that “ISBNdb has never purchased, scanned, or destroyed a book—for AI training or anything else. We don’t train AI models, and we never have. The page was up to explore demand for a service we never brought to life.” In response to recent “concern,” the representative said, the company had removed the page advertising that service from its website.</p>
+<p>Reddit users did call out a different company for “frequent and sizable online orders”: Zoom Books, based in Canada, claims to use “smart logistics” to “acquire, sort, and resell over 2 million books monthly.” Booksellers in Germany <ref target="https://lesekauz.de/forum/thread/1999-sammelbestellungen-von-zoombooks-c-o-prepfort-usa-%C3%BCber-abebooks/">mentioned</ref> similar orders from Zoom, as did a New Zealand bookseller who <ref target="https://bookhaven.co.nz/blogs/blogs/is-ai-sucking-up-all-knowledge-including-here">wrote that</ref> Zoom had placed multiple orders, including one for 71 titles. Becker would not confirm or deny whether his bulk buyer was Zoom.</p>
+<p>On May 26, a book-industry newsletter called Publishers Lunch noted accusations that Zoom was buying books for AI companies. On the following day, the newsletter included a response from Zoom, claiming that it “has no involvement in digitization, scanning, or destruction of books, and we do not sell books for those purposes to our knowledge.” (Zoom did not respond to a request for comment.)</p>
+<p>Some booksellers who received orders from Zoom have reported that the shipping addresses on these orders belong to a company called PrepFort. PrepFort specializes in preparing items for sale on Amazon and Walmart, but as a third-party logistics company, it can route books to other destinations as well. Using such a company would be consistent with the AI industry’s practice of acquiring training data through intermediaries, a strategy that has been used for <ref target="https://laion.ai/blog/laion-5b/">images</ref>, <ref target="https://www.theatlantic.com/technology/2025/11/common-crawl-ai-training-data/684567/">paywalled articles</ref>, and other media. I emailed PrepFort to see if it could provide any details about these orders. Sufyaan Kalota, a co-founder of the company, responded: “While we would love to assist, we unfortunately cannot share any details regarding our customer agreements due to our confidentiality commitments.”</p>
+<p>In June, the <hi rend="#i">NL Times</hi>, an Amsterdam-based publication, reported that some Dutch booksellers had received emails from a Singapore-based organization called 2077AI, which claims to be “revolutionizing AI data,” partly by creating training data sets. One bookseller reported that the email from 2077AI was accompanied by a list of 3,000 English-language titles the company wanted to purchase. The examples given were academic books such as <hi rend="#i">Distinct Element Modelling in Geomechanics</hi> and <hi rend="#i">Laser Shock Peening of Advanced Ceramics</hi>. Such books might legitimately be considered “rare”: they had small print runs, contain esoteric knowledge, but are important within a specific field. (<hi rend="#i">404 Media</hi> linked to this story but did not reference these books specifically, or 2077AI.) 2077AI did not immediately respond to a request for comment.</p>
+<p>For now, this is what we know: A lot of used books are suddenly being bought up by companies including Zoom Books. But we do not know how many of these orders are coming from AI companies, or whether these books will be destroyed. Based on the practices of Anthropic and the attempted purchases by 2077AI, it seems very possible that the books are destined for AI companies, but we can’t be certain.</p>
+<p>Regardless, the idea of an AI behemoth destroying books has sent a bolt through the collective psyche. Book destruction is historically linked to authoritarian regimes and attempts to control public discourse, as well as ancient tragedies—the burning of the Library of Alexandria comes to mind. The encroachment of AI, particularly in the realm of books, is now everyday news: Last month it emerged that a top-selling Kindle book may have been <ref target="https://www.theatlantic.com/technology/2026/07/daggermouth-novel-bestseller-ai/688067/">partly written by AI</ref>, and grandparents are buying <ref target="https://www.wired.com/story/boomers-cant-stop-gifting-their-grandkids-ai-generated-slop-books/">children’s books</ref> filled with AI-generated slop.</p>
+<p>Even if a literal book burning is not under way, the process of ingesting millions of books, stripping them of authorship, and blending them into a homogenous “intelligence” branded with the name of a chatbot certainly feels destructive. It masks the hard work and collaboration that goes into knowledge creation, undermines incentives for authors to write books, prevents experts from finding one another, and gives AI companies tremendous power over what information people can access. Given this scale of cultural damage, the physical destruction of books seems almost quaint.</p>
+</main>
+<comments></comments>
+</doc>
+    </div>
+  </main>
+
+  <script>
+    window.addEventListener('scroll', () => {
+      const h = document.documentElement;
+      const st = h.scrollTop || document.body.scrollTop;
+      const sh = h.scrollHeight - h.clientHeight;
+      document.getElementById('progress').style.width = ((st/sh)*100) + '%';
+    });
+
+    function setTheme(name) {
+      document.body.className = 'theme-' + name;
+      localStorage.setItem('ladder_reader_theme', name);
+      document.querySelectorAll('.theme-dot').forEach(d => d.classList.remove('active'));
+      const activeDot = document.querySelector('.theme-dot.' + name);
+      if (activeDot) activeDot.classList.add('active');
+    }
+
+    // 默认以羊皮纸 (sepia) 或用户上次记忆的主题打开
+    const savedTheme = localStorage.getItem('ladder_reader_theme') || 'sepia';
+    setTheme(savedTheme);
+
+    // 字号缩放控制与持久记忆 (以 22px 为基准)
+    let currentFSize = parseInt(localStorage.getItem('ladder_reader_fsize') || '22', 10);
+
+    function applyFontSize(sz) {
+      currentFSize = Math.max(16, Math.min(36, sz));
+      localStorage.setItem('ladder_reader_fsize', currentFSize);
+      
+      const contentElem = document.getElementById('content');
+      if (contentElem) {
+        contentElem.style.fontSize = currentFSize + 'px';
+      }
+      const allSub = document.querySelectorAll('.article-content p, .article-content li, .article-content blockquote');
+      allSub.forEach(el => {
+        el.style.fontSize = currentFSize + 'px';
+      });
+      
+      const disp = document.getElementById('fSizeDisplay');
+      if (disp) disp.innerText = currentFSize + 'px';
+    }
+
+    function resizeFont(step) {
+      applyFontSize(currentFSize + step);
+    }
+
+    applyFontSize(currentFSize);
+
+    const filePath = "D:\\Desktop\\reading\\reading data\\TheAtlantic\\2026-08\\2026-08-10_Someone_Is_Mysteriously_Snapping_Up_Used_Books_Around_the_Wo.md";
+    const openBtn = document.getElementById('openLocalBtn');
+
+    openBtn.addEventListener('click', () => {
+      openBtn.innerText = '⏳ 正在定位...';
+      fetch('/api/open-folder?path=' + encodeURIComponent(filePath))
+        .then(r => r.json())
+        .then(() => {
+          openBtn.innerText = '✅ 已在资源管理器中高亮';
+          setTimeout(() => { openBtn.innerText = '📂 打开本地文件'; }, 2500);
+        })
+        .catch(() => {
+          openBtn.innerText = '📂 打开本地文件';
+        });
+    });
+  </script>
+</body>
+</html>

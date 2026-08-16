@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Color Recession May Be Permanent · Ladder 沉浸阅读</title>
+  <style>
+    /* 中文字符专属字体定义：自动等比缩减至 80% (约 17.5px)，字重柔和轻量 */
+    @font-face {
+      font-family: 'ChineseSoftMuted';
+      src: local('PingFang SC Light'), local('PingFang SC'), local('Microsoft YaHei Light'), local('Microsoft YaHei'), local('SimHei');
+      unicode-range: U+4E00-9FFF, U+3400-4DBF, U+20000-2A6DF, U+3000-303F, U+FF00-FFEF;
+      size-adjust: 80%;
+    }
+
+    :root {
+      --font-reader: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", "Arial Nova", 'ChineseSoftMuted', sans-serif;
+    }
+
+    /* 1. 经典羊皮纸 (Sepia / Parchment) - 默认主题 */
+    body.theme-sepia {
+      --bg: #f8f1e3;
+      --card: #ede3ce;
+      --text: #382c1e;
+      --muted: #7a6854;
+      --border: rgba(60, 44, 30, 0.12);
+      --accent: #b45309;
+      --cover-bg: #e6dac1;
+    }
+
+    /* 2. 蓝色冷静学术风 (Nordic Academic Blue) */
+    body.theme-academic {
+      --bg: #0e1726;
+      --card: #162238;
+      --text: #e2e8f0;
+      --muted: #8ba2c4;
+      --border: rgba(148, 163, 184, 0.14);
+      --accent: #38bdf8;
+      --cover-bg: #121d30;
+    }
+
+    /* 3. 清新薄荷森系 (Fresh Mint / Sage) */
+    body.theme-mint {
+      --bg: #edf5f0;
+      --card: #deebe2;
+      --text: #1b382b;
+      --muted: #4e7663;
+      --border: rgba(27, 56, 43, 0.1);
+      --accent: #059669;
+      --cover-bg: #d2e4d8;
+    }
+
+    /* 4. 夏日海滩暖阳 (Summer Beach / Warm Sand) */
+    body.theme-beach {
+      --bg: #fdf6ec;
+      --card: #f7ebd9;
+      --text: #3c2d1d;
+      --muted: #8c7155;
+      --border: rgba(217, 119, 6, 0.14);
+      --accent: #0284c7;
+      --cover-bg: #f0deca;
+    }
+
+    /* 5. 极夜深黑 (Midnight Dark) */
+    body.theme-dark {
+      --bg: #0b0f19;
+      --card: #151c2c;
+      --text: #f1f5f9;
+      --muted: #94a3b8;
+      --border: rgba(255, 255, 255, 0.08);
+      --accent: #818cf8;
+      --cover-bg: #111726;
+    }
+
+    /* 6. 月白浅色 (Pure Paper White) */
+    body.theme-light {
+      --bg: #fafafa;
+      --card: #ffffff;
+      --text: #171717;
+      --muted: #737373;
+      --border: rgba(0, 0, 0, 0.08);
+      --accent: #4f46e5;
+      --cover-bg: #f0f0f0;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-reader);
+      min-height: 100vh;
+      font-weight: 400;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      text-rendering: optimizeLegibility;
+      transition: background 0.25s ease, color 0.25s ease;
+    }
+    #progress {
+      position: fixed; top: 0; left: 0; height: 3px;
+      background: linear-gradient(90deg, var(--accent), #ec4899);
+      width: 0%; z-index: 1000;
+    }
+    header {
+      position: sticky; top: 0; z-index: 900;
+      background: var(--card); border-bottom: 1px solid var(--border);
+      padding: 12px 32px; display: flex; align-items: center; justify-content: space-between;
+      backdrop-filter: blur(16px); transition: background 0.25s ease;
+    }
+    .btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 7px 14px; border-radius: 8px; font-size: 13px; font-weight: 600;
+      cursor: pointer; text-decoration: none; border: 1px solid var(--border);
+      background: rgba(127,127,127,0.08); color: var(--text);
+      font-family: var(--font-reader); transition: all 0.2s;
+    }
+    .btn:hover { background: rgba(127,127,127,0.18); transform: translateY(-1px); }
+    .btn-green { background: #059669; color: #fff; border: none; cursor: default; }
+    
+    .theme-picker {
+      display: flex; gap: 7px; align-items: center; background: rgba(127,127,127,0.08);
+      padding: 4px 10px; border-radius: 9999px; border: 1px solid var(--border);
+    }
+    .theme-dot {
+      width: 18px; height: 18px; border-radius: 50%; display: inline-block; cursor: pointer;
+      border: 2px solid transparent; transition: transform 0.2s, border-color 0.2s;
+    }
+    .theme-dot:hover { transform: scale(1.2); }
+    .theme-dot.active { border-color: var(--accent); transform: scale(1.25); box-shadow: 0 0 8px var(--accent); }
+
+    .theme-dot.sepia { background: #f8f1e3; border: 1px solid #7a6854; }
+    .theme-dot.academic { background: #1e40af; border: 1px solid #60a5fa; }
+    .theme-dot.mint { background: #10b981; border: 1px solid #059669; }
+    .theme-dot.beach { background: #f59e0b; border: 1px solid #d97706; }
+    .theme-dot.dark { background: #000000; border: 1px solid #4b5563; }
+    .theme-dot.light { background: #ffffff; border: 1px solid #9ca3af; }
+
+    /* 超宽全屏沉浸流 (宽度 1280px / 92%，左右留白极小) */
+    main {
+      max-width: 1280px;
+      width: 92%;
+      margin: 32px auto 100px;
+      padding: 0 16px;
+    }
+    .badge {
+      display: inline-block; padding: 5px 12px; background: rgba(99,102,241,0.14);
+      color: var(--accent); font-size: 13px; font-weight: 700; border-radius: 6px; margin-bottom: 16px;
+      letter-spacing: 0.5px;
+    }
+    h1 {
+      font-size: 40px; line-height: 1.3; font-weight: 800; margin-bottom: 18px;
+      font-family: var(--font-reader); letter-spacing: -0.03em;
+    }
+    .meta {
+      color: var(--muted); font-size: 14px; margin-bottom: 32px;
+      padding-bottom: 20px; border-bottom: 1px solid var(--border);
+      display: flex; gap: 20px; align-items: center; flex-wrap: wrap;
+    }
+    
+    /* 官方同款高清大封面 (Hero Cover) */
+    .hero-cover-container {
+      margin: 24px 0 40px;
+      border-radius: 14px;
+      overflow: hidden;
+      box-shadow: 0 12px 36px rgba(0,0,0,0.25);
+      background: var(--cover-bg);
+    }
+    .hero-cover-img {
+      width: 100%;
+      max-height: 620px;
+      object-fit: cover;
+      display: block;
+    }
+    figcaption {
+      padding: 10px 16px;
+      font-size: 13px;
+      color: var(--muted);
+      background: rgba(0,0,0,0.06);
+      line-height: 1.5;
+    }
+
+    /* 纯净现代英文优先排版 (英文 22px 醒目呈现，中文半透明淡化 52% 缩小 80%) */
+    .article-content {
+      font-family: var(--font-reader);
+      font-size: 22px;
+      font-weight: 400;
+      line-height: 1.9;
+      letter-spacing: -0.015em;
+    }
+    .article-content p {
+      margin-bottom: 1.8em;
+      font-size: 22px;
+      line-height: 1.9;
+      font-weight: 400;
+    }
+    .article-content h2, .article-content h3 {
+      margin: 2.2em 0 0.9em; line-height: 1.35;
+      font-family: var(--font-reader); font-weight: 700; letter-spacing: -0.02em;
+    }
+    .article-content blockquote {
+      border-left: 4px solid var(--accent); padding: 12px 24px; margin: 1.8em 0;
+      background: rgba(127,127,127,0.05); color: var(--muted); border-radius: 0 10px 10px 0;
+      font-style: normal; font-size: 22px;
+    }
+    .article-content img {
+      max-width: 100%; height: auto; border-radius: 10px; margin: 2em auto; display: block;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.18);
+    }
+    .article-content figure { margin: 2.2em 0; }
+
+    /* 中文字符深度降权弱化（半透明淡化 52% + 等比缩小 80%） */
+    .zh-soft {
+      font-size: 0.80em !important;
+      opacity: 0.52 !important;
+      font-weight: 300 !important;
+      letter-spacing: 0.03em !important;
+      display: inline !important;
+    }
+  </style>
+</head>
+<body class="theme-sepia">
+  <div id="progress"></div>
+
+  <header>
+    <div style="display:flex; gap:12px; align-items:center;">
+      <a href="/" class="btn">🏠 历史控制中心</a>
+      <span class="btn btn-green">✅ 已持久归档</span>
+      <button class="btn" id="openLocalBtn">📂 打开本地文件</button>
+    </div>
+    <div style="display:flex; gap:10px; align-items:center;">
+      <div class="theme-picker">
+        <span class="theme-dot sepia active" onclick="setTheme('sepia')" title="📜 经典羊皮纸 (默认)"></span>
+        <span class="theme-dot academic" onclick="setTheme('academic')" title="🌊 蓝色冷静学术"></span>
+        <span class="theme-dot mint" onclick="setTheme('mint')" title="🌿 清新薄荷森系"></span>
+        <span class="theme-dot beach" onclick="setTheme('beach')" title="🏖️ 夏日海滩暖阳"></span>
+        <span class="theme-dot dark" onclick="setTheme('dark')" title="🌑 极夜深黑"></span>
+        <span class="theme-dot light" onclick="setTheme('light')" title="☀️ 月白浅色"></span>
+      </div>
+      <button class="btn" onclick="resizeFont(-2)" title="缩小字号">A-</button>
+      <span id="fSizeDisplay" style="font-size:12px; font-weight:700; opacity:0.85; min-width:34px; text-align:center;">22px</span>
+      <button class="btn" onclick="resizeFont(2)" title="放大字号">A+</button>
+      <a href="https://www.theatlantic.com/ideas/2026/08/colorless-gray-products-houses/688174/" target="_blank" class="btn">🔗 原网链接</a>
+    </div>
+  </header>
+
+  <main>
+    <div class="badge">TheAtlantic</div>
+    <h1 id="articleTitle">The Color Recession May Be Permanent</h1>
+    <div class="meta">
+      <span>✍️ <b>Amogh Dimri</b></span>
+      <span>📅 2026-08-10</span>
+      <span style="color:#059669; font-weight:600;">📁 D:\Desktop\reading\reading data\TheAtlantic\2026-08\2026-08-10_The_Color_Recession_May_Be_Permanent.md</span>
+    </div>
+
+    
+        <div class="hero-cover-container">
+          <img src="/assets/TheAtlantic/2026-08/assets/2026-08-10_The_Color_Recession_May_Be_Permanent/41b9cc6827e1.gif" alt="The Color Recession May Be Permanent" class="hero-cover-img" />
+          <figcaption>Illustration by Matteo Giuseppe Pani / The Atlantic</figcaption>
+        </div>
+        
+
+    <div class="article-content" id="content">
+      <?xml version="1.0" encoding="utf-8"?>
+<doc fingerprint="26b013371f5180af">
+<main>
+<head rend="h1">The Color Recession May Be Permanent</head>
+<p>Consumers are so afraid of getting colors wrong, they don’t use them at all.</p>
+<graphic alt="A colorful townhouse is painted yellow, purple, and green, then switches to being gray and white." src="/assets/TheAtlantic/2026-08/assets/2026-08-10_The_Color_Recession_May_Be_Permanent/41b9cc6827e1.gif"></graphic>
+<graphic alt="Colorful townhouses on a tree-lined street are painted yellow, purple, and green, then switch to being gray and white." src="/assets/TheAtlantic/2026-08/assets/2026-08-10_The_Color_Recession_May_Be_Permanent/9133e85fa128.gif"></graphic>
+<p>When Bob Buckter, a 79-year-old housepainter who also goes by “Dr. Color,” began his career, in the 1970s, the job was a lot more fun. Acid-tripping hippies in his hometown of San Francisco wanted “wild-ass color combinations” for their facades, he told me. Armed with mustard-yellow, lime-green, and vermilion paint, Buckter happily transformed drab Victorian and Edwardian homes into vivid eye candy.</p>
+<p>Today, almost no one seems to be looking to the hues of jelly beans for inspiration for their home—or car or couch or fridge or practically <ref target="https://lab.sciencemuseum.org.uk/colour-shape-using-computer-vision-to-explore-the-science-museum-c4b4f1cbd72c">anything else</ref>. Since the late 2000s, Buckter has watched with dismay as essentially colorless colors—think white, beige, gray—have taken over. “It’s not even three shades, or four shades, of gray. It’s just one dark gray,” he said. “It’s an ignorant way to paint your house.” A <ref target="https://www.washingtonpost.com/dc-md-va/interactive/2025/gentrification-gray-changing-city-neighborhoods/">study</ref> of homes in Washington, D.C., last year found a similarly sharp rise in the number of gray homes, especially in the most rapidly gentrifying wards.</p>
+<p>Color trends used to come and go. But the color recession that began early this century has dragged on far longer than the heyday of avocado green in the 1960s or hot pink in the 1980s. “Our top color from 2000 to 2010 was ‘Pelham Beige.’ We thought that would never change,” Sue Wadden, the director of color marketing at the paint company Sherwin-Williams, told me. The next decade, she said, “gray was dominant. Like gray, gray, more gray.” Sherwin-Williams’s current <ref target="https://www.sherwin-williams.com/en-us/color/color-collections/top-50-colors">list</ref> of its most popular colors for home interiors features “Ice Cube” and “Crushed Ice” (both white), and “Agreeable Gray” and “Passive” (both gray). Colors are now getting warmer again, Wadden noted hopefully, but they’re “warmer whites.” The company’s color of 2026 is “<ref target="https://www.sherwin-williams.com/en-us/color/color-of-the-year/2026?gad_source=1&amp;gad_campaignid=18708770772&amp;gbraid=0AAAAADmwGVartIAFI4gaEOkX-d2lP2Q58&amp;gclid=Cj0KCQjwp7jOBhDGARIsABe7C4fAPi8czClVusUgWM54yhAZZMmfb9WBrkrfR029yI6AqySXlu2T4UIaAgKEEALw_wcB">Universal Khaki</ref>”—otherwise known, unfortunately, as “greige.”</p>
+<p>The color drought doesn’t affect just paint companies. According to Pantone, a color-technology company influential among designers and manufacturers across industries, 2026’s “Color of the Year” is “<ref target="https://www.theatlantic.com/culture/2025/12/pantone-color-of-the-year-cloud-dancer/685316/">Cloud Dancer</ref>” (yes, white).</p>
+<p>The share of new cars in grayscale colors rose from <ref target="https://www.forbes.com/sites/kbrauer/2024/07/16/where-have-all-the-colorful-cars-gone-study-shows-them-vanishing/">60 percent</ref> in 2004 to 80 percent in 2023. Production of purple cars dropped 93 percent over that period, gold by 97 percent. “I don’t know how many different variants of silver and gray there could possibly be, but I think BMW and Mercedes have discovered it,” Karl Brauer, the analyst behind the report, told me.</p>
+<p>Some color trends may look like a matter of whim. In the 2006 film <hi rend="#i">The Devil Wears Prada</hi>, the imperious fashion editor Miranda Priestly (played by Meryl Streep) delivered the now-famous <ref target="https://www.youtube.com/watch?v=-rDTRuCOs9g">monologue</ref> in which she berates her assistant Andy Sachs (Anne Hathaway) for being “blithely unaware” of how her own cerulean-blue sweater was in fact a product of a high-fashion embrace of the hue “by the people in this room.” Twenty years on, in this year’s <hi rend="#i">The Devil Wears Prada 2</hi>, Sachs is <ref target="https://www.tiktok.com/@gma/video/7632315370715548941">gently discouraged</ref> from wearing anything colorful. “This is quiet luxury,” Stanley Tucci’s Nigel Kipling explains while assembling a wardrobe of grays and taupes. “That,” he adds, gesturing at the pink garment in her hands, “is like a screaming guitar solo.”</p>
+<p>What’s plain, in the <hi rend="#i">Prada</hi> sequel and nearly everywhere else, is that color fads are no longer dictated from on high by style gurus. Remarkably, shoppers’ personal taste may not be much of a factor, either. Although some studies <ref target="https://link.springer.com/article/10.3758/s13423-024-02615-z">show</ref> that people tend to feel more cheerful in the company of oranges and yellows, more calm among blues and greens, and sometimes more depressed around too much gray, their spending habits say otherwise. Two decades into the color recession, the observable preferences of landlords, homeowners, car buyers, and consumers have grown detached from what people claim to like. And little evidence indicates that walls or cars or appliances in hues other than greige are coming back anytime soon.</p>
+<p>For thousands of years, color was an aristocratic luxury. From the 14th century B.C.E. to the 15th century C.E., only Mediterranean royalty, priests, and nobles wore anything dyed Tyrian purple, because acquiring the color could involve slicing out the mucous glands of special sea snails, fermenting them in salt for days, boiling them for days more, and then pouring urine on newly dyed garments to bind the color to the fabric. (A single gram of the dye required at least 10,000 snails.) The deep red of kermes crimson in ancient Rome involved grinding dried female kermes insect corpses. By the Middle Ages, some landlords accepted the dye as rent. The lurid <ref target="https://www.mountvernon.org/the-estate-gardens/location/dining-room">verdigris</ref> that adorns the dining-room walls of George Washington’s Mount Vernon estate was a labor-intensive status symbol, achieved by oxidizing copper plates with vinegar vapors and then mixing the resulting patina with oil.</p>
+<p>In 1856, after an 18-year-old English chemistry student named William Henry Perkin accidentally invented synthetic dye while trying to cure malaria, a range of colors—including <ref target="https://www.sciencemuseum.org.uk/objects-and-stories/chemistry/colourful-chemistry-artificial-dyes">his own</ref>, snail-free Tyrian purple—became widely available for textiles. Suddenly, anyone could don the color the Roman emperor Caligula allegedly killed the King of Mauretania for wearing.</p>
+<p>Perkin’s discovery spurred other lab-made dyes, which lowered costs and applied color to a widening variety of goods. Indiscriminate demand duly followed. By the early 20th century, Sherwin-Williams’s ads were <ref target="https://www.jstor.org/stable/1512040">encouraging</ref> homeowners to repaint <hi rend="#i">every </hi>season: warm colors for winter and cool shades in the summer. Henry Ford may have once said that buyers could get a Ford Model T in any color, “so long as it was black,” but even he succumbed. In 1927, nearly two decades after the first Model T rolled off the assembly line, Ford hoped to revive interest in his car by painting it red.</p>
+<p>“The effects of our chromatic revolution are everywhere apparent,” a 1928 <hi rend="#i">Saturday Evening Post </hi>article called “The New Age of Color” observed. “Cars are borrowing their hues from the waters of the Nile, from the sands of Arabia, the plumage of birds and the fire of gems.” The ’20s were roaring; stocks were climbing, Hitler had yet to rise to power, and the cars plying American highways bore the Day-Glo colors of tropical birds. What could be more delightful?</p>
+<p>By mid-century, a put-together, color-coordinated lifestyle “was what it meant to be middle class,” Regina Blaszczyk, a color historian, told me. Buyers matched their shoes to their suit and hat, and their car to the exterior of their home.</p>
+<p><hi rend="#i">Mad Men</hi>–era color oracles in high-rise offices offered industry executives predictions that promised to boost sales and solve problems. In his 1945 book, <hi rend="#i">Selling With Color</hi>, the color consultant Faber Birren <ref target="https://mag.uchicago.edu/sites/default/files/issues/UChicagoMag_Spring18_0.pdf">wrote</ref> about the value of using warm and light colors for hospital-patient rooms but a more clinical blue-green hue for operating rooms (to reduce eye fatigue by posing a contrast to the red hue of innards). Alexander Schauss, a biologist, found in 1979 that a shade of pink—known as Baker-Miller Pink or Drunk-Tank Pink—could calm inmates and reduce fights in prisons.</p>
+<p>The postwar decades, in short, were gloriously colorful in the United States. The decline would be precipitous.</p>
+<p>Institutional constraints on color were already starting to emerge during this period. Postwar developers, for example, worked to meet the immense demand for housing by building entire neighborhoods with a handful of floorplans and a limited palette. In the name of protecting property values, homeowner associations attached to these developments decided that “uniformity is actually a positive,” Evan McKenzie, a University of Illinois Chicago professor who studies HOAs, told me. Many mandated earth-tone palettes for home facades, and even restricted the colors of street-visible features such as mailboxes, roofs, and curtains. Instead of resenting these limits, buyers came to see greige paint as securing their investment. “You’d want a neighborhood where you can restrict your neighbor, because your neighbor might do something crazy,” McKenzie said.</p>
+<p>Meanwhile, in the auto industry, the passage of the Clean Air Act of 1970 and the Toxic Substances Control Act of 1976 narrowed the range of financially feasible colors for cars. Roy Kerney, the head of product strategy at the car-painting company Axalta, told me that the more eco-friendly coating that replaced lacquer paints was more expensive, which raised the cost of delivering variety. Stocking neutrals, which sold reliably, was far easier and more cost-effective than testing the appeal of various hues.</p>
+<p>Time has reinforced those constraints. Given that ever <ref target="https://www.consumeraffairs.com/automotive/car-sale-statistics.html#used-or-new-cars">more</ref> auto sales are for used vehicles, shoppers sensibly prefer to buy cars in inoffensive colors in case they need to resell. “When it comes to car colors, it’s not just about personal preference or what makes you happiest,” Kelley Blue Book <ref target="https://www.kbb.com/car-advice/what-are-the-best-car-colors-to-buy/">warns</ref>. “If you’re looking to retain your car’s value, it’s best to play it safe and choose neutral colors.”</p>
+<p>Never mind that resale-market data defy this conventional wisdom. A 2024 <ref target="https://www.iseecars.com/car-color-study">study</ref> of 1.2 million three-year-old used cars found that yellow, orange, and green cars depreciated less than silver, gray, and white ones.</p>
+<p>Big purchases breed risk aversion. A 2025 survey of real-estate agents by <hi rend="#i">Better Homes and Gardens </hi>found that <ref target="https://www.nar.realtor/blogs/styled-staged-sold/why-fresh-paint-still-rules-in-home-sales">84 percent</ref> recommend repainting house interiors in white, gray, or beige before selling—particularly if the walls are red. Yet this market-appeasing logic doesn’t always satisfy the market. One Zillow <ref target="https://zillow.mediaroom.com/2025-06-17-Ready-to-sell-These-paint-colors-can-boost-your-homes-sale-price?utm_source=chatgpt.com">study</ref> last year found that olive-green and navy-blue walls actually boosted home prices compared with white.</p>
+<p>Even so, Alana Cowan, a graphic designer, still found herself puzzling over the difference between “Chantilly Lace” and “Alabaster” recently while figuring out what to paint the walls of her new house, in Arkansas. “Apparently, there’s 30 shades of white,” she told me. She was too plagued by doubt to consider anything more adventurous: “What if I hate it? What if I get tired of it? What if the next buyer doesn’t like it and that’s the reason they don’t buy the house?”This logic repeats itself from one room to the next, a phenomenon <ref target="https://www.theatlantic.com/technology/archive/2022/08/hgtv-flipping-houses-cheap-redesign/671187/">some decry</ref> as “the HGTV-ification of America.” Among renovating homeowners, 72 percent choose inoffensive <ref target="https://st.hzcdn.com/static/econ/2026_Houzz_US_Kitchen_Trends_Report.pdf">stainless-steel</ref> appliances, according to one recent report. White and off-white dominated kitchen-wall colors and backsplash tiles. Amy Woolf, an interior decorator and color forecaster, told me that she’s seen “cocooning”—or seeking safety in one’s purchases—solidify gray’s dominance in every product sphere. When people buy a sofa now, they “don’t want to hate it in two years, so they’re not going to go with orange,” she said.</p>
+<p>Yet grayification isn’t as “neutral” as buyers believe. A <ref target="https://link.springer.com/article/10.3758/s13423-024-02615-z">review</ref> last year of more than 100 studies of the effect of color on emotion found that gray consistently triggered fatigue, boredom, or sadness. Stephen Westland, a professor who studies color science, attributes the rise of gray to the fact that people are “scared of using color,” he told me, even though “the use of color can make you feel happier, psychologically.”</p>
+<p>I wish I could say that change is on the horizon—that after decades in retreat, color is making a comeback.</p>
+<p>Here and there, some consumers are letting color back in. Amy Freed, a retired lawyer from Maryland, decided to repaint her home and hired Woolf to help pick out the best shades of gray. Freed was shocked when Woolf suggested orange for the entryway. The color seemed “too bold and aggressive, and so out of my comfort zone,” Freed told me. “I don’t like color.” Nevertheless, Woolf persuaded her to try it out, and the foyer quickly “became this incredibly fun, joyful thing for me,” Freed said.</p>
+<p>But her experience is notable precisely because it’s unusual. Millennial Pink in the 2010s, Barbie Pink in 2023, and Brat Green in 2024 were welcome counterpoints to the color recession, but they were also short-lived. They never quite translated into real-world buying habits for most consumers.</p>
+<p>Color experts across multiple sectors told me, with varying degrees of wistfulness, that bright shades are ill-equipped to return. The structural obstacles to color are not going away. Almost <ref target="https://www.nahb.org/blog/2025/12/community-builds-are-on-the-rise-again">70 percent</ref> of new single-family homes were built into HOAs in 2024, the second-highest year on record after 2020. In a data-driven car marketplace, the color recession has become self-reinforcing. The preponderance of grays ensures that there’s too little information to even gauge demand for other colors.</p>
+<p>Color enthusiasts are now largely stuck sneaking bright hues <hi rend="#i">into </hi>gray. “Color is coming back,” Nancy Lockhart, a co-director of the Inter-Society Color Council, a nonprofit professional group, assured me. “But it’s coming back so subtly that you almost don’t notice it.”</p>
+<p>In a show of defiance, Axalta did pick “<ref target="https://ir.axalta.com/news/press-releases/detail/676/axalta-announces-orange-solar-boost-as-its-2026-global-automotive-color-of-the-year">Solar Boost</ref>”—“a warm and inviting orange tone”—as its automotive color of the year. But Kerney, the company’s product-strategy head, told me that the company doesn’t actually expect many orange cars to roll off the assembly line anytime soon. The choice of Solar Boost was simply to nudge the market in a livelier direction. The hope, Kerney explained, was that “a gray car out there may be gray, but may have a slight twinge of red.”</p>
+<p>A marginally brighter gray might not seem worth celebrating. Dr. Color, the San Francisco housepainter, certainly can’t understand why so many people are denying themselves the pleasure of vivid, kaleidoscopic hues. His house is painted in no fewer than 11: “yellows, golds, ochres, cinnamons, with touches of blues, reds, and gold leaf, and purple and green,” he said. His home, in all of its peacocking beauty, stands out on Google Maps.</p>
+<p>His neighbors, however, are playing it safe. Their homes are painted in different shades of greige.</p>
+</main>
+<comments></comments>
+</doc>
+    </div>
+  </main>
+
+  <script>
+    window.addEventListener('scroll', () => {
+      const h = document.documentElement;
+      const st = h.scrollTop || document.body.scrollTop;
+      const sh = h.scrollHeight - h.clientHeight;
+      document.getElementById('progress').style.width = ((st/sh)*100) + '%';
+    });
+
+    function setTheme(name) {
+      document.body.className = 'theme-' + name;
+      localStorage.setItem('ladder_reader_theme', name);
+      document.querySelectorAll('.theme-dot').forEach(d => d.classList.remove('active'));
+      const activeDot = document.querySelector('.theme-dot.' + name);
+      if (activeDot) activeDot.classList.add('active');
+    }
+
+    // 默认以羊皮纸 (sepia) 或用户上次记忆的主题打开
+    const savedTheme = localStorage.getItem('ladder_reader_theme') || 'sepia';
+    setTheme(savedTheme);
+
+    // 字号缩放控制与持久记忆 (以 22px 为基准)
+    let currentFSize = parseInt(localStorage.getItem('ladder_reader_fsize') || '22', 10);
+
+    function applyFontSize(sz) {
+      currentFSize = Math.max(16, Math.min(36, sz));
+      localStorage.setItem('ladder_reader_fsize', currentFSize);
+      
+      const contentElem = document.getElementById('content');
+      if (contentElem) {
+        contentElem.style.fontSize = currentFSize + 'px';
+      }
+      const allSub = document.querySelectorAll('.article-content p, .article-content li, .article-content blockquote');
+      allSub.forEach(el => {
+        el.style.fontSize = currentFSize + 'px';
+      });
+      
+      const disp = document.getElementById('fSizeDisplay');
+      if (disp) disp.innerText = currentFSize + 'px';
+    }
+
+    function resizeFont(step) {
+      applyFontSize(currentFSize + step);
+    }
+
+    applyFontSize(currentFSize);
+
+    const filePath = "D:\\Desktop\\reading\\reading data\\TheAtlantic\\2026-08\\2026-08-10_The_Color_Recession_May_Be_Permanent.md";
+    const openBtn = document.getElementById('openLocalBtn');
+
+    openBtn.addEventListener('click', () => {
+      openBtn.innerText = '⏳ 正在定位...';
+      fetch('/api/open-folder?path=' + encodeURIComponent(filePath))
+        .then(r => r.json())
+        .then(() => {
+          openBtn.innerText = '✅ 已在资源管理器中高亮';
+          setTimeout(() => { openBtn.innerText = '📂 打开本地文件'; }, 2500);
+        })
+        .catch(() => {
+          openBtn.innerText = '📂 打开本地文件';
+        });
+    });
+  </script>
+</body>
+</html>

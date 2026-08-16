@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Are Raccoons Evolving Into Pets? · Ladder 沉浸阅读</title>
+  <style>
+    /* 中文字符专属字体定义：自动等比缩减至 80% (约 17.5px)，字重柔和轻量 */
+    @font-face {
+      font-family: 'ChineseSoftMuted';
+      src: local('PingFang SC Light'), local('PingFang SC'), local('Microsoft YaHei Light'), local('Microsoft YaHei'), local('SimHei');
+      unicode-range: U+4E00-9FFF, U+3400-4DBF, U+20000-2A6DF, U+3000-303F, U+FF00-FFEF;
+      size-adjust: 80%;
+    }
+
+    :root {
+      --font-reader: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", "Arial Nova", 'ChineseSoftMuted', sans-serif;
+    }
+
+    /* 1. 经典羊皮纸 (Sepia / Parchment) - 默认主题 */
+    body.theme-sepia {
+      --bg: #f8f1e3;
+      --card: #ede3ce;
+      --text: #382c1e;
+      --muted: #7a6854;
+      --border: rgba(60, 44, 30, 0.12);
+      --accent: #b45309;
+      --cover-bg: #e6dac1;
+    }
+
+    /* 2. 蓝色冷静学术风 (Nordic Academic Blue) */
+    body.theme-academic {
+      --bg: #0e1726;
+      --card: #162238;
+      --text: #e2e8f0;
+      --muted: #8ba2c4;
+      --border: rgba(148, 163, 184, 0.14);
+      --accent: #38bdf8;
+      --cover-bg: #121d30;
+    }
+
+    /* 3. 清新薄荷森系 (Fresh Mint / Sage) */
+    body.theme-mint {
+      --bg: #edf5f0;
+      --card: #deebe2;
+      --text: #1b382b;
+      --muted: #4e7663;
+      --border: rgba(27, 56, 43, 0.1);
+      --accent: #059669;
+      --cover-bg: #d2e4d8;
+    }
+
+    /* 4. 夏日海滩暖阳 (Summer Beach / Warm Sand) */
+    body.theme-beach {
+      --bg: #fdf6ec;
+      --card: #f7ebd9;
+      --text: #3c2d1d;
+      --muted: #8c7155;
+      --border: rgba(217, 119, 6, 0.14);
+      --accent: #0284c7;
+      --cover-bg: #f0deca;
+    }
+
+    /* 5. 极夜深黑 (Midnight Dark) */
+    body.theme-dark {
+      --bg: #0b0f19;
+      --card: #151c2c;
+      --text: #f1f5f9;
+      --muted: #94a3b8;
+      --border: rgba(255, 255, 255, 0.08);
+      --accent: #818cf8;
+      --cover-bg: #111726;
+    }
+
+    /* 6. 月白浅色 (Pure Paper White) */
+    body.theme-light {
+      --bg: #fafafa;
+      --card: #ffffff;
+      --text: #171717;
+      --muted: #737373;
+      --border: rgba(0, 0, 0, 0.08);
+      --accent: #4f46e5;
+      --cover-bg: #f0f0f0;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-reader);
+      min-height: 100vh;
+      font-weight: 400;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      text-rendering: optimizeLegibility;
+      transition: background 0.25s ease, color 0.25s ease;
+    }
+    #progress {
+      position: fixed; top: 0; left: 0; height: 3px;
+      background: linear-gradient(90deg, var(--accent), #ec4899);
+      width: 0%; z-index: 1000;
+    }
+    header {
+      position: sticky; top: 0; z-index: 900;
+      background: var(--card); border-bottom: 1px solid var(--border);
+      padding: 12px 32px; display: flex; align-items: center; justify-content: space-between;
+      backdrop-filter: blur(16px); transition: background 0.25s ease;
+    }
+    .btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 7px 14px; border-radius: 8px; font-size: 13px; font-weight: 600;
+      cursor: pointer; text-decoration: none; border: 1px solid var(--border);
+      background: rgba(127,127,127,0.08); color: var(--text);
+      font-family: var(--font-reader); transition: all 0.2s;
+    }
+    .btn:hover { background: rgba(127,127,127,0.18); transform: translateY(-1px); }
+    .btn-green { background: #059669; color: #fff; border: none; cursor: default; }
+    
+    .theme-picker {
+      display: flex; gap: 7px; align-items: center; background: rgba(127,127,127,0.08);
+      padding: 4px 10px; border-radius: 9999px; border: 1px solid var(--border);
+    }
+    .theme-dot {
+      width: 18px; height: 18px; border-radius: 50%; display: inline-block; cursor: pointer;
+      border: 2px solid transparent; transition: transform 0.2s, border-color 0.2s;
+    }
+    .theme-dot:hover { transform: scale(1.2); }
+    .theme-dot.active { border-color: var(--accent); transform: scale(1.25); box-shadow: 0 0 8px var(--accent); }
+
+    .theme-dot.sepia { background: #f8f1e3; border: 1px solid #7a6854; }
+    .theme-dot.academic { background: #1e40af; border: 1px solid #60a5fa; }
+    .theme-dot.mint { background: #10b981; border: 1px solid #059669; }
+    .theme-dot.beach { background: #f59e0b; border: 1px solid #d97706; }
+    .theme-dot.dark { background: #000000; border: 1px solid #4b5563; }
+    .theme-dot.light { background: #ffffff; border: 1px solid #9ca3af; }
+
+    /* 超宽全屏沉浸流 (宽度 1280px / 92%，左右留白极小) */
+    main {
+      max-width: 1280px;
+      width: 92%;
+      margin: 32px auto 100px;
+      padding: 0 16px;
+    }
+    .badge {
+      display: inline-block; padding: 5px 12px; background: rgba(99,102,241,0.14);
+      color: var(--accent); font-size: 13px; font-weight: 700; border-radius: 6px; margin-bottom: 16px;
+      letter-spacing: 0.5px;
+    }
+    h1 {
+      font-size: 40px; line-height: 1.3; font-weight: 800; margin-bottom: 18px;
+      font-family: var(--font-reader); letter-spacing: -0.03em;
+    }
+    .meta {
+      color: var(--muted); font-size: 14px; margin-bottom: 32px;
+      padding-bottom: 20px; border-bottom: 1px solid var(--border);
+      display: flex; gap: 20px; align-items: center; flex-wrap: wrap;
+    }
+    
+    /* 官方同款高清大封面 (Hero Cover) */
+    .hero-cover-container {
+      margin: 24px 0 40px;
+      border-radius: 14px;
+      overflow: hidden;
+      box-shadow: 0 12px 36px rgba(0,0,0,0.25);
+      background: var(--cover-bg);
+    }
+    .hero-cover-img {
+      width: 100%;
+      max-height: 620px;
+      object-fit: cover;
+      display: block;
+    }
+    figcaption {
+      padding: 10px 16px;
+      font-size: 13px;
+      color: var(--muted);
+      background: rgba(0,0,0,0.06);
+      line-height: 1.5;
+    }
+
+    /* 纯净现代英文优先排版 (英文 22px 醒目呈现，中文半透明淡化 52% 缩小 80%) */
+    .article-content {
+      font-family: var(--font-reader);
+      font-size: 22px;
+      font-weight: 400;
+      line-height: 1.9;
+      letter-spacing: -0.015em;
+    }
+    .article-content p {
+      margin-bottom: 1.8em;
+      font-size: 22px;
+      line-height: 1.9;
+      font-weight: 400;
+    }
+    .article-content h2, .article-content h3 {
+      margin: 2.2em 0 0.9em; line-height: 1.35;
+      font-family: var(--font-reader); font-weight: 700; letter-spacing: -0.02em;
+    }
+    .article-content blockquote {
+      border-left: 4px solid var(--accent); padding: 12px 24px; margin: 1.8em 0;
+      background: rgba(127,127,127,0.05); color: var(--muted); border-radius: 0 10px 10px 0;
+      font-style: normal; font-size: 22px;
+    }
+    .article-content img {
+      max-width: 100%; height: auto; border-radius: 10px; margin: 2em auto; display: block;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.18);
+    }
+    .article-content figure { margin: 2.2em 0; }
+
+    /* 中文字符深度降权弱化（半透明淡化 52% + 等比缩小 80%） */
+    .zh-soft {
+      font-size: 0.80em !important;
+      opacity: 0.52 !important;
+      font-weight: 300 !important;
+      letter-spacing: 0.03em !important;
+      display: inline !important;
+    }
+  </style>
+</head>
+<body class="theme-sepia">
+  <div id="progress"></div>
+
+  <header>
+    <div style="display:flex; gap:12px; align-items:center;">
+      <a href="/" class="btn">🏠 历史控制中心</a>
+      <span class="btn btn-green">✅ 已持久归档</span>
+      <button class="btn" id="openLocalBtn">📂 打开本地文件</button>
+    </div>
+    <div style="display:flex; gap:10px; align-items:center;">
+      <div class="theme-picker">
+        <span class="theme-dot sepia active" onclick="setTheme('sepia')" title="📜 经典羊皮纸 (默认)"></span>
+        <span class="theme-dot academic" onclick="setTheme('academic')" title="🌊 蓝色冷静学术"></span>
+        <span class="theme-dot mint" onclick="setTheme('mint')" title="🌿 清新薄荷森系"></span>
+        <span class="theme-dot beach" onclick="setTheme('beach')" title="🏖️ 夏日海滩暖阳"></span>
+        <span class="theme-dot dark" onclick="setTheme('dark')" title="🌑 极夜深黑"></span>
+        <span class="theme-dot light" onclick="setTheme('light')" title="☀️ 月白浅色"></span>
+      </div>
+      <button class="btn" onclick="resizeFont(-2)" title="缩小字号">A-</button>
+      <span id="fSizeDisplay" style="font-size:12px; font-weight:700; opacity:0.85; min-width:34px; text-align:center;">22px</span>
+      <button class="btn" onclick="resizeFont(2)" title="放大字号">A+</button>
+      <a href="https://www.theatlantic.com/ideas/2026/08/are-raccoons-evolving-pets/688231/" target="_blank" class="btn">🔗 原网链接</a>
+    </div>
+  </header>
+
+  <main>
+    <div class="badge">TheAtlantic</div>
+    <h1 id="articleTitle">Are Raccoons Evolving Into Pets?</h1>
+    <div class="meta">
+      <span>✍️ <b>Annie Lowrey</b></span>
+      <span>📅 2026-08-10</span>
+      <span style="color:#059669; font-weight:600;">📁 D:\Desktop\reading\reading data\TheAtlantic\2026-08\2026-08-10_Are_Raccoons_Evolving_Into_Pets.md</span>
+    </div>
+
+    
+        <div class="hero-cover-container">
+          <img src="/assets/TheAtlantic/2026-08/assets/2026-08-10_Are_Raccoons_Evolving_Into_Pets/ec03af6958b9.png" alt="Are Raccoons Evolving Into Pets?" class="hero-cover-img" />
+          <figcaption>Illustration by Pedro Nekoi</figcaption>
+        </div>
+        
+
+    <div class="article-content" id="content">
+      <?xml version="1.0" encoding="utf-8"?>
+<doc fingerprint="f63199921de3367f">
+<main>
+<head rend="h1">Are Raccoons Evolving Into Pets?</head>
+<p>The myth and science of the country’s favorite floofy, fluffy cuddle-badgers</p>
+<graphic alt="a bunch of raccoons being destructive in someone's living room" src="/assets/TheAtlantic/2026-08/assets/2026-08-10_Are_Raccoons_Evolving_Into_Pets/ec03af6958b9.png"></graphic>
+<p>At 10 p.m. in early July, Long Island was sweltering under a heat dome. As bedroom lights dimmed and heavy clouds rolled in, a raccoon ambled onto the porch of a split-level home, found a crack in a sliding door, and slipped inside. He tongue-polished a lasagna tray on the floor near the kitchen counter before waddling back into the damp fug of the summer night.</p>
+<p>Soon after, a raccoon with a facial scar and a thin tail entered, ate a snack, and flopped down for a nap. Next, a pair of juvenile raccoons scrounged for kibble and used the dining chairs as a wrestling ring, hanging upside down from the rungs and tackling one another like luchadores. By dawn, a procession of animals had cycled through—one piebald kitty, a bunch of raccoons—like the stoned overnight patrons of a roadside Waffle House.</p>
+<p>Marilyn Smith knows that things have escalated. Maybe, she concedes, they have even gotten out of hand. (I am giving her a pseudonym, because she worries her neighbors will call the police.) Years ago, she encountered a colony of feral cats on a nearby trail. She got involved in trapping and neutering the animals, and started feeding them. “I don’t know whether the word was out, but a gazillion cats came to my house,” Smith told me. She set up hard-shell crates for them in her backyard. She left her garage and porch doors open a bit so they could shelter during storms. In time, the feral cats became her cats, some with names, Tootsie and Little Baby and Foxy. “They trust me,” she said, describing how one curls up around her neck and sleeps on her pillow. Still, they often prefer to be outdoors.</p>
+<p>Smith would not keep out the cats. Thus, she could not keep out the raccoons, who quickly lost whatever fear of her they might have had. They started appearing in her bedroom in the middle of the night, searching her pocketbook for kibble. They began breaking into her cabinets. They began dominating the tin cans she left out, making the cats caterwaul. Smith considered quelling the resource conflicts by feeding the species separately: cat food inside during the day, raccoon food outside at night. (Cats are crepuscular carnivores; raccoons are nocturnal omnivores.) It wouldn’t work, she concluded. She ended up slinging orders for half a dozen cats and who knows how many raccoons 24/7, the customer always right. “The other day, the raccoons rejected a kind of cookie; maybe it was oatmeal,” she said. “They took it and spit it out. So that’s off the list.” They don’t like stuffing or brussels sprouts either.</p>
+<p>As much as Smith loves animals, the situation is not exactly working for her. Her kitchen smells like stale ammonia; the stairs to an abandoned seating area are dotted with scat. She can’t travel. She can’t sleep. She can’t host (people, I mean). She has had to get two rounds of rabies shots—scratched by accident, not on purpose, she swears. She could simply shut her doors at night, I suggest, or go on a vacation, encouraging the animals to fend for themselves. “I’m very neurotic,” she responds. “When I wake up in the morning, the first thing I think is: <hi rend="#i">They’re hungry</hi>.”</p>
+<p>Smith is living out the “If you give a mouse a cookie” parable. She is also unwittingly taking part in an extraordinary, unfolding ecological shift. Unlike many native species—ocelots, Shenandoah salamanders, Xerces blue butterflies, Key Largo wood rats—raccoons flourish in human settlements. Over time, their population has increased and their attitude toward the people in those settlements has changed. Urban raccoons have become more curious and less reactive. They have also started to develop distinctive traits common among tame species and uncommon among wild ones. The differences are so pronounced that some academics believe that raccoons are <ref target="https://link.springer.com/article/10.1186/s12983-025-00583-1#Sec2">actively domesticating</ref>, much like the curious wolves that eventually transformed into pugs.</p>
+<p>Last year, <hi rend="#i">Frontiers in Zoology </hi>published <ref target="https://pubmed.ncbi.nlm.nih.gov/41039604/">a </ref><ref target="https://pubmed.ncbi.nlm.nih.gov/41039604/">study</ref> on the phenomenon; mainstream media outlets picked up on it; social-media posts heralded the arrival of the “<ref target="https://www.tiktok.com/@dailymail/video/7577840289906216247">new American pet</ref>.” The research confirmed what many Americans suspected about the creatures rummaging through their recycling bins. More than that, it confirmed what many Americans wanted to believe about these floofy, fluffy cuddle-badgers, with their picklock fingers and Zorro masks. Raccoons aren’t just raccoons, after all. They’re up there with capybaras and deep-sea anglerfish as objects of unhinged human adoration. They’re trash pandas. They’re Rocket and Bandit. They’re Jimothy, a spry, deformed raccoon who has become so popular in Seattle that its city council officially decreed it “<ref target="https://komonews.com/news/local/photos-seattle-officially-declares-jimothy-summer-to-honor-internet-famous-raccoon-raccoon-short-spine-syndrome-viral-ballard-art-celebration-government-travel-tourism-parade-weekend">Jimothy Summer</ref>.”</p>
+<p>Standing in Smith’s kitchen, surrounded by lasagna pans and scat, I half-felt that I was watching Darwinian evolution occurring in real time, and even wondered whether the raccoons of Long Island somehow <hi rend="#i">wanted </hi>to domesticate. Then again, that might be nothing more than what a lot of Americans want to believe.</p>
+<p>The raccoon’s thriving represents not merely a remarkable triumph but a remarkable turnaround. When Christopher Columbus arrived on Long Island (the one in the Bahamas, not New York) in 1492, he noticed a local fisherman keeping <ref target="https://www.smithsonianmag.com/blogs/smithsonian-books/2025/05/29/the-long-and-fascinating-history-of-raccoons-in-north-american-culture-from-symbols-to-pets-to-dinner/">some strange kind of dogs</ref> as pets. He was far from the last colonist to be confused by the species, described nearly 300 years later by the explorer Jonathan Carver <ref target="https://www.gutenberg.org/files/49753/49753-h/49753-h.htm">as possessing</ref> a badger’s body, fox’s head, dog’s muzzle, cat’s tail, and sharp claws that let it climb like a monkey. (Raccoons are not a close relative of any of those animals; they are procyonids, related to coatis and kinkajous.) Following Columbus’s second voyage, Europeans ate so many of the animals that they went extinct on the island of Hispaniola.</p>
+<p>Over the following centuries, colonizers exploited raccoons not so much for food as for fur. Jaunty association with the king of the wild frontier notwithstanding, raccoon pelts were considered inferior to beaver pelts, “common or even undignified for men of means and ambition,” Daniel Health Justice, a professor of Indigenous studies at the University of British Columbia, <ref target="https://press.uchicago.edu/ucp/books/book/distributed/R/bo111563421.html">writes</ref>. Nevertheless, in the early 1800s, settlers trapped and skinned hundreds of thousands of raccoons a year.</p>
+<p>The population busted, thanks to humans. Then it boomed, thanks to humans. Hunters and ranchers eradicated raccoons’ natural predators, among them coyotes, wolves, and bobcats. Developers and farmers destroyed their natural habitats, woodlands and marshlands, but built unnatural environments that suited raccoons just as well. Raccoons survive on farms and in fields. They thrive in suburbs and cities, thanks to gardens and trash cans and dumps. From the 1930s to the late ’80s—as dozens of native species went extinct, and even as the raccoon-pelt trade <ref target="https://www.fs.usda.gov/rm/pubs/rmrs_gtr033.pdf">picked up again</ref>—the raccoon population <ref target="https://archive.org/details/raccoonsnaturalh0000zeve">soared</ref> 20-fold.</p>
+<p>Humans don’t deserve all the credit for raccoons’ success, I should note. The animals are one of nature’s star utility players. They are opportunistic feeders, eating just about anything available. They are opportunistic den-makers, exploiting whatever natural cavities or fabricated structures they find. They are intelligent, having long memories and a knack for problem-solving. “If you give them a puzzle and change the rules, they go with it,” Lauren Stanton, a cognitive ecologist at UC Berkeley, told me. “They have this creativity.” On top of that, they are dexterous enough to shuck oysters, unscrew jars, unlatch gates, and pick knots.</p>
+<p>Raccoons have not only taken advantage of their anthropogenic environment but also adapted to it, much like pigeons, ants, rats, and crows. Urban raccoons have smaller ranges and live at higher densities than their wildland counterparts, for instance. Suzanne MacDonald, an animal psychologist at York University, told me: “They’re much more social in the city.” (Same.) Urban raccoons have also become less afraid of the unfamiliar, more eager to solve puzzles, more flexible in their routines, and less flighty. “We’ve ended up with animals that don’t run away from us, and instead come sit on our patio furniture,” as MacDonald put it.</p>
+<p>This nascent friendliness could be due to habituation—raccoons learning to play nice, more or less. It could also be due to what MacDonald describes as “runaway selection.” Affable raccoons probably eat more than aggressive raccoons do. They probably have more kits. Those kits are probably more likely to survive, more likely to be affable themselves, and more likely to give birth. In this way, generation by generation, the raccoon population would become less lion and more kitty cat.</p>
+<p>Docility is domestication’s lynchpin trait, because it allows for an animal’s safe handling and captive breeding. (You wouldn’t let an animal hang around the homestead if it kept trying to fight you.) Yet the strongest evidence that raccoons are evolving straight through the crack in the porch door has nothing to do with their attitudes. It has to do with their snouts.</p>
+<p>In <hi rend="#i">On the Origin of Species</hi>, Charles Darwin observed that domesticated animals share a set of peculiar phenotypic traits, among them floppy ears, bright colors, and curly fur. Humans were not purposefully breeding those features into existence; rather, they seemed to be the byproducts of a deep and cryptic biological process. (“When man goes on selecting, and thus augmenting, any peculiarity, he will almost certainly unconsciously modify other parts of the structure,” Darwin wrote.) “Domestication syndrome” remained a mystery for 140 years after the voyage of The Beagle. Why those specific features? How did they show up in animals as varied as angora rabbits and zebrafish? In 2014, scientists <ref target="https://academic.oup.com/genetics/article/197/3/795/5935921">published a tidy and compelling theory</ref>: Docile animals have a heritable “deficiency” of a specific kind of stem cell that appears in vertebrate embryos, migrates through the body, affects tissue development, and disappears. Through these neural crest cells, rubbable tummies lead to furry tummies.</p>
+<p>As well as short snouts—3.6 percent shorter in urban raccoons than in rural raccoons, according to <ref target="https://pmc.ncbi.nlm.nih.gov/articles/PMC12492588/">the study</ref> in <hi rend="#i">Frontiers in Zoology</hi>. “That doesn’t sound like a lot. And in a sense, it is not a lot. But if you think about these animals potentially only being at the very early beginning stages of domestication, that is still a fairly clear signal,” Raffaela Lesch, the lead author on the study, <ref target="https://www.cnn.com/2025/11/24/science/raccoons-urban-trash-domestication-shorter-snouts">told CNN</ref>. (Lesch declined to speak with me.)</p>
+<p>I found this evidence tantalizing yet bewildering. The United States’ cities and suburbs exploded in size after World War II—less than 100 years and 100 raccoon generations ago. Didn’t evolution take eons? Could raccoons really develop domesticated traits so fast?</p>
+<p>Yes, Melinda Zeder, a zooarcheologist and emeritus curator at the Smithsonian Institution, told me. Domestication can take thousands of years or tens of years, as a Soviet experiment on silver foxes demonstrated. In the late 1950s, the geneticists Dmitri Belyaev and Lyudmila Trut decided to see how friendly they could make foxes, and how fast they could do so. Within a dozen generations, the animals exhibited “major changes in behavior, as well as in coat color” and other ancillary traits, Zeder said. Within decades, the foxes looked more like fluffy kittens and acted more like silly puppies.</p>
+<p>In a sense, raccoons are arriving on our doorsteps half-domesticated. They naturally tolerate close proximity to humans, unlike wolverines. They pose no mortal threat to humans, unlike hippos. They love human food, unlike pandas. They are highly intelligent, unlike ostriches. (Ostriches, it turns out, are real morons.) They’re so compatible with us that our earliest written records describe them as pets, the Taino fisherman’s unusual dogs. In the centuries before the United States urbanized, writers frequently emphasized the raccoon’s tameability. Foxes “are never to be made familiar,” the naturalist John Lawson <ref target="https://www.gutenberg.org/files/1838/1838-h/1838-h.htm">wrote in 1709</ref>. “The Raccoon is.” (Little did he know about the Soviets.) President Calvin Coolidge even kept a raccoon, Rebecca, in the White House, walking her around on a leash. I wondered: If raccoons naturally possess many of the features common in companion animals, why aren’t they common companion animals? Why haven’t raccoons already domesticated?</p>
+<p>“They’re not really a very good model” for domestication, Bonnie Beaver, a veterinarian and an acclaimed animal behaviorist at Texas A&amp;M University, told me. Domesticated animals reproduce easily, early, and often, for instance; female raccoons are fertile as few as three days a year. Raccoons might be curious about and comfortable near humans but are innately solitary too. They don’t like roommates and won’t put up with taskmasters. Plus, Beaver said, raccoons “do not have limited agility.”</p>
+<p>I did not quite understand what she meant until I spoke with Dave, who had impulsively bought a raccoon kit from an exotic-pet dealer a few years ago and now cohabitates with “a total asshole.” (Dave asked me to give him a pseudonym. Keeping a raccoon is legal in a dozen states, though not the one where he lives.) Things started out promisingly. “Blondie learned a bunch of tricks,” Dave told me, describing how the raccoon would climb onto his shoulders to get a Cheez-It or a shred of turkey jerky, careen through the tunnel mazes that Dave would build for him, snooze in a big dog crate, and use a litter box.</p>
+<p>Then Blondie “went psycho.” (Raccoons become much more aggressive when they hit puberty, at around 1 year of age.) He ate through the cords to Dave’s television, gaming system, and computer. He shredded books. He expanded a crack in the living-room drywall into a hole big enough for Dave to climb into. He escaped from his crate and trashed the kitchen in the middle of the night. When placed in a stronger enclosure, the raccoon injured himself trying to get out. Today, Dave is the only person that Blondie tolerates as a handler, and <hi rend="#i">tolerate </hi>is a generous description. The raccoon is “mad” all the time. I asked Dave whether he wished he had never gotten his pet. He would not say that, but he expressed frustration at the exotic-animal dealer, himself, and his miserable raccoon.</p>
+<p>Experts were not exactly surprised. Breeders play up raccoons’ supposed good nature and definite good looks. Social-media accounts showcase the animals freezing when a light turns on or freaking out when they dunk cotton candy in water and it disappears. (In many languages, raccoons are called “the ones who wash,” “wash-bears,” or “washing-rats.” They submerge objects in water to heighten the sensory capacity of their finger pads, not unlike gourmands who bring Brie to room temperature before they take a whiff.) Cute, sure. But raccoons are “incredibly destructive,” Nessie O’Neil, a raccoon biologist, told me. “They’re so smart compared to cats and dogs—wildly, wildly intelligent—and because of that, they are very, very hard to keep entertained.” Captive raccoons require specially designed, large enclosures and “puzzle after puzzle” to work on, she said. “They like textures, they like to pick at things, they like to tear things apart, and it’s fun for them.”</p>
+<p>Other experts were more emphatic. “These are mesocarnivores. Would you accept having a coyote in your house?” MacDonald, of York University, said. “Why the hell would you take a crazy little wild animal that is exceedingly bitey—why would you want this destructive force in your house?” She added: “In the U.S., I have to say, you folks are insane. In Canada, raccoons are a protected species” and thus generally illegal to keep as pets.</p>
+<p>Raccoons pose a serious bite risk to humans and are carriers of rabies, leptospirosis, and the raccoon roundworm. In humans, the parasite can cause nausea, fatigue, ataxia, liver disease, blindness, and comatosis. The condition is rare, <ref target="https://pmc.ncbi.nlm.nih.gov/articles/PMC12261942/">thank Bandit</ref>, and sometimes treatable. But many people do not realize they are infected until they fall over while walking down the stairs or notice a squiggle in their vision, meaning a roundworm is floating in their eyeball. Oh, and the roundworm’s eggs can survive for years, even after being doused with soap, detergent, and bleach.</p>
+<p>Raccoons make humans sick; humans make raccoons sick too. One of the simpler ways to keep a captive raccoon pliable is to feed it all the time, MacDonald pointed out. As a result, many raccoon pets are obese and diabetic, as are many of their wild cousins. They are also prone to kidney disease. On a human diet, they die, O’Neil said. “I see it all the time. It’s horrible.”</p>
+<p>If raccoons were domesticated animals, they would be far different. Their brains would have shrunken; their neuroendocrine system would have transformed. These changes would have made them calmer, more trainable, less intelligent, and less aggressive. Maybe they would have developed sheepdog shags, Dalmatian spots, poodle curls, and Boston terrier bug eyes too.</p>
+<p>Perhaps this genetic drift started 100 raccoon generations ago, and if we wait a few hundred raccoon generations more, the process would be complete. Yet scientists cautioned me against thinking about domestication as a sequential, deterministic, and unidirectional process—get on at wolf; get off at Yorkie. Some species start domesticating and then stop, such as gazelles. Some domesticate and later rewild, such as dingoes. Some seem domesticated but are not, like quokkas. Some are considered domesticated and perhaps should not be, such as cats—really. Sure, kitties have velvety meow-meows and tortoiseshell coats, and they like to figure-eight through people’s legs. Yet we haven’t been selectively breeding the animals for long, Beaver pointed out, meaning that we “haven’t really messed cats up.” Neither have we made them need us, or even listen to us. Indeed, they do perfectly well on their own.</p>
+<p><hi rend="#i">Domesticated </hi>is a tidy term for systems as chaotic and complicated and changeable as nature itself, and a term that “robs you of really understanding what’s going on,” as Zeder put it. When we talked about raccoons, she used two other words to describe them: The creatures might have developed a “commensal” relationship with humans, meaning that they benefit and we do not. (Remora have a commensal thing going on with sharks; demodex face mites have a commensal thing going on with us.) Or they might be “synanthropes,” relying on humans without us ever throwing open the porch door to them. (Lice, cockroaches, bedbugs, and pigeons are synanthropes.)</p>
+<p>Marilyn and Dave aside, humans <hi rend="#i">aren’t</hi> throwing the porch door open to raccoons. Everyone in possession of a brain knows that they are a rabies vector and a bite risk. Anyone in possession of a trash can, feed bin, vegetable garden, root cellar, chicken coop, barn, attic, garage, woodshed, crawl space, dumpster, corn field, or DoorDash order on their front steps knows that they are a nuisance, if a stuffy-sized nuisance with a habit of standing on their hind legs and making uppy-arms. Thus, these marauding chubbos are missing the most fundamental domesticating force: human desire. We don’t have a lot of use for raccoons, Beaver pointed out: “We don’t need them for food. We don’t need them for clothing. We don’t need them as companions.” We aren’t going to start mass-raccoon-breeding operations or begin putting them under the tree at Christmas. Like a lot of species, they might remain half-domesticated forever.</p>
+<p>What about last year’s attention-getting study, then? The paper is just one, researchers told me. Plus, the analysis is based on photographs submitted by members of the public, meaning the sample might not be big enough and sound enough to draw conclusions. The greater risk lies in its interpretation. “People hear what they think is a scientific justification for having this animal as a pet,” O’Neil said. “People are not going to do enough digging to realize, <hi rend="#i">Oh my God, this is a really bad idea</hi>.”</p>
+<p>As for Smith, she recognizes that what she is doing is probably not a good idea, but she can’t stop. She described putting lasagna trays filled with kibble, peanut-butter sandwiches, crackers, and leftovers out one recent night. The raccoons were still hungry, she guessed. They ventured upstairs and ransacked her daughter’s old bedroom.</p>
+<p>“No one would believe this,” she said, but “I’m really a dog lover.”</p>
+</main>
+<comments></comments>
+</doc>
+    </div>
+  </main>
+
+  <script>
+    window.addEventListener('scroll', () => {
+      const h = document.documentElement;
+      const st = h.scrollTop || document.body.scrollTop;
+      const sh = h.scrollHeight - h.clientHeight;
+      document.getElementById('progress').style.width = ((st/sh)*100) + '%';
+    });
+
+    function setTheme(name) {
+      document.body.className = 'theme-' + name;
+      localStorage.setItem('ladder_reader_theme', name);
+      document.querySelectorAll('.theme-dot').forEach(d => d.classList.remove('active'));
+      const activeDot = document.querySelector('.theme-dot.' + name);
+      if (activeDot) activeDot.classList.add('active');
+    }
+
+    // 默认以羊皮纸 (sepia) 或用户上次记忆的主题打开
+    const savedTheme = localStorage.getItem('ladder_reader_theme') || 'sepia';
+    setTheme(savedTheme);
+
+    // 字号缩放控制与持久记忆 (以 22px 为基准)
+    let currentFSize = parseInt(localStorage.getItem('ladder_reader_fsize') || '22', 10);
+
+    function applyFontSize(sz) {
+      currentFSize = Math.max(16, Math.min(36, sz));
+      localStorage.setItem('ladder_reader_fsize', currentFSize);
+      
+      const contentElem = document.getElementById('content');
+      if (contentElem) {
+        contentElem.style.fontSize = currentFSize + 'px';
+      }
+      const allSub = document.querySelectorAll('.article-content p, .article-content li, .article-content blockquote');
+      allSub.forEach(el => {
+        el.style.fontSize = currentFSize + 'px';
+      });
+      
+      const disp = document.getElementById('fSizeDisplay');
+      if (disp) disp.innerText = currentFSize + 'px';
+    }
+
+    function resizeFont(step) {
+      applyFontSize(currentFSize + step);
+    }
+
+    applyFontSize(currentFSize);
+
+    const filePath = "D:\\Desktop\\reading\\reading data\\TheAtlantic\\2026-08\\2026-08-10_Are_Raccoons_Evolving_Into_Pets.md";
+    const openBtn = document.getElementById('openLocalBtn');
+
+    openBtn.addEventListener('click', () => {
+      openBtn.innerText = '⏳ 正在定位...';
+      fetch('/api/open-folder?path=' + encodeURIComponent(filePath))
+        .then(r => r.json())
+        .then(() => {
+          openBtn.innerText = '✅ 已在资源管理器中高亮';
+          setTimeout(() => { openBtn.innerText = '📂 打开本地文件'; }, 2500);
+        })
+        .catch(() => {
+          openBtn.innerText = '📂 打开本地文件';
+        });
+    });
+  </script>
+</body>
+</html>

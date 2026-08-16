@@ -91,11 +91,31 @@ def resolve_md_root(env_val):
     for c in cands:
         if os.path.isdir(c):
             return c
-    # 目录不存在时返回原值（交由 build() 优雅跳过），而非 None
     return env_val
 
 
-MD_ROOT = resolve_md_root(os.environ.get("MD_ARTICLES_ROOT", DEFAULT_MD_ROOT))
+def find_md_root():
+    # 1. 环境变量覆盖
+    env_val = os.environ.get("MD_ARTICLES_ROOT")
+    if env_val:
+        resolved = resolve_md_root(env_val)
+        if resolved and os.path.isdir(resolved):
+            return resolved
+    # 2. 仓库内持久化数据源 (manual_source/TheAtlantic)
+    in_repo = os.path.join(PROJECT_ROOT, "manual_source", "TheAtlantic")
+    if os.path.isdir(in_repo):
+        return in_repo
+    # 3. 阿里云备份源
+    backup_path = r"D:\Desktop\Tools\阿里云桌面备份\html_data\reading\reading data\TheAtlantic"
+    if os.path.isdir(backup_path):
+        return backup_path
+    # 4. 默认路径
+    if os.path.isdir(DEFAULT_MD_ROOT):
+        return DEFAULT_MD_ROOT
+    return in_repo
+
+
+MD_ROOT = find_md_root()
 
 # 各来源默认主题色（与 PDF 项目 TheAtlantic 刊一致；可被 frontmatter theme_color 覆盖）
 WEBSITE_THEME = {

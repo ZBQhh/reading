@@ -125,7 +125,7 @@ export function setViewMode(mode) {
 }
 
 export function applyTheme(name) {
-  if (THEMES.indexOf(name) < 0) name = 'light';
+  if (THEMES.indexOf(name) < 0) name = 'academic';
   THEMES.forEach(function (t) { document.body.classList.remove('theme-' + t); });
   document.body.classList.add('theme-' + name);
   lsSet(LS.theme, name);
