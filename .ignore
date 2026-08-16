@@ -1,0 +1,19 @@
+# Static Assets Ignore for Cloudflare Pages / Workers
+node_modules/
+scripts/
+tools/
+docs/
+issues/
+raw_pdf/
+_backups/
+manual_translations/
+.git/
+.github/
+.vscode/
+.workbuddy/
+*.log
+*.tmp
+package-lock.json
+package.json
+README.md
+CHANGELOG.md
