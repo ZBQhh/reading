@@ -1,0 +1,9 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "bilingual-reader",
+  "compatibility_date": "2026-08-16",
+  "assets": {
+    "directory": ".",
+    "not_found_handling": "single-page-application"
+  }
+}
