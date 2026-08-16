@@ -1,21 +1,23 @@
 // ==============================================================================
 // scripts/build-dist.js — BilingualReader 生产部署包构建器 (Cloudflare / GitHub Pages)
 // ==============================================================================
-import fs from "fs";
-import path from "path";
-import { execSync } from "child_process";
-import { fileURLToPath } from "url";
+const fs = require("fs");
+const path = require("path");
+const { execSync } = require("child_process");
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 const root = path.resolve(__dirname, "..");
 const dist = path.join(root, "dist");
 
 console.log("🔨 [1/3] Bundling JavaScript with esbuild...");
-execSync("npx -y esbuild src/main.js --bundle --format=iife --target=es2018 --charset=utf8 --outfile=assets/js/reader_app.js", {
-  cwd: root,
-  stdio: "inherit"
-});
+try {
+  execSync("npx -y esbuild src/main.js --bundle --format=iife --target=es2018 --charset=utf8 --outfile=assets/js/reader_app.js", {
+    cwd: root,
+    stdio: "inherit"
+  });
+} catch (e) {
+  console.error("esbuild bundle failed:", e.message);
+  process.exit(1);
+}
 
 console.log("📁 [2/3] Preparing clean dist/ directory...");
 if (fs.existsSync(dist)) {
