@@ -178,21 +178,46 @@ sgit-update "feat: curate [刊物名] [文章名] with bilingual translation & n
 
 ## 四、背景/双关注释（`.zh-annotation`）质量红线与分类规范
 
-为确保阅读器的学术与深度阅读质感，注释必须遵循**“精准、精炼、见解深刻、严禁废话”**原则。
+## 四、背景/双关注释（`.zh-annotation`）质量红线与高阶细读指南
 
-### 🏷️ 4 大官方徽章前缀与适用场景
+为确保阅读器达到**名刊导师级导读（Deep Reading & Rhetorical Analysis）**的学术质感，注释必须遵循**“精准、精炼、见解深刻、拆解透彻、严禁废话”**原则。
 
-| 徽章前缀 | 适用场景 | 范例 |
-|:---|:---|:---|
-| `💡【时代背景】` | 宏观时代思潮、政策法规出台背景、产业技术转型关键节点 | `💡【时代背景】“Pronatalism”（鼓励生育主义）：近年在欧美政界与硅谷精英圈盛行的思潮，将生育率跌破世代更替线视为文明危机。` |
-| `🏛️【政治/历史背景】` | 历史事件、政党斗争、学术丑闻、关键法案或历史人物溯源 | `🏛️【政治/历史背景】“Bond Vigilantes”（债券义警）：1983 年华尔街创造的名词，指当政府财政赤字失控时通过抛售国债推高利率以强迫削减开支的投资者。` |
-| `🧩【语言双关】` | 英语双关语（Pun）、反讽、押韵修辞、典故借用、一词多意解析 | `🧩【语言双关】标题“Point His Money Machine”暗合投币式老虎机与军工机枪双重意象，反讽资本对州级议员席位的扫射式资助。` |
-| `🌍【文化典故】` | 希腊神话、圣经隐喻、英美经典文学/电影意象、哲学思想实验 | `🌍【文化典故】“Moravec's Paradox”（莫拉维克悖论）：指出计算机实现象棋等高级推理极易，但具备一岁婴儿的物理感知与运动协调却极难。` |
+---
+
+### 🌟 金牌标杆范例（Gold Standard Benchmark）
+
+以《The Mysterious Art of Conducting》开篇第一段为例：
+
+> **英文原文**：  
+> *"The conductor is a con artist. Or: The conductor is God. Musicians frequently encounter both of these extreme views of music’s most mysterious profession. It’s not surprising that conductors elicit suspicion as well as adulation. The very act of conducting—waving a wand to summon ravishing or ethereal or earsplitting sounds—can look like either inexplicable magic or embarrassing nonsense, a kind of tuxedoed air guitar."*
+
+> **标准深度注释输出（Sidecar JSON `notes["0"]`）**：  
+> ```
+> 🧩【语言双关与修辞拆解】
+> • 原文“The conductor is a con artist”：作者运用了极其精妙的**头韵与词源双关（Paronomasia）**——“指挥家”（conductor）本身在舞台上不发一声却独享掌声，在怀疑者眼中就成了“骗术大师”（con artist），暗讽其将乐手劳作据为己有。
+> • 原文“a kind of tuxedoed air guitar”：**荒谬并置修辞（Incongruous Juxtaposition）**——将古典交响乐至高殿堂的“燕尾服”（tuxedo）与摇滚青年狂热虚无的“空气吉他”（air guitar，无实物拟奏）强行融合，极尽讽刺地戳破了指挥动作在门外汉眼中的虚张声势。
+> 
+> 🏛️【美学与历史背景】
+> • 自 19 世纪瓦格纳、门德尔松确立近代独立指挥职能以来，古典乐界就分裂为“神性造物主”（Maestro）与“多余傀儡”两大极端偏见。
+> ```
+
+---
+
+### 🏷️ 4 大官方徽章前缀与解读维度
+
+| 徽章前缀 | 解读维度 | 核心剖析点 | 范例场景 |
+|:---|:---|:---|:---|
+| `🧩【语言双关/修辞拆解】` | 双关语、词根谐音、反讽、荒谬并置、通感隐喻 | 剖析英文独有的语言修辞巧思与文字游戏，点明作者深层反讽意图 | `conductor` 与 `con artist` 头韵双关；`tuxedoed air guitar` 荒诞并置 |
+| `💡【时代背景】` | 宏观时代思潮、产业技术突破、社会学理论 | 阐述当下的技术演进节点、生活方式变迁与前沿思想辩论 | 具身智能 `In-Context Learning`；`Calm Tech` 沉静技术；`Pronatalism` 思潮 |
+| `🏛️【政治/历史背景】` | 宪政博弈、学术丑闻、关键法案、地缘冲突 | 追溯制度源头、历史事件原貌与权力博弈格局 | 剑桥大学阿戴学术造假案与 DEI 异化；`Bond Vigilantes` 华尔街债券义警 |
+| `🌍【文化典故/哲学反差】` | 希腊神话、艺术史理论、后现代解构、思想实验 | 提炼文本背后的跨学科哲学内涵与人类学隐喻 | 莫拉维克悖论；本雅明“机械复制时代的灵光（Aura）”；柏拉图洞穴寓言 |
+
+---
 
 ### ⛔ 注释质量三大红线
-1. ❌ **严禁复述段落表面文字**：如果注释只是把段落中文再换个句式说一遍，一律删除。
+1. ❌ **严禁复述段落表面文字**：如果注释只是把段落中文翻译再换个句式说一遍，一律删除。
 2. ❌ **严禁空洞的情感抒情**：避免出现“这段写得非常生动”、“作者表达了强烈的感情”等无信息增量的废话。
-3. ⚠️ **控制单篇密度**：一篇 15 段左右的文章，高价值注释以 **2 ~ 5 处** 为最佳，确保读者阅读流畅，不产生视觉喧宾夺主。
+3. ⚠️ **控制单篇密度**：一篇 15 段左右的文章，高价值注释以 **2 ~ 5 处** 最具信息增量的节点为最佳，确保读者阅读流畅，不产生视觉喧宾夺主。
 
 ---
 
