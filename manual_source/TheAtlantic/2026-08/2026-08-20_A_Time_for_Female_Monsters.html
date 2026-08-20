@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>A Time for Female Monsters · Ladder 沉浸阅读</title>
+  <style>
+    /* 中文字符专属字体定义：自动等比缩减至 80% (约 17.5px)，字重柔和轻量 */
+    @font-face {
+      font-family: 'ChineseSoftMuted';
+      src: local('PingFang SC Light'), local('PingFang SC'), local('Microsoft YaHei Light'), local('Microsoft YaHei'), local('SimHei');
+      unicode-range: U+4E00-9FFF, U+3400-4DBF, U+20000-2A6DF, U+3000-303F, U+FF00-FFEF;
+      size-adjust: 80%;
+    }
+
+    :root {
+      --font-reader: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", "Arial Nova", 'ChineseSoftMuted', sans-serif;
+    }
+
+    /* 1. 经典羊皮纸 (Sepia / Parchment) - 默认主题 */
+    body.theme-sepia {
+      --bg: #f8f1e3;
+      --card: #ede3ce;
+      --text: #382c1e;
+      --muted: #7a6854;
+      --border: rgba(60, 44, 30, 0.12);
+      --accent: #b45309;
+      --cover-bg: #e6dac1;
+    }
+
+    /* 2. 蓝色冷静学术风 (Nordic Academic Blue) */
+    body.theme-academic {
+      --bg: #0e1726;
+      --card: #162238;
+      --text: #e2e8f0;
+      --muted: #8ba2c4;
+      --border: rgba(148, 163, 184, 0.14);
+      --accent: #38bdf8;
+      --cover-bg: #121d30;
+    }
+
+    /* 3. 清新薄荷森系 (Fresh Mint / Sage) */
+    body.theme-mint {
+      --bg: #edf5f0;
+      --card: #deebe2;
+      --text: #1b382b;
+      --muted: #4e7663;
+      --border: rgba(27, 56, 43, 0.1);
+      --accent: #059669;
+      --cover-bg: #d2e4d8;
+    }
+
+    /* 4. 夏日海滩暖阳 (Summer Beach / Warm Sand) */
+    body.theme-beach {
+      --bg: #fdf6ec;
+      --card: #f7ebd9;
+      --text: #3c2d1d;
+      --muted: #8c7155;
+      --border: rgba(217, 119, 6, 0.14);
+      --accent: #0284c7;
+      --cover-bg: #f0deca;
+    }
+
+    /* 5. 极夜深黑 (Midnight Dark) */
+    body.theme-dark {
+      --bg: #0b0f19;
+      --card: #151c2c;
+      --text: #f1f5f9;
+      --muted: #94a3b8;
+      --border: rgba(255, 255, 255, 0.08);
+      --accent: #818cf8;
+      --cover-bg: #111726;
+    }
+
+    /* 6. 月白浅色 (Pure Paper White) */
+    body.theme-light {
+      --bg: #fafafa;
+      --card: #ffffff;
+      --text: #171717;
+      --muted: #737373;
+      --border: rgba(0, 0, 0, 0.08);
+      --accent: #4f46e5;
+      --cover-bg: #f0f0f0;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-reader);
+      min-height: 100vh;
+      font-weight: 400;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      text-rendering: optimizeLegibility;
+      transition: background 0.25s ease, color 0.25s ease;
+    }
+    #progress {
+      position: fixed; top: 0; left: 0; height: 3px;
+      background: linear-gradient(90deg, var(--accent), #ec4899);
+      width: 0%; z-index: 1000;
+    }
+    header {
+      position: sticky; top: 0; z-index: 900;
+      background: var(--card); border-bottom: 1px solid var(--border);
+      padding: 12px 32px; display: flex; align-items: center; justify-content: space-between;
+      backdrop-filter: blur(16px); transition: background 0.25s ease;
+    }
+    .btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 7px 14px; border-radius: 8px; font-size: 13px; font-weight: 600;
+      cursor: pointer; text-decoration: none; border: 1px solid var(--border);
+      background: rgba(127,127,127,0.08); color: var(--text);
+      font-family: var(--font-reader); transition: all 0.2s;
+    }
+    .btn:hover { background: rgba(127,127,127,0.18); transform: translateY(-1px); }
+    .btn-green { background: #059669; color: #fff; border: none; cursor: default; }
+    
+    .theme-picker {
+      display: flex; gap: 7px; align-items: center; background: rgba(127,127,127,0.08);
+      padding: 4px 10px; border-radius: 9999px; border: 1px solid var(--border);
+    }
+    .theme-dot {
+      width: 18px; height: 18px; border-radius: 50%; display: inline-block; cursor: pointer;
+      border: 2px solid transparent; transition: transform 0.2s, border-color 0.2s;
+    }
+    .theme-dot:hover { transform: scale(1.2); }
+    .theme-dot.active { border-color: var(--accent); transform: scale(1.25); box-shadow: 0 0 8px var(--accent); }
+
+    .theme-dot.sepia { background: #f8f1e3; border: 1px solid #7a6854; }
+    .theme-dot.academic { background: #1e40af; border: 1px solid #60a5fa; }
+    .theme-dot.mint { background: #10b981; border: 1px solid #059669; }
+    .theme-dot.beach { background: #f59e0b; border: 1px solid #d97706; }
+    .theme-dot.dark { background: #000000; border: 1px solid #4b5563; }
+    .theme-dot.light { background: #ffffff; border: 1px solid #9ca3af; }
+
+    /* 超宽全屏沉浸流 (宽度 1280px / 92%，左右留白极小) */
+    main {
+      max-width: 1280px;
+      width: 92%;
+      margin: 32px auto 100px;
+      padding: 0 16px;
+    }
+    .badge {
+      display: inline-block; padding: 5px 12px; background: rgba(99,102,241,0.14);
+      color: var(--accent); font-size: 13px; font-weight: 700; border-radius: 6px; margin-bottom: 16px;
+      letter-spacing: 0.5px;
+    }
+    h1 {
+      font-size: 40px; line-height: 1.3; font-weight: 800; margin-bottom: 18px;
+      font-family: var(--font-reader); letter-spacing: -0.03em;
+    }
+    .meta {
+      color: var(--muted); font-size: 14px; margin-bottom: 32px;
+      padding-bottom: 20px; border-bottom: 1px solid var(--border);
+      display: flex; gap: 20px; align-items: center; flex-wrap: wrap;
+    }
+    
+    /* 官方同款高清大封面 (Hero Cover) */
+    .hero-cover-container {
+      margin: 24px 0 40px;
+      border-radius: 14px;
+      overflow: hidden;
+      box-shadow: 0 12px 36px rgba(0,0,0,0.25);
+      background: var(--cover-bg);
+    }
+    .hero-cover-img {
+      width: 100%;
+      max-height: 620px;
+      object-fit: cover;
+      display: block;
+    }
+    figcaption {
+      padding: 10px 16px;
+      font-size: 13px;
+      color: var(--muted);
+      background: rgba(0,0,0,0.06);
+      line-height: 1.5;
+    }
+
+    /* 纯净现代英文优先排版 (英文 22px 醒目呈现，中文半透明淡化 52% 缩小 80%) */
+    .article-content {
+      font-family: var(--font-reader);
+      font-size: 22px;
+      font-weight: 400;
+      line-height: 1.9;
+      letter-spacing: -0.015em;
+    }
+    .article-content p {
+      margin-bottom: 1.8em;
+      font-size: 22px;
+      line-height: 1.9;
+      font-weight: 400;
+    }
+    .article-content h2, .article-content h3 {
+      margin: 2.2em 0 0.9em; line-height: 1.35;
+      font-family: var(--font-reader); font-weight: 700; letter-spacing: -0.02em;
+    }
+    .article-content blockquote {
+      border-left: 4px solid var(--accent); padding: 12px 24px; margin: 1.8em 0;
+      background: rgba(127,127,127,0.05); color: var(--muted); border-radius: 0 10px 10px 0;
+      font-style: normal; font-size: 22px;
+    }
+    .article-content img {
+      max-width: 100%; height: auto; border-radius: 10px; margin: 2em auto; display: block;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.18);
+    }
+    .article-content figure { margin: 2.2em 0; }
+
+    /* 中文字符深度降权弱化（半透明淡化 52% + 等比缩小 80%） */
+    .zh-soft {
+      font-size: 0.80em !important;
+      opacity: 0.52 !important;
+      font-weight: 300 !important;
+      letter-spacing: 0.03em !important;
+      display: inline !important;
+    }
+  </style>
+</head>
+<body class="theme-sepia">
+  <div id="progress"></div>
+
+  <header>
+    <div style="display:flex; gap:12px; align-items:center;">
+      <a href="/" class="btn">🏠 历史控制中心</a>
+      <span class="btn btn-green">✅ 已持久归档</span>
+      <button class="btn" id="openLocalBtn">📂 打开本地文件</button>
+    </div>
+    <div style="display:flex; gap:10px; align-items:center;">
+      <div class="theme-picker">
+        <span class="theme-dot sepia active" onclick="setTheme('sepia')" title="📜 经典羊皮纸 (默认)"></span>
+        <span class="theme-dot academic" onclick="setTheme('academic')" title="🌊 蓝色冷静学术"></span>
+        <span class="theme-dot mint" onclick="setTheme('mint')" title="🌿 清新薄荷森系"></span>
+        <span class="theme-dot beach" onclick="setTheme('beach')" title="🏖️ 夏日海滩暖阳"></span>
+        <span class="theme-dot dark" onclick="setTheme('dark')" title="🌑 极夜深黑"></span>
+        <span class="theme-dot light" onclick="setTheme('light')" title="☀️ 月白浅色"></span>
+      </div>
+      <button class="btn" onclick="resizeFont(-2)" title="缩小字号">A-</button>
+      <span id="fSizeDisplay" style="font-size:12px; font-weight:700; opacity:0.85; min-width:34px; text-align:center;">22px</span>
+      <button class="btn" onclick="resizeFont(2)" title="放大字号">A+</button>
+      <a href="https://www.theatlantic.com/culture/2026/08/furious-hulu-tv-review-female-monsters/688313/" target="_blank" class="btn">🔗 原网链接</a>
+    </div>
+  </header>
+
+  <main>
+    <div class="badge">TheAtlantic</div>
+    <h1 id="articleTitle">A Time for Female Monsters</h1>
+    <div class="meta">
+      <span>✍️ <b>Sophie Gilbert</b></span>
+      <span>📅 2026-08-20</span>
+      <span style="color:#059669; font-weight:600;">📁 D:\Desktop\WorkSpace\BilingualReader\manual_source\TheAtlantic\2026-08\2026-08-20_A_Time_for_Female_Monsters.md</span>
+    </div>
+
+    
+        <div class="hero-cover-container">
+          <img src="/assets/TheAtlantic/2026-08/assets/2026-08-20_A_Time_for_Female_Monsters/7b4942da5073.jpg" alt="A Time for Female Monsters" class="hero-cover-img" />
+          <figcaption>Sarah Shatz / Hulu / Disney / Everett Collection</figcaption>
+        </div>
+        
+
+    <div class="article-content" id="content">
+      <?xml version="1.0" encoding="utf-8"?>
+<doc fingerprint="b4021999db7f80b1">
+<main>
+<head rend="h1">A Time for Female Monsters</head>
+<p>The crime drama of the year is all about anger that has metastasized into something darker.</p>
+<graphic alt="Emmy Rossum, as Alice, has a bruised lip and stands in a neutral colored office with a look of concern on her face" src="/assets/TheAtlantic/2026-08/assets/2026-08-20_A_Time_for_Female_Monsters/7b4942da5073.jpg"></graphic>
+<graphic alt="Emmy Rossum, as Alice, has a bruised lip and stands in a neutral colored office with a look of concern on her face" src="/assets/TheAtlantic/2026-08/assets/2026-08-20_A_Time_for_Female_Monsters/1f7a0b584972.jpg"></graphic>
+<p>Most dramas about murderous women save the revelations of deviance for the end, after parceling out uncertainty and complication. <hi rend="#i">Furious</hi> does things exactly backwards. <hi rend="#i">Here is a monster</hi>, the Hulu series announces with its very first scene, during which an unblinking blonde in a Halloween cat mask kills a man by forcibly injecting him with fentanyl, which she keeps in a bedazzled silver tin. “I don’t really like listening to you,” she whispers, as he gasps for breath. “I don’t like the sounds you’re making. But I love your smile.” After he dies, she reaches for a bowl of candy corn, which she eats slowly and with care, piece by piece.</p>
+<p>The scene felt confrontational to me at first watch, as though it were daring me to switch it off in discomfort. But why? Crime shows begin with violated women all the time—the naked, bloodied female corpse is such a staple in the genre’s visual language that viewers hardly notice it. Why is a scene of a young woman luxuriating in her sadistic treatment of a man so unsettling? As <hi rend="#i">Furious</hi> goes on, it offers up more murders, but also more context for why this woman, Catherine (played by Lola Petticrew), is doing what she’s doing—and although she remains monstrous, the show shades in her full, horrifying humanity.</p>
+<p><hi rend="#i">Furious</hi>—created by the writer Liz Meriwether and executive-produced by the actor Emmy Rossum, who also stars in it—is preoccupied with elemental ideas about violence and transformation, which juxtapose nicely with the more conventional framework of a police procedural. Rossum plays Alice, a former detective turned FBI grunt who’s dragged into investigating Catherine’s latest victim by her former partner Danny (Scoot McNairy). Like Catherine, Alice has been warped by trauma; her previous boyfriend, also a police officer (Jake Lacy), beat her, and all of her colleagues except Danny froze her out when she finally reported him. She uses apps to find sexual partners who will agree to beat her, role-playing her own abuse. In one episode, she outright refuses to shower, a tendency that seems off-putting until her sister reveals to Danny that her ex used to drag her from the shower to hit her, sometimes leaving her passed out under the running water.</p>
+<p>Early on, the show evokes Medusa—whose rape at the hands of Poseidon saw her turned into a hideous Gorgon with snakes for hair—in reference to Catherine, whose own history is at least as cruel; there are also multiple references to the Furies, winged goddesses of retribution. Nora Washington (Quincy Tyler Bernstine), who runs the FBI sex-crimes division that Alice is trying to get assigned to, describes the room that agents use to review child-sexual-abuse material as “the darkest pit of Hades down deep in the bottom of the Earth.” Washington’s perpetual rage, and her attempts to quash it with emotional detachment and tequila, suffuses every scene she’s in.</p>
+<p>Watching the show, I remembered the moment, almost a decade ago, when women’s anger became the subject of countless books and news stories—when many people expressed hope that it might have a revolutionary power. Instead, during a period when women have lost fundamental rights and have been confronted with the apparent futility of their protests, cultural narratives about women’s rage no longer have the luxury of optimism. Instead, anger has metastasized into vengeance, inflamed and out for blood.</p>
+<p>While watching <hi rend="#i">Furious</hi>, I happened to read <ref target="https://bookshop.org/a/12476/9780593979761"><hi rend="#i">Honey</hi></ref>, by Imani Thompson: a wry and erudite take on the dark-academia genre about a Ph.D. candidate at Cambridge named Yrsa (derived from an Old Norse word for “furious”) who—almost accidentally—becomes a serial killer. Yrsa’s journey toward murder begins casually one day, when she tips a bee into the lemonade of an older male colleague who has betrayed Yrsa’s friend and stolen credit for the research project they were working on together. When the bee stings the man, who’s allergic to them, Yrsa watches while he chokes to death, observing “the theatrics of the wheezing man. The red-hot raspberry of his face.” When he falls to the ground, she gets onto her knees and strokes his hair. Afterward, she eats ice cream. Murder in the book becomes associated with sweetness and satiation. In dull moments after the man’s death, Yrsa replays the scene in her mind, and it fills her up.</p>
+<p>Thompson wanted to write about a female serial killer, she said in <ref target="https://www.cbc.ca/books/imani-thompsons-debut-novel-features-an-academic-turned-serial-killer-9.7299423">one interview</ref>, because “we always see the woman as a victim,” in ways that are often glamorized. But Yrsa is also working on a Ph.D. about “Afropessimism and Black women’s discourses on their liberation,” and the book is studded with references to academics and writers who consider the heritage of violence. Yrsa often uses critical theory to try to justify what she’s doing: She cites thinkers such as Audre Lorde, Stuart Hall, and Saidiya Hartman, and fixates particularly on Hartman’s essay <hi rend="#i">Venus in Two Acts</hi>, about all of the nameless murdered Black girls obliterated by history. How, Hartman wonders, can she “revisit the scene of subjection without replicating the grammar of violence?” In Yrsa’s mind, this question becomes twisted into the idea that punishing abusive men might redress some of the imbalance.</p>
+<p>Yrsa does so in part by tracking down men outed on a site where sex workers name their most vicious clients. She injects one with a fatal dose of heroin and enjoys doing it, much like Catherine, savoring the memory of “that moment when she realized he was vulnerable only to her. That moment when she could do anything.” Late in <hi rend="#i">Furious</hi>, Catherine tells Alice about how her brutal actions feel to her: “It’s power, watching someone die.” She adds, “When I’m killing someone, it’s like I’m eating him, like I’m swallowing him, like everything he’s ever done is disappearing inside me.” She is, it turns out, pursuing and murdering the men who hurt her when she was an underage teenager being trafficked for sex, starting with the pimp who beat, raped, and starved her. Her pleasure in killing, unlike Yrsa’s, is derived not from the act itself but from neutralizing what these men did to her.</p>
+<p>The show is a fascinating pivot for Meriwether, who previously created the beloved offbeat Fox comedy <hi rend="#i">New Girl</hi> and who most recently co-created the FX series <hi rend="#i">Dying for Sex</hi>, about a woman who receives a fatal cancer diagnosis and decides to pursue sexual pleasure in her final months. There are moments in <hi rend="#i">Furious</hi> that come off as morbidly comic—an FBI agent played by Rob Yang shouts “Boom!” at inopportune moments, and a witness with muscular dystrophy (Steve Way) needles police officers with his wheelchair—but more often, the series is pitch-dark. The show was shot with anamorphic lenses to foster a moody, surveillant feeling, evoking David Fincher more than <hi rend="#i">Law &amp; Order: Special Victims Unit</hi>.<hi rend="#i"></hi>The point seems to be to use the visual language of neo-noir while shifting the focus to characters who don’t usually draw the camera’s attention.</p>
+<p><hi rend="#i">Furious</hi> has been referred to as a “crime drama for a post-Epstein world,” and one of the characters—a billionaire with similar proclivities who seems to operate with impunity—seems modeled after the serial sex offender. “The ones who are really to blame don’t get caught, never, never,” Nora tells Alice. “You think you’re ever gonna catch anyone who matters?” But Meriwether, in an interview with <hi rend="#i">Vulture</hi>,<hi rend="#i"></hi>noted that she was “much more interested in the experience of the women than I am with the experience of the perpetrator,” and the show is especially curious regarding women who become compelled to victimize others. What does living with that kind of trauma and injustice do to a person’s psyche? “My memory <hi rend="#i">sucks</hi>,” Catherine says in one scene, trying to piece together fragments of her past life into a coherent shape. “It’s ’cause I got strangled so much.”</p>
+<p>The actors in <hi rend="#i">Furious</hi> are uniformly brilliant: Bernstine’s achingly blasé Nora; McNairy’s frowsy, compassionate Danny; Rossum’s magnetic and volatile Alice. Petticrew turns Catherine’s postured immaturity into something vividly repulsive—she’s constantly restaging the girlhood she never got to have, but in an unavoidably corrupted way. By the show’s end, we can better understand her, even if we’re lucky enough not to have her tolerance for cruelty. What happens to anger when it can’t be absorbed? We can only consider whether there’s truth in Nora’s assertion that only evil can really fight evil, and that in order to defend humanity, you occasionally have to sacrifice your own.</p>
+<p><hi rend="#i">When you buy a book using a link on this page, we receive a commission. Thank you for supporting </hi>The Atlantic<hi rend="#i">.</hi></p>
+</main>
+<comments></comments>
+</doc>
+    </div>
+  </main>
+
+  <script>
+    window.addEventListener('scroll', () => {
+      const h = document.documentElement;
+      const st = h.scrollTop || document.body.scrollTop;
+      const sh = h.scrollHeight - h.clientHeight;
+      document.getElementById('progress').style.width = ((st/sh)*100) + '%';
+    });
+
+    function setTheme(name) {
+      document.body.className = 'theme-' + name;
+      localStorage.setItem('ladder_reader_theme', name);
+      document.querySelectorAll('.theme-dot').forEach(d => d.classList.remove('active'));
+      const activeDot = document.querySelector('.theme-dot.' + name);
+      if (activeDot) activeDot.classList.add('active');
+    }
+
+    // 默认以羊皮纸 (sepia) 或用户上次记忆的主题打开
+    const savedTheme = localStorage.getItem('ladder_reader_theme') || 'sepia';
+    setTheme(savedTheme);
+
+    // 字号缩放控制与持久记忆 (以 22px 为基准)
+    let currentFSize = parseInt(localStorage.getItem('ladder_reader_fsize') || '22', 10);
+
+    function applyFontSize(sz) {
+      currentFSize = Math.max(16, Math.min(36, sz));
+      localStorage.setItem('ladder_reader_fsize', currentFSize);
+      
+      const contentElem = document.getElementById('content');
+      if (contentElem) {
+        contentElem.style.fontSize = currentFSize + 'px';
+      }
+      const allSub = document.querySelectorAll('.article-content p, .article-content li, .article-content blockquote');
+      allSub.forEach(el => {
+        el.style.fontSize = currentFSize + 'px';
+      });
+      
+      const disp = document.getElementById('fSizeDisplay');
+      if (disp) disp.innerText = currentFSize + 'px';
+    }
+
+    function resizeFont(step) {
+      applyFontSize(currentFSize + step);
+    }
+
+    applyFontSize(currentFSize);
+
+    const filePath = "D:\\Desktop\\WorkSpace\\BilingualReader\\manual_source\\TheAtlantic\\2026-08\\2026-08-20_A_Time_for_Female_Monsters.md";
+    const openBtn = document.getElementById('openLocalBtn');
+
+    openBtn.addEventListener('click', () => {
+      openBtn.innerText = '⏳ 正在定位...';
+      fetch('/api/open-folder?path=' + encodeURIComponent(filePath))
+        .then(r => r.json())
+        .then(() => {
+          openBtn.innerText = '✅ 已在资源管理器中高亮';
+          setTimeout(() => { openBtn.innerText = '📂 打开本地文件'; }, 2500);
+        })
+        .catch(() => {
+          openBtn.innerText = '📂 打开本地文件';
+        });
+    });
+  </script>
+</body>
+</html>

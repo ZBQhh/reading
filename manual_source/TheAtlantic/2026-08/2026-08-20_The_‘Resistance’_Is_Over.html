@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The ‘Resistance’ Is Over · Ladder 沉浸阅读</title>
+  <style>
+    /* 中文字符专属字体定义：自动等比缩减至 80% (约 17.5px)，字重柔和轻量 */
+    @font-face {
+      font-family: 'ChineseSoftMuted';
+      src: local('PingFang SC Light'), local('PingFang SC'), local('Microsoft YaHei Light'), local('Microsoft YaHei'), local('SimHei');
+      unicode-range: U+4E00-9FFF, U+3400-4DBF, U+20000-2A6DF, U+3000-303F, U+FF00-FFEF;
+      size-adjust: 80%;
+    }
+
+    :root {
+      --font-reader: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", "Arial Nova", 'ChineseSoftMuted', sans-serif;
+    }
+
+    /* 1. 经典羊皮纸 (Sepia / Parchment) - 默认主题 */
+    body.theme-sepia {
+      --bg: #f8f1e3;
+      --card: #ede3ce;
+      --text: #382c1e;
+      --muted: #7a6854;
+      --border: rgba(60, 44, 30, 0.12);
+      --accent: #b45309;
+      --cover-bg: #e6dac1;
+    }
+
+    /* 2. 蓝色冷静学术风 (Nordic Academic Blue) */
+    body.theme-academic {
+      --bg: #0e1726;
+      --card: #162238;
+      --text: #e2e8f0;
+      --muted: #8ba2c4;
+      --border: rgba(148, 163, 184, 0.14);
+      --accent: #38bdf8;
+      --cover-bg: #121d30;
+    }
+
+    /* 3. 清新薄荷森系 (Fresh Mint / Sage) */
+    body.theme-mint {
+      --bg: #edf5f0;
+      --card: #deebe2;
+      --text: #1b382b;
+      --muted: #4e7663;
+      --border: rgba(27, 56, 43, 0.1);
+      --accent: #059669;
+      --cover-bg: #d2e4d8;
+    }
+
+    /* 4. 夏日海滩暖阳 (Summer Beach / Warm Sand) */
+    body.theme-beach {
+      --bg: #fdf6ec;
+      --card: #f7ebd9;
+      --text: #3c2d1d;
+      --muted: #8c7155;
+      --border: rgba(217, 119, 6, 0.14);
+      --accent: #0284c7;
+      --cover-bg: #f0deca;
+    }
+
+    /* 5. 极夜深黑 (Midnight Dark) */
+    body.theme-dark {
+      --bg: #0b0f19;
+      --card: #151c2c;
+      --text: #f1f5f9;
+      --muted: #94a3b8;
+      --border: rgba(255, 255, 255, 0.08);
+      --accent: #818cf8;
+      --cover-bg: #111726;
+    }
+
+    /* 6. 月白浅色 (Pure Paper White) */
+    body.theme-light {
+      --bg: #fafafa;
+      --card: #ffffff;
+      --text: #171717;
+      --muted: #737373;
+      --border: rgba(0, 0, 0, 0.08);
+      --accent: #4f46e5;
+      --cover-bg: #f0f0f0;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-reader);
+      min-height: 100vh;
+      font-weight: 400;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      text-rendering: optimizeLegibility;
+      transition: background 0.25s ease, color 0.25s ease;
+    }
+    #progress {
+      position: fixed; top: 0; left: 0; height: 3px;
+      background: linear-gradient(90deg, var(--accent), #ec4899);
+      width: 0%; z-index: 1000;
+    }
+    header {
+      position: sticky; top: 0; z-index: 900;
+      background: var(--card); border-bottom: 1px solid var(--border);
+      padding: 12px 32px; display: flex; align-items: center; justify-content: space-between;
+      backdrop-filter: blur(16px); transition: background 0.25s ease;
+    }
+    .btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 7px 14px; border-radius: 8px; font-size: 13px; font-weight: 600;
+      cursor: pointer; text-decoration: none; border: 1px solid var(--border);
+      background: rgba(127,127,127,0.08); color: var(--text);
+      font-family: var(--font-reader); transition: all 0.2s;
+    }
+    .btn:hover { background: rgba(127,127,127,0.18); transform: translateY(-1px); }
+    .btn-green { background: #059669; color: #fff; border: none; cursor: default; }
+    
+    .theme-picker {
+      display: flex; gap: 7px; align-items: center; background: rgba(127,127,127,0.08);
+      padding: 4px 10px; border-radius: 9999px; border: 1px solid var(--border);
+    }
+    .theme-dot {
+      width: 18px; height: 18px; border-radius: 50%; display: inline-block; cursor: pointer;
+      border: 2px solid transparent; transition: transform 0.2s, border-color 0.2s;
+    }
+    .theme-dot:hover { transform: scale(1.2); }
+    .theme-dot.active { border-color: var(--accent); transform: scale(1.25); box-shadow: 0 0 8px var(--accent); }
+
+    .theme-dot.sepia { background: #f8f1e3; border: 1px solid #7a6854; }
+    .theme-dot.academic { background: #1e40af; border: 1px solid #60a5fa; }
+    .theme-dot.mint { background: #10b981; border: 1px solid #059669; }
+    .theme-dot.beach { background: #f59e0b; border: 1px solid #d97706; }
+    .theme-dot.dark { background: #000000; border: 1px solid #4b5563; }
+    .theme-dot.light { background: #ffffff; border: 1px solid #9ca3af; }
+
+    /* 超宽全屏沉浸流 (宽度 1280px / 92%，左右留白极小) */
+    main {
+      max-width: 1280px;
+      width: 92%;
+      margin: 32px auto 100px;
+      padding: 0 16px;
+    }
+    .badge {
+      display: inline-block; padding: 5px 12px; background: rgba(99,102,241,0.14);
+      color: var(--accent); font-size: 13px; font-weight: 700; border-radius: 6px; margin-bottom: 16px;
+      letter-spacing: 0.5px;
+    }
+    h1 {
+      font-size: 40px; line-height: 1.3; font-weight: 800; margin-bottom: 18px;
+      font-family: var(--font-reader); letter-spacing: -0.03em;
+    }
+    .meta {
+      color: var(--muted); font-size: 14px; margin-bottom: 32px;
+      padding-bottom: 20px; border-bottom: 1px solid var(--border);
+      display: flex; gap: 20px; align-items: center; flex-wrap: wrap;
+    }
+    
+    /* 官方同款高清大封面 (Hero Cover) */
+    .hero-cover-container {
+      margin: 24px 0 40px;
+      border-radius: 14px;
+      overflow: hidden;
+      box-shadow: 0 12px 36px rgba(0,0,0,0.25);
+      background: var(--cover-bg);
+    }
+    .hero-cover-img {
+      width: 100%;
+      max-height: 620px;
+      object-fit: cover;
+      display: block;
+    }
+    figcaption {
+      padding: 10px 16px;
+      font-size: 13px;
+      color: var(--muted);
+      background: rgba(0,0,0,0.06);
+      line-height: 1.5;
+    }
+
+    /* 纯净现代英文优先排版 (英文 22px 醒目呈现，中文半透明淡化 52% 缩小 80%) */
+    .article-content {
+      font-family: var(--font-reader);
+      font-size: 22px;
+      font-weight: 400;
+      line-height: 1.9;
+      letter-spacing: -0.015em;
+    }
+    .article-content p {
+      margin-bottom: 1.8em;
+      font-size: 22px;
+      line-height: 1.9;
+      font-weight: 400;
+    }
+    .article-content h2, .article-content h3 {
+      margin: 2.2em 0 0.9em; line-height: 1.35;
+      font-family: var(--font-reader); font-weight: 700; letter-spacing: -0.02em;
+    }
+    .article-content blockquote {
+      border-left: 4px solid var(--accent); padding: 12px 24px; margin: 1.8em 0;
+      background: rgba(127,127,127,0.05); color: var(--muted); border-radius: 0 10px 10px 0;
+      font-style: normal; font-size: 22px;
+    }
+    .article-content img {
+      max-width: 100%; height: auto; border-radius: 10px; margin: 2em auto; display: block;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.18);
+    }
+    .article-content figure { margin: 2.2em 0; }
+
+    /* 中文字符深度降权弱化（半透明淡化 52% + 等比缩小 80%） */
+    .zh-soft {
+      font-size: 0.80em !important;
+      opacity: 0.52 !important;
+      font-weight: 300 !important;
+      letter-spacing: 0.03em !important;
+      display: inline !important;
+    }
+  </style>
+</head>
+<body class="theme-sepia">
+  <div id="progress"></div>
+
+  <header>
+    <div style="display:flex; gap:12px; align-items:center;">
+      <a href="/" class="btn">🏠 历史控制中心</a>
+      <span class="btn btn-green">✅ 已持久归档</span>
+      <button class="btn" id="openLocalBtn">📂 打开本地文件</button>
+    </div>
+    <div style="display:flex; gap:10px; align-items:center;">
+      <div class="theme-picker">
+        <span class="theme-dot sepia active" onclick="setTheme('sepia')" title="📜 经典羊皮纸 (默认)"></span>
+        <span class="theme-dot academic" onclick="setTheme('academic')" title="🌊 蓝色冷静学术"></span>
+        <span class="theme-dot mint" onclick="setTheme('mint')" title="🌿 清新薄荷森系"></span>
+        <span class="theme-dot beach" onclick="setTheme('beach')" title="🏖️ 夏日海滩暖阳"></span>
+        <span class="theme-dot dark" onclick="setTheme('dark')" title="🌑 极夜深黑"></span>
+        <span class="theme-dot light" onclick="setTheme('light')" title="☀️ 月白浅色"></span>
+      </div>
+      <button class="btn" onclick="resizeFont(-2)" title="缩小字号">A-</button>
+      <span id="fSizeDisplay" style="font-size:12px; font-weight:700; opacity:0.85; min-width:34px; text-align:center;">22px</span>
+      <button class="btn" onclick="resizeFont(2)" title="放大字号">A+</button>
+      <a href="https://www.theatlantic.com/ideas/2026/08/democratic-primaries-left-dsa-trump/688327/" target="_blank" class="btn">🔗 原网链接</a>
+    </div>
+  </header>
+
+  <main>
+    <div class="badge">TheAtlantic</div>
+    <h1 id="articleTitle">The ‘Resistance’ Is Over</h1>
+    <div class="meta">
+      <span>✍️ <b>David Frum</b></span>
+      <span>📅 2026-08-20</span>
+      <span style="color:#059669; font-weight:600;">📁 D:\Desktop\WorkSpace\BilingualReader\manual_source\TheAtlantic\2026-08\2026-08-20_The_‘Resistance’_Is_Over.md</span>
+    </div>
+
+    
+        <div class="hero-cover-container">
+          <img src="/assets/TheAtlantic/2026-08/assets/2026-08-20_The_‘Resistance’_Is_Over/63ffd97258ce.jpg" alt="The ‘Resistance’ Is Over" class="hero-cover-img" />
+          <figcaption>Joe Raedle / Getty</figcaption>
+        </div>
+        
+
+    <div class="article-content" id="content">
+      <?xml version="1.0" encoding="utf-8"?>
+<doc fingerprint="475852758c6ed5b0">
+<main>
+<head rend="h1">The ‘Resistance’ Is Over</head>
+<p>The insurgent left cares more about its own factional agenda than the president’s threats to democracy.</p>
+<graphic alt="Photograph of Angie Nixon wearing a pink blazer. She is seated and applauding while a woman holding an “Angie Nixon” sign stands near her." src="/assets/TheAtlantic/2026-08/assets/2026-08-20_The_‘Resistance’_Is_Over/63ffd97258ce.jpg"></graphic>
+<p>Is Donald Trump over? Can we all now relax and move on to the next thing?</p>
+<p>That’s the message from a significant portion of Democratic primary voters. Just as Trump is bored with Iran and the economy and wants to play with monuments and gilding, so too are many Democratic primary voters in Florida and elsewhere bored with Trump and eager to play factional politics instead.</p>
+<p>The political statistician Nate Silver summed up the mood on <ref target="https://x.com/NateSilver538/status/2089881090454396952">X</ref> today: “It’s kind of been a rough set of primaries for Heroes of the Resistance 1.0.” Silver then listed stalwart anti-Trumpers who have lost their contests in 2026 and concluded, “People want to move on.”</p>
+<p>America is a fast-moving, dynamic country. It’s tough for Americans to stay focused on a single thing, even if that single thing is the threat to American democracy. As the celebrity spokesmodel Heidi Klum tells the audience on <hi rend="#i">Project Runway</hi>: “In fashion, one day you’re in, and the next day, you’re out.” This law also apparently applies to Democratic candidates who took serious risks to challenge Trump. The resistance, it seems, is out.</p>
+<p>The far left of the Democratic Party has never been as energized as the party’s center about Trump and democracy. A <ref target="https://www.washingtonpost.com/news/monkey-cage/wp/2017/08/24/did-enough-bernie-sanders-supporters-vote-for-trump-to-cost-clinton-the-election/">2017 analysis</ref> in <hi rend="#i">The Washington Post </hi>suggested that between 6 and 12 percent of people who voted for Bernie Sanders in the 2016 Democratic primaries voted for Trump in the general election. With many careful caveats, the analysis observed that these voters exceeded Trump’s margin of victory.</p>
+<p>In 2024, likewise, some leaders of the activist left noisily defected from the Harris-Walz ticket. For many of them, opposing Israel’s war against Hamas in Gaza mattered more than stopping a Trump presidency at home. The effect of this mobilization on the left is hard to measure, but <hi rend="#i">The Nation</hi> was quick to <ref target="https://www.thenation.com/article/politics/kamala-harris-gaza-election-analysis/">insist</ref> that the Biden administration’s Gaza policy likely cost the party Michigan, because many Arabs and Muslims swung toward Trump. The article did not seriously consider whether culture politics, such as Kamala Harris’s support for transgender rights, influenced socially conservative Arab and Muslim voters, even though the city of Dearborn has long been a locus of <ref target="https://www.theguardian.com/us-news/2022/oct/16/dearborn-michigan-book-bans">anti-gay grassroots</ref> politics in the state. The claim that Harris lost to Trump because of Gaza may well be activist self-medication, but this kind of story about the election is telling.</p>
+<p>This year, the dulling of anti-Trump impetus on the left is even more visible and consequential. Again and again, primary voters have made choices that subordinate general-election concerns to factional power-seeking. Democratic leaders—the dreaded “Establishment”—have promoted highly plausible candidates for statewide office in North Carolina, Texas, and other suddenly competitive states. But the insurgent left has again and again upset leadership plans with high-risk choices to serve its own factional agenda, putting at risk once-probable Senate victories in Maine, Michigan, and some House seats too.</p>
+<p>That agenda seems to argue as follows:</p>
+<p>
+<hi rend="#i">Donald Trump is not that important. His attacks on the rule of law, on free and peaceful elections, on U.S. alliances, on trade and markets—those are all mere symptoms of a disease, not the disease itself. Political energy should be focused on treating the deeper problems of which Trump is a mere passing expression, even at the risk of losing the Senate in 2026 and forfeiting the presidency in 2028. “Winning” with Chuck Schumer–approved candidates is no win at all. Better to risk losing than to “win” on Schumer’s terms.</hi>
+</p>
+<p>The Democratic left is making a complicated—and quite ironic—internal gamble here. The faction’s efforts to hijack the larger party to their own unpopular causes will work only if they can convince Democratic voters that Trump is not the most important and urgent problem facing Americans. Yet the only reason Democratic centrists would coalesce around the party’s leftist candidates in November is if they believe in the absolute urgency of stopping Trump.</p>
+<p>Many of the far-left candidates are aggressively obnoxious from a centrist’s point of view. Centrist Democrats are not socialists, not revolutionaries, and not disposed to blame Zionist conspiracies for every trouble in American life, including <ref target="https://www.timesofisrael.com/boot-on-your-neck-mamdani-in-2023-blamed-israel-for-police-violence-in-ny/">police brutality</ref> and <ref target="https://x.com/susanabulhawa/status/2086169135214407894">urban gentrification</ref>. Why on earth would centrist Democrats in Michigan vote for a radical leftist who <ref target="https://www.theatlantic.com/politics/2026/07/michigan-primary-abdul-elsayed-progressives-stevens/688096/">calls</ref> most Democrats hypocrites when the other choice on the ballot is a Republican <ref target="https://rogersforsenate.com/news/rogers-launches-builders-outlines-plan-to-build-more-homes-and-lower-housing-costs">campaigning</ref> on reducing housing costs by simplifying the government-approval process?</p>
+<p>In Florida last night, Democrats rejected Alex Vindman, the former national-security official who at immense personal and career risk blew the whistle on Trump’s 2019 plot to blackmail Ukrainian President Volodymyr Zelensky into fabricating campaign dirt against Joe Biden. Voters chose instead Angie Nixon, who campaigned as an explicit “socialist” in a state that is home to hundreds of thousands of Cuban American and Venezuelan American refugees from socialism, and who ran alongside anti-Israel figures such as Oliver Larkin and Rashida Tlaib in a state with the nation’s third-biggest Jewish population.</p>
+<p>From a Democratic-centrist point of view, if Trump’s attacks on the rule of law are not a supreme and imperative threat, then a Republican Senate majority led by John Thune is an endurable nuisance. Far-left candidates have a chance in the general election only if Democrats believe that Trump is the supreme and imperative threat.</p>
+<p>The remains of the suddenly unfashionable Democratic resistance can only hope that Democrats in Texas, North Carolina, Michigan, and elsewhere will rise above the factional politics and remember in November what, and who, remains the most pressing danger to the nation’s law and democracy.</p>
+</main>
+<comments></comments>
+</doc>
+    </div>
+  </main>
+
+  <script>
+    window.addEventListener('scroll', () => {
+      const h = document.documentElement;
+      const st = h.scrollTop || document.body.scrollTop;
+      const sh = h.scrollHeight - h.clientHeight;
+      document.getElementById('progress').style.width = ((st/sh)*100) + '%';
+    });
+
+    function setTheme(name) {
+      document.body.className = 'theme-' + name;
+      localStorage.setItem('ladder_reader_theme', name);
+      document.querySelectorAll('.theme-dot').forEach(d => d.classList.remove('active'));
+      const activeDot = document.querySelector('.theme-dot.' + name);
+      if (activeDot) activeDot.classList.add('active');
+    }
+
+    // 默认以羊皮纸 (sepia) 或用户上次记忆的主题打开
+    const savedTheme = localStorage.getItem('ladder_reader_theme') || 'sepia';
+    setTheme(savedTheme);
+
+    // 字号缩放控制与持久记忆 (以 22px 为基准)
+    let currentFSize = parseInt(localStorage.getItem('ladder_reader_fsize') || '22', 10);
+
+    function applyFontSize(sz) {
+      currentFSize = Math.max(16, Math.min(36, sz));
+      localStorage.setItem('ladder_reader_fsize', currentFSize);
+      
+      const contentElem = document.getElementById('content');
+      if (contentElem) {
+        contentElem.style.fontSize = currentFSize + 'px';
+      }
+      const allSub = document.querySelectorAll('.article-content p, .article-content li, .article-content blockquote');
+      allSub.forEach(el => {
+        el.style.fontSize = currentFSize + 'px';
+      });
+      
+      const disp = document.getElementById('fSizeDisplay');
+      if (disp) disp.innerText = currentFSize + 'px';
+    }
+
+    function resizeFont(step) {
+      applyFontSize(currentFSize + step);
+    }
+
+    applyFontSize(currentFSize);
+
+    const filePath = "D:\\Desktop\\WorkSpace\\BilingualReader\\manual_source\\TheAtlantic\\2026-08\\2026-08-20_The_\u2018Resistance\u2019_Is_Over.md";
+    const openBtn = document.getElementById('openLocalBtn');
+
+    openBtn.addEventListener('click', () => {
+      openBtn.innerText = '⏳ 正在定位...';
+      fetch('/api/open-folder?path=' + encodeURIComponent(filePath))
+        .then(r => r.json())
+        .then(() => {
+          openBtn.innerText = '✅ 已在资源管理器中高亮';
+          setTimeout(() => { openBtn.innerText = '📂 打开本地文件'; }, 2500);
+        })
+        .catch(() => {
+          openBtn.innerText = '📂 打开本地文件';
+        });
+    });
+  </script>
+</body>
+</html>

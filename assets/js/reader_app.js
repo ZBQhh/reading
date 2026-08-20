@@ -29,7 +29,7 @@
     SWIPE_THRESHOLD_PX: 60,
     WORDBOOK_MAX: 500
   };
-  var VERSION = window.BUILD_VERSION || "2.6.19";
+  var VERSION = window.BUILD_VERSION || "2.7.0";
   var allIssues = window.ALL_ISSUES || {};
   var els = {};
   var state = {
@@ -1445,6 +1445,8 @@
     const en = toDisplayText(seg.en);
     const zh = toDisplayText(seg.zh);
     const zhHtml = seg.zh && String(seg.zh).trim() ? '<div class="zh-text-card" lang="zh-CN"><div>' + zh + "</div></div>" : "";
+    const annot = seg.annotation || seg.notes || seg.note || "";
+    const annotHtml = annot && String(annot).trim() ? '<div class="zh-annotation" lang="zh-CN"><div class="zh-annotation-content">' + toDisplayText(annot) + "</div></div>" : "";
     if (type === "embedded") {
       const fig = document.createElement("figure");
       fig.className = "embedded-figure";
@@ -1459,7 +1461,7 @@
     if (type === "caption") enHtml = '<div class="en-text" lang="en"><em>' + en + "</em></div>";
     else if (type === "ad") enHtml = '<div class="en-text" lang="en"><strong>[Advertisement]</strong> ' + en + "</div>";
     else enHtml = '<div class="en-text" lang="en">' + en + "</div>";
-    div.innerHTML = enHtml + zhHtml;
+    div.innerHTML = enHtml + zhHtml + annotHtml;
     return div;
   }
   function renderArtCard(pageObj, pageNum, doc) {

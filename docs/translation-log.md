@@ -40,15 +40,33 @@
 
 | # | slug | 标题 | 段数 | 图注 | 译者 | 日期 | 核对状态 | 备注 |
 |---|------|------|-----|------|------|------|----------|------|
-| 1 | 2026-08-09-the-mysterious-art-of-conducting | The Mysterious Art of Conducting | 35 | 1 | 历史 agent | 2026-08-10 | 已核对 | 历史译文本轮统一通读核对，流畅度 OK；build 回填 35 段/1 图注 |
-| 2 | 2026-08-10-a-culture-war-in-the-bedroom | A Culture War in the Bedroom | 15 | 1 | 当前 agent | 2026-08-10 | 已翻译+已核对 | 全文翻译并通读核对 |
-| 3 | 2026-08-10-are-raccoons-evolving-into-pets | Are Raccoons Evolving Into Pets? | 35 | 1 | 当前 agent | 2026-08-10 | 已翻译+已核对 | 全文翻译并通读核对 |
-| 4 | 2026-08-10-someone-is-mysteriously-snapping-up-used-books-around-the-wo | Someone Is Mysteriously Snapping Up Used Books Around the World | 18 | 1 | 当前 agent | 2026-08-10 | 已翻译+已核对 | 全文翻译并通读核对 |
-| 5 | 2026-08-10-the-color-recession-may-be-permanent | The Color Recession May Be Permanent | 30 | 1 | 当前 agent | 2026-08-10 | 已翻译+已核对 | 全文翻译并通读核对 |
-| 6 | 2026-08-10-the-internet-is-more-image-focused-than-ever | The Internet Is More Image-Focused Than Ever | 172 | 1 | 当前 agent | 2026-08-10 | 已翻译+已核对 | 全文翻译（播客文字稿，含对话署名）并通读核对 |
-| 7 | 2026-08-10-the-watchdogs-are-barking-themselves-hoarse | The Watchdogs Are Barking Themselves Hoarse | 20 | 1 | 当前 agent | 2026-08-10 | 已翻译+已核对 | 全文翻译并通读核对 |
-| 8 | 2026-08-10-why-i-quit-the-tenure-track | Why I Quit the Tenure Track | 108 | 1 | 当前 agent | 2026-08-10 | 已翻译+已核对 | 全文翻译并通读核对 |
+| 1 | 2026-08-09-the-mysterious-art-of-conducting | The Mysterious Art of Conducting | 35 | 1 | 历史 agent | 2026-08-10 | 已翻译+已核对+已注释 | 回填 35 段/1 图注/4 注释 |
+| 2 | 2026-08-10-a-culture-war-in-the-bedroom | A Culture War in the Bedroom | 15 | 1 | 历史 agent | 2026-08-10 | 已翻译+已核对+已注释 | 回填 15 段/1 图注/5 注释 |
+| 3 | 2026-08-10-are-raccoons-evolving-into-pets | Are Raccoons Evolving Into Pets? | 35 | 1 | 历史 agent | 2026-08-10 | 已翻译+已核对+已注释 | 回填 35 段/1 图注/2 注释 |
+| 4 | 2026-08-10-someone-is-mysteriously-snapping-up-used-books-around-the-wo | Someone Is Mysteriously Snapping Up Used Books Around the World | 18 | 1 | 历史 agent | 2026-08-10 | 已翻译+已核对+已注释 | 回填 18 段/1 图注/2 注释 |
+| 5 | 2026-08-10-the-color-recession-may-be-permanent | The Color Recession May Be Permanent | 30 | 1 | 历史 agent | 2026-08-10 | 已翻译+已核对+已注释 | 回填 30 段/1 图注/2 注释 |
+| 6 | 2026-08-10-the-internet-is-more-image-focused-than-ever | The Internet Is More Image-Focused Than Ever | 172 | 1 | 历史 agent | 2026-08-10 | 已翻译+已核对+已注释 | 回填 172 段/1 图注/2 注释 |
+| 7 | 2026-08-10-the-watchdogs-are-barking-themselves-hoarse | The Watchdogs Are Barking Themselves Hoarse | 20 | 1 | 历史 agent | 2026-08-10 | 已翻译+已核对+已注释 | 回填 20 段/1 图注/2 注释 |
+| 8 | 2026-08-10-why-i-quit-the-tenure-track | Why I Quit the Tenure Track | 108 | 1 | 历史 agent | 2026-08-10 | 已翻译+已核对+已注释 | 回填 108 段/1 图注/2 注释 |
+| 9 | 2026-08-20-a-time-for-female-monsters | A Time for Female Monsters | 13 | 1 | 当前 agent | 2026-08-20 | 已翻译+已核对+已注释 | The Atlantic：女性主义文艺批评，回填 13 段/1 图注/2 注释 |
+| 10 | 2026-08-20-are-you-sure-you-want-a-car-with-a-giant-touch-screen | Are You Sure You Want a Car With a Giant Touch Screen? | 12 | 1 | 当前 agent | 2026-08-20 | 已翻译+已核对+已注释 | The Atlantic：汽车大屏安全争议，回填 12 段/1 图注/2 注释 |
+| 11 | 2026-08-20-the-case-for-chilling-out-about-birth-rates | The Case for Chilling Out About Birth Rates | 16 | 1 | 当前 agent | 2026-08-20 | 已翻译+已核对+已注释 | The Atlantic：人口出生率辩析，回填 16 段/1 图注/2 注释 |
+| 12 | 2026-08-20-the-resistance-is-over | The ‘Resistance’ Is Over | 15 | 1 | 当前 agent | 2026-08-20 | 已翻译+已核对+已注释 | The Atlantic：美国自由派政治反思，回填 15 段/1 图注/3 注释 |
+| 13 | 2026-08-20-why-the-closing-of-harvard-s-writing-center-matters | Why the Closing of Harvard’s Writing Center Matters | 11 | 1 | 当前 agent | 2026-08-20 | 已翻译+已核对+已注释 | The Atlantic：哈佛写作中心裁撤反思，回填 11 段/1 图注/2 注释 |
+| 14 | 2026-08-20-bernie-sanders-takes-on-data-centers | Bernie Sanders Takes on Data Centers | 7 | 1 | 当前 agent | 2026-08-20 | 已翻译+已核对+已注释 | The New Yorker：桑德斯调查 AI 算力中心能耗，回填 7 段/1 图注/2 注释 |
+| 15 | 2026-08-20-dreams-in-nightmares-turns-the-art-life-political | “Dreams in Nightmares” Turns the Art Life Political | 10 | 1 | 当前 agent | 2026-08-20 | 已翻译+已核对+已注释 | The New Yorker：独立电影美学与政治，回填 10 段/1 图注/2 注释 |
+| 16 | 2026-08-20-the-glorious-disorder-of-michael-ondaatje-s-early-work | The Glorious Disorder of Michael Ondaatje’s Early Work | 16 | 1 | 当前 agent | 2026-08-20 | 已翻译+已核对+已注释 | The New Yorker：翁达杰早期文学评述，回填 16 段/1 图注/3 注释 |
+| 17 | 2026-08-20-the-mark-of-the-machine | The Mark of the Machine | 10 | 1 | 当前 agent | 2026-08-20 | 已翻译+已核对+已注释 | The New Yorker：算法时代人性与机器笔触，回填 10 段/1 图注/2 注释 |
+| 18 | 2026-08-20-the-real-meaning-of-the-jason-arday-scandal | The Real Meaning of the Jason Arday Scandal | 14 | 1 | 当前 agent | 2026-08-20 | 已翻译+已核对+已注释 | The New Yorker：剑桥大学杰森·阿戴学术丑闻深度分析，回填 14 段/1 图注/2 注释 |
+| 19 | 2026-08-20-after-hating-my-first-digital-wall-calendar-it-s-now-my-fav | After Hating My First Digital Wall Calendar, It’s Now My Favorite Gadget | 39 | 1 | 当前 agent | 2026-08-20 | 已翻译+已核对+已注释 | Wired：智能壁挂日历生活体验，回填 39 段/1 图注/2 注释 |
+| 20 | 2026-08-20-coders-say-they-already-found-workarounds-to-claude-s-invisi | Coders Say They Already Found Workarounds to Claude’s Invisible Watermarks | 13 | 1 | 当前 agent | 2026-08-20 | 已翻译+已核对+已注释 | Wired：Claude 隐形水印破解与版权博弈，回填 13 段/1 图注/2 注释 |
+| 21 | 2026-08-20-elon-musk-is-expected-to-point-his-money-machine-at-texas-po | Elon Musk Is Expected to Point His Money Machine at Texas Politics | 14 | 1 | 当前 agent | 2026-08-20 | 已翻译+已核对+已注释 | Wired：马斯克在得州的政治金权布局，回填 14 段/1 图注/2 注释 |
+| 22 | 2026-08-20-i-saw-the-future-of-ai-in-a-robot-that-can-learn-on-the-spot | I Saw the Future of AI in a Robot That Can Learn on the Spot | 17 | 1 | 当前 agent | 2026-08-20 | 已翻译+已核对+已注释 | Wired：具身智能人形机器人现场学习，回填 17 段/1 图注/2 注释 |
+| 23 | 2026-08-20-we-bought-a-500-counterfeit-rolex-so-good-even-rolex-didn | We Bought a $500 Counterfeit Rolex So Good, Even Rolex Didn’t Spot It | 56 | 1 | 当前 agent | 2026-08-20 | 已翻译+已核对+已注释 | Wired：顶级复刻劳力士工业调查，回填 56 段/1 图注/2 注释 |
+| 24 | 2026-08-20-how-to-study-antarctic-ice-without-blowing-it-up | How to study Antarctic ice without blowing it up | 6 | 0 | 当前 agent | 2026-08-20 | 已翻译+已核对+已注释 | The Economist：南极冰盖非破坏性震源勘探，回填 6 段/0 图注/2 注释 |
+| 25 | 2026-08-20-in-praise-of-designer-ish-babies | In praise of designer-ish babies | 4 | 1 | 当前 agent | 2026-08-20 | 已翻译+已核对+已注释 | The Economist：胚胎基因筛选与优生辩论，回填 4 段/1 图注/2 注释 |
+| 26 | 2026-08-20-jason-arday-was-treated-as-a-symbol-not-a-man | Jason Arday was treated as a symbol, not a man | 4 | 1 | 当前 agent | 2026-08-20 | 已翻译+已核对+已注释 | The Economist：阿戴事件与制度性象征主义评析，回填 4 段/1 图注/2 注释 |
+| 27 | 2026-08-20-rock-solid-evidence-for-the-origins-of-birds | Rock-solid evidence for the origins of birds | 3 | 1 | 当前 agent | 2026-08-20 | 已翻译+已核对+已注释 | The Economist：热河生物群带羽恐龙演化新证，回填 3 段/1 图注/2 注释 |
+| 28 | 2026-08-20-why-bond-markets-are-unnerving-rich-world-politicians | Why bond markets are unnerving rich-world politicians | 6 | 0 | 当前 agent | 2026-08-20 | 已翻译+已核对+已注释 | The Economist：发达国家国债收益率与财政风险，回填 6 段/0 图注/2 注释 |
 
-> 段数/图注数以 `manual_issues.json` 实际 segments 为准（build:md 生成）。
-> 批量翻译批次（2026-08-10）：8 篇全部完成翻译与通读核对，`npm run build` 回填成功（35+15+35+18+30+172+20+108 段）。
-> 后续新增文章：先在表中插入行（状态「未翻译」），翻译后更新为「已翻译+已核对」，且只核对本轮新增/改动篇目。
+> 批量翻译批次（2026-08-20）：自选文库全量 28 篇（8 篇历史 + 20 篇新增）全部完成 100% 翻译、通读核对与时代背景/语言双关注释回填。

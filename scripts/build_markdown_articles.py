@@ -60,18 +60,29 @@ def load_translation(slug):
 
 
 def apply_translation(segs, tr):
-    """按段落 / 嵌入式顺序回填 zh。返回 (填段数, 填图注数)。"""
+    """按段落 / 嵌入式顺序回填 zh 及背景/双关注解 notes。返回 (填段数, 填图注数, 填注解数)。"""
     para_zh = tr.get("paragraphs") or []
     cap_zh = tr.get("captions") or []
-    pi = ci = 0
+    notes = tr.get("notes") or tr.get("annotations") or {}
+    pi = ci = ni = 0
     for s in segs:
-        if s.get("type") == "paragraph" and pi < len(para_zh):
-            s["zh"] = para_zh[pi]
+        if s.get("type") == "paragraph":
+            if pi < len(para_zh):
+                s["zh"] = para_zh[pi]
+            # notes 支持稀疏字典 {"0": "...", "5": "..."} 或对齐列表
+            note_val = None
+            if isinstance(notes, dict):
+                note_val = notes.get(str(pi)) or notes.get(pi)
+            elif isinstance(notes, list) and pi < len(notes):
+                note_val = notes[pi]
+            if note_val and str(note_val).strip():
+                s["annotation"] = str(note_val).strip()
+                ni += 1
             pi += 1
         elif s.get("type") == "embedded" and ci < len(cap_zh):
             s["zh"] = cap_zh[ci]
             ci += 1
-    return pi, ci
+    return pi, ci, ni
 
 
 def resolve_md_root(env_val):
@@ -94,30 +105,37 @@ def resolve_md_root(env_val):
     return env_val
 
 
-def find_md_root():
+def find_md_roots():
+    roots = []
     # 1. 环境变量覆盖
     env_val = os.environ.get("MD_ARTICLES_ROOT")
     if env_val:
         resolved = resolve_md_root(env_val)
         if resolved and os.path.isdir(resolved):
-            return resolved
-    # 2. 仓库内持久化数据源 (manual_source/TheAtlantic)
-    in_repo = os.path.join(PROJECT_ROOT, "manual_source", "TheAtlantic")
+            roots.append(resolved)
+    # 2. 仓库内持久化数据源 (manual_source)
+    in_repo = os.path.join(PROJECT_ROOT, "manual_source")
     if os.path.isdir(in_repo):
-        return in_repo
+        roots.append(in_repo)
     # 3. 阿里云备份源
-    backup_path = r"D:\Desktop\Tools\阿里云桌面备份\html_data\reading\reading data\TheAtlantic"
+    backup_path = r"D:\Desktop\Tools\阿里云桌面备份\html_data\reading\reading data"
     if os.path.isdir(backup_path):
-        return backup_path
-    # 4. 默认路径
-    if os.path.isdir(DEFAULT_MD_ROOT):
-        return DEFAULT_MD_ROOT
-    return in_repo
+        roots.append(backup_path)
+    # 4. 默认数据源
+    if os.path.isdir(r"D:\Desktop\reading\reading data"):
+        roots.append(r"D:\Desktop\reading\reading data")
+    elif os.path.isdir(DEFAULT_MD_ROOT):
+        roots.append(DEFAULT_MD_ROOT)
+
+    unique_roots = []
+    for r in roots:
+        norm = os.path.normpath(r)
+        if norm not in unique_roots:
+            unique_roots.append(norm)
+    return unique_roots
 
 
-MD_ROOT = find_md_root()
-
-# 各来源默认主题色（与 PDF 项目 TheAtlantic 刊一致；可被 frontmatter theme_color 覆盖）
+# 各来源默认主题色（与 PDF 项目一致；可被 frontmatter theme_color 覆盖）
 WEBSITE_THEME = {
     "theatlantic": "#b91c1c",
     "the atlantic": "#b91c1c",
@@ -126,7 +144,14 @@ WEBSITE_THEME = {
     "newyorker": "#c0392b",
     "the new yorker": "#c0392b",
     "guardian": "#0b6e4f",
+    "the guardian": "#0b6e4f",
     "bbc": "#0b5fa5",
+    "wired": "#111111",
+    "economist": "#e3120b",
+    "the economist": "#e3120b",
+    "wsj": "#005689",
+    "the wall street journal": "#005689",
+    "bloomberg": "#104f96",
 }
 DEFAULT_THEME = "#b3802f"
 
@@ -287,8 +312,9 @@ def copy_article_assets(month_dir, asset_folders):
 
 # ----------------------------------------------------------------- 主流程
 def build():
-    if not os.path.isdir(MD_ROOT):
-        print("[markdown] 数据源目录不存在：%s" % MD_ROOT)
+    md_roots = find_md_roots()
+    if not md_roots:
+        print("[markdown] 数据源目录不存在")
         print("[markdown] 跳过生成（manual_issues.json 保持为空或未更新）。")
         # 仍写出空对象，保证注入不报错
         with open(OUT_JSON, "w", encoding="utf-8") as f:
@@ -300,16 +326,24 @@ def build():
 
     issues = {}
     md_files = []
-    for root, _dirs, files in os.walk(MD_ROOT):
-        for fn in files:
-            if fn.lower().endswith(".md"):
-                # 跳过 README 等非文章说明文件
-                if fn.lower().startswith("readme"):
-                    continue
-                # 跳过 assets 目录下的文件（若有）
-                if os.sep + "assets" + os.sep in root.replace("/", os.sep):
-                    continue
-                md_files.append(os.path.join(root, fn))
+    scanned_slugs = set()
+    for root_dir in md_roots:
+        if not os.path.isdir(root_dir):
+            continue
+        for root, _dirs, files in os.walk(root_dir):
+            for fn in files:
+                if fn.lower().endswith(".md"):
+                    # 跳过 README 等非文章说明文件
+                    if fn.lower().startswith("readme"):
+                        continue
+                    # 跳过 assets 目录下的文件（若有）
+                    if os.sep + "assets" + os.sep in root.replace("/", os.sep):
+                        continue
+                    full_path = os.path.join(root, fn)
+                    slug = slugify(os.path.splitext(fn)[0])
+                    if slug not in scanned_slugs:
+                        scanned_slugs.add(slug)
+                        md_files.append(full_path)
 
     md_files.sort()
     for path in md_files:
@@ -341,11 +375,11 @@ def build():
                     asset_folders.add(mm.group(1))
         copy_article_assets(month_dir, asset_folders)
 
-        # 回填译文侧车（若存在）：zh 按段落/嵌入式顺序填充
+        # 回填译文侧车（若存在）：zh 及 notes
         tr = load_translation(slug)
         if tr:
-            pn, cn = apply_translation(segs, tr)
-            print("[markdown]   ✓ 译文回填 %d 段 / %d 图注" % (pn, cn))
+            pn, cn, ni = apply_translation(segs, tr)
+            print("[markdown]   ✓ 译文回填 %d 段 / %d 图注 / %d 注释" % (pn, cn, ni))
 
         issue_id = "md-" + slug
         issues[issue_id] = {

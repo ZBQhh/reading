@@ -992,8 +992,22 @@ body.view-split .image-column { display: flex; }
   color: var(--text-2);
 }
 
+/* 背景/双关解释框：同一卡片内的注记层，紧随中文译文下方，以微弱柔和色衬底 + 虚线分隔 */
+.zh-annotation {
+  padding: 12px 22px 14px 22px;
+  border-top: 1px dashed color-mix(in srgb, var(--issue-accent) 40%, var(--border-soft));
+  background: color-mix(in srgb, var(--bg-card) 85%, var(--issue-accent) 15%);
+  font-family: var(--font-zh);
+  font-size: calc(var(--reader-font-scale) * 0.88);
+  line-height: 1.68;
+  color: var(--text-2);
+}
+.zh-annotation-content {
+  display: block;
+}
+
 /* 视图模式过滤 */
-body.view-en-only .zh-text-card { display: none; }
+body.view-en-only .zh-text-card, body.view-en-only .zh-annotation { display: none; }
 body.view-zh-only .en-text { display: none; }
 body.view-zh-only .zh-text-card { border-top: none; padding-top: 20px; }
 
@@ -1003,6 +1017,7 @@ body.align-mode-justify .en-text { text-align: justify; }
 /* 字体模式 */
 body.font-mode-serif .en-text { font-family: var(--font-serif); }
 body.font-mode-serif .zh-text-card { font-family: var(--font-serif-zh); }
+body.font-mode-serif .zh-annotation { font-family: var(--font-serif-zh); }
 
 /* 毒舌 3.5：标题字号 clamp 保护——极端字号下不层级模糊、不溢出 */
 .segment-h3 .en-text { font-size: clamp(19px, calc(var(--reader-font-scale) * 1.35), 34px); line-height: 1.45; font-weight: 600; }
@@ -1603,6 +1618,7 @@ body.font-mode-serif .zh-text-card { font-family: var(--font-serif-zh); }
   /* 中英文同框：左右内边距统一为 24px（距强调框线足够远、不贴线；中英严格一致保证左对齐） */
   .en-text { font-size: max(13.5px, calc(var(--reader-font-scale) * 0.8)); padding: 12px 24px 6px; }
   .zh-text-card { font-size: max(13.5px, calc(var(--reader-font-scale) * 0.8)); padding: 5px 24px 13px; }
+  .zh-annotation { font-size: max(12px, calc(var(--reader-font-scale) * 0.76)); padding: 6px 24px 12px; }
   .segment-block { padding: 0; }
 
   /* 标题段移动端内边距加大（桌面端 .segment-h3 仅 14px 太贴边，与普通段落的 24px 对齐） */

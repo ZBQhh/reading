@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Mark of the Machine · Ladder 沉浸阅读</title>
+  <style>
+    /* 中文字符专属字体定义：自动等比缩减至 80% (约 17.5px)，字重柔和轻量 */
+    @font-face {
+      font-family: 'ChineseSoftMuted';
+      src: local('PingFang SC Light'), local('PingFang SC'), local('Microsoft YaHei Light'), local('Microsoft YaHei'), local('SimHei');
+      unicode-range: U+4E00-9FFF, U+3400-4DBF, U+20000-2A6DF, U+3000-303F, U+FF00-FFEF;
+      size-adjust: 80%;
+    }
+
+    :root {
+      --font-reader: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", "Arial Nova", 'ChineseSoftMuted', sans-serif;
+    }
+
+    /* 1. 经典羊皮纸 (Sepia / Parchment) - 默认主题 */
+    body.theme-sepia {
+      --bg: #f8f1e3;
+      --card: #ede3ce;
+      --text: #382c1e;
+      --muted: #7a6854;
+      --border: rgba(60, 44, 30, 0.12);
+      --accent: #b45309;
+      --cover-bg: #e6dac1;
+    }
+
+    /* 2. 蓝色冷静学术风 (Nordic Academic Blue) */
+    body.theme-academic {
+      --bg: #0e1726;
+      --card: #162238;
+      --text: #e2e8f0;
+      --muted: #8ba2c4;
+      --border: rgba(148, 163, 184, 0.14);
+      --accent: #38bdf8;
+      --cover-bg: #121d30;
+    }
+
+    /* 3. 清新薄荷森系 (Fresh Mint / Sage) */
+    body.theme-mint {
+      --bg: #edf5f0;
+      --card: #deebe2;
+      --text: #1b382b;
+      --muted: #4e7663;
+      --border: rgba(27, 56, 43, 0.1);
+      --accent: #059669;
+      --cover-bg: #d2e4d8;
+    }
+
+    /* 4. 夏日海滩暖阳 (Summer Beach / Warm Sand) */
+    body.theme-beach {
+      --bg: #fdf6ec;
+      --card: #f7ebd9;
+      --text: #3c2d1d;
+      --muted: #8c7155;
+      --border: rgba(217, 119, 6, 0.14);
+      --accent: #0284c7;
+      --cover-bg: #f0deca;
+    }
+
+    /* 5. 极夜深黑 (Midnight Dark) */
+    body.theme-dark {
+      --bg: #0b0f19;
+      --card: #151c2c;
+      --text: #f1f5f9;
+      --muted: #94a3b8;
+      --border: rgba(255, 255, 255, 0.08);
+      --accent: #818cf8;
+      --cover-bg: #111726;
+    }
+
+    /* 6. 月白浅色 (Pure Paper White) */
+    body.theme-light {
+      --bg: #fafafa;
+      --card: #ffffff;
+      --text: #171717;
+      --muted: #737373;
+      --border: rgba(0, 0, 0, 0.08);
+      --accent: #4f46e5;
+      --cover-bg: #f0f0f0;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-reader);
+      min-height: 100vh;
+      font-weight: 400;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      text-rendering: optimizeLegibility;
+      transition: background 0.25s ease, color 0.25s ease;
+    }
+    #progress {
+      position: fixed; top: 0; left: 0; height: 3px;
+      background: linear-gradient(90deg, var(--accent), #ec4899);
+      width: 0%; z-index: 1000;
+    }
+    header {
+      position: sticky; top: 0; z-index: 900;
+      background: var(--card); border-bottom: 1px solid var(--border);
+      padding: 12px 32px; display: flex; align-items: center; justify-content: space-between;
+      backdrop-filter: blur(16px); transition: background 0.25s ease;
+    }
+    .btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 7px 14px; border-radius: 8px; font-size: 13px; font-weight: 600;
+      cursor: pointer; text-decoration: none; border: 1px solid var(--border);
+      background: rgba(127,127,127,0.08); color: var(--text);
+      font-family: var(--font-reader); transition: all 0.2s;
+    }
+    .btn:hover { background: rgba(127,127,127,0.18); transform: translateY(-1px); }
+    .btn-green { background: #059669; color: #fff; border: none; cursor: default; }
+    
+    .theme-picker {
+      display: flex; gap: 7px; align-items: center; background: rgba(127,127,127,0.08);
+      padding: 4px 10px; border-radius: 9999px; border: 1px solid var(--border);
+    }
+    .theme-dot {
+      width: 18px; height: 18px; border-radius: 50%; display: inline-block; cursor: pointer;
+      border: 2px solid transparent; transition: transform 0.2s, border-color 0.2s;
+    }
+    .theme-dot:hover { transform: scale(1.2); }
+    .theme-dot.active { border-color: var(--accent); transform: scale(1.25); box-shadow: 0 0 8px var(--accent); }
+
+    .theme-dot.sepia { background: #f8f1e3; border: 1px solid #7a6854; }
+    .theme-dot.academic { background: #1e40af; border: 1px solid #60a5fa; }
+    .theme-dot.mint { background: #10b981; border: 1px solid #059669; }
+    .theme-dot.beach { background: #f59e0b; border: 1px solid #d97706; }
+    .theme-dot.dark { background: #000000; border: 1px solid #4b5563; }
+    .theme-dot.light { background: #ffffff; border: 1px solid #9ca3af; }
+
+    /* 超宽全屏沉浸流 (宽度 1280px / 92%，左右留白极小) */
+    main {
+      max-width: 1280px;
+      width: 92%;
+      margin: 32px auto 100px;
+      padding: 0 16px;
+    }
+    .badge {
+      display: inline-block; padding: 5px 12px; background: rgba(99,102,241,0.14);
+      color: var(--accent); font-size: 13px; font-weight: 700; border-radius: 6px; margin-bottom: 16px;
+      letter-spacing: 0.5px;
+    }
+    h1 {
+      font-size: 40px; line-height: 1.3; font-weight: 800; margin-bottom: 18px;
+      font-family: var(--font-reader); letter-spacing: -0.03em;
+    }
+    .meta {
+      color: var(--muted); font-size: 14px; margin-bottom: 32px;
+      padding-bottom: 20px; border-bottom: 1px solid var(--border);
+      display: flex; gap: 20px; align-items: center; flex-wrap: wrap;
+    }
+    
+    /* 官方同款高清大封面 (Hero Cover) */
+    .hero-cover-container {
+      margin: 24px 0 40px;
+      border-radius: 14px;
+      overflow: hidden;
+      box-shadow: 0 12px 36px rgba(0,0,0,0.25);
+      background: var(--cover-bg);
+    }
+    .hero-cover-img {
+      width: 100%;
+      max-height: 620px;
+      object-fit: cover;
+      display: block;
+    }
+    figcaption {
+      padding: 10px 16px;
+      font-size: 13px;
+      color: var(--muted);
+      background: rgba(0,0,0,0.06);
+      line-height: 1.5;
+    }
+
+    /* 纯净现代英文优先排版 (英文 22px 醒目呈现，中文半透明淡化 52% 缩小 80%) */
+    .article-content {
+      font-family: var(--font-reader);
+      font-size: 22px;
+      font-weight: 400;
+      line-height: 1.9;
+      letter-spacing: -0.015em;
+    }
+    .article-content p {
+      margin-bottom: 1.8em;
+      font-size: 22px;
+      line-height: 1.9;
+      font-weight: 400;
+    }
+    .article-content h2, .article-content h3 {
+      margin: 2.2em 0 0.9em; line-height: 1.35;
+      font-family: var(--font-reader); font-weight: 700; letter-spacing: -0.02em;
+    }
+    .article-content blockquote {
+      border-left: 4px solid var(--accent); padding: 12px 24px; margin: 1.8em 0;
+      background: rgba(127,127,127,0.05); color: var(--muted); border-radius: 0 10px 10px 0;
+      font-style: normal; font-size: 22px;
+    }
+    .article-content img {
+      max-width: 100%; height: auto; border-radius: 10px; margin: 2em auto; display: block;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.18);
+    }
+    .article-content figure { margin: 2.2em 0; }
+
+    /* 中文字符深度降权弱化（半透明淡化 52% + 等比缩小 80%） */
+    .zh-soft {
+      font-size: 0.80em !important;
+      opacity: 0.52 !important;
+      font-weight: 300 !important;
+      letter-spacing: 0.03em !important;
+      display: inline !important;
+    }
+  </style>
+</head>
+<body class="theme-sepia">
+  <div id="progress"></div>
+
+  <header>
+    <div style="display:flex; gap:12px; align-items:center;">
+      <a href="/" class="btn">🏠 历史控制中心</a>
+      <span class="btn btn-green">✅ 已持久归档</span>
+      <button class="btn" id="openLocalBtn">📂 打开本地文件</button>
+    </div>
+    <div style="display:flex; gap:10px; align-items:center;">
+      <div class="theme-picker">
+        <span class="theme-dot sepia active" onclick="setTheme('sepia')" title="📜 经典羊皮纸 (默认)"></span>
+        <span class="theme-dot academic" onclick="setTheme('academic')" title="🌊 蓝色冷静学术"></span>
+        <span class="theme-dot mint" onclick="setTheme('mint')" title="🌿 清新薄荷森系"></span>
+        <span class="theme-dot beach" onclick="setTheme('beach')" title="🏖️ 夏日海滩暖阳"></span>
+        <span class="theme-dot dark" onclick="setTheme('dark')" title="🌑 极夜深黑"></span>
+        <span class="theme-dot light" onclick="setTheme('light')" title="☀️ 月白浅色"></span>
+      </div>
+      <button class="btn" onclick="resizeFont(-2)" title="缩小字号">A-</button>
+      <span id="fSizeDisplay" style="font-size:12px; font-weight:700; opacity:0.85; min-width:34px; text-align:center;">22px</span>
+      <button class="btn" onclick="resizeFont(2)" title="放大字号">A+</button>
+      <a href="https://www.newyorker.com/culture/infinite-scroll/the-mark-of-the-machine" target="_blank" class="btn">🔗 原网链接</a>
+    </div>
+  </header>
+
+  <main>
+    <div class="badge">NewYorker</div>
+    <h1 id="articleTitle">The Mark of the Machine</h1>
+    <div class="meta">
+      <span>✍️ <b>Brady Brickner-Wood</b></span>
+      <span>📅 2026-08-20</span>
+      <span style="color:#059669; font-weight:600;">📁 D:\Desktop\WorkSpace\BilingualReader\manual_source\NewYorker\2026-08\2026-08-20_The_Mark_of_the_Machine.md</span>
+    </div>
+
+    
+        <div class="hero-cover-container">
+          <img src="/assets/NewYorker/2026-08/assets/2026-08-20_The_Mark_of_the_Machine/5d832d81e423.svg" alt="The Mark of the Machine" class="hero-cover-img" />
+          
+        </div>
+        
+
+    <div class="article-content" id="content">
+      <?xml version="1.0" encoding="utf-8"?>
+<doc fingerprint="aaa2913db9a34ca9">
+<main>
+<p>Last week, <ref target="https://www.newyorker.com/magazine/2026/02/16/what-is-claude-anthropic-doesnt-know-either"><hi rend="#i">Anthropic</hi></ref> announced an unexpected policy change: text created with Claude, the company’s large language model, would now contain an invisible watermark. If a person were to copy and paste a chatbot-crafted passage into a separate document, an A.I. detector would be able to determine the likelihood that it had been processed by Claude. A.I.-detection systems aren’t new, of course; programs such as Pangram and Turnitin have become entrenched in academic and publishing practices. But, while those tools train on huge data sets to recognize statistical patterns that constitute a discernible A.I. writing “style,” Claude’s watermark is embedded within the text itself, at the individual word level, making it potentially harder for L.L.M. users to edit away evidence that they used A.I.</p>
+<p>Across the internet, criticism of the allegedly broken contract between machines and their human prompters ballooned. Weren’t L.L.M.s specifically advertised as being able to present a machine’s work as one’s own? Wasn’t that possibility indeed why many people used L.L.M.s in the first place? Now, for the students who’d grown accustomed to writing essays with chatbots, the journalists and authors who secretly used L.L.M.s to draft their articles and newsletters and books, and even the lawyers who relied on Claude to write briefs and motions, the jig was seemingly up. “Those guys come out of the process with a digital tattoo on their forehead,” one Reddit user wrote in a viral post that itself appeared to be A.I.-generated. (I ran it through an A.I.-detection system and, yeah, one hundred per cent L.L.M.-“assisted.”) “The stigma,” the poster continued. “Jesus, the stigma.”</p>
+<p>In the absence of comprehensive federal regulations for A.I., and with inconsistent and often contradictory rules governing its use in professional, academic, and artistic contexts, few forces have proved as powerful at tempering A.I.’s threat to human ingenuity as public shaming has. “Put plainly, you should feel bad for using AI,” the editors of <hi rend="#i">n+1</hi><ref target="https://www.nplusonemag.com/issue-51/the-intellectual-situation/large-language-muddle/">wrote</ref>, last year, in a polemic against L.L.M.s. “Stigmatization is a powerful force, and disgust and shame are among our greatest tools.” As generative A.I. is increasingly deployed across our cultural and political life—from winners of prestigious <ref target="https://www.newyorker.com/books/page-turner/did-a-chatbot-write-a-prize-winning-story-does-it-matter">short-story prizes</ref> to major-label album releases to Presidential propaganda—the average person is now tasked with policing machine-generated infractions in an effort to preserve whatever ethical dignity and critical acumen our species has left. Accusers can occasionally be overzealous, making allegations that aren’t always ironclad, especially when the phrase “100% AI Generated” has emerged as a kind of cultural scarlet letter. But with Claude’s new watermark, maybe this process of discerning the “real” from the “fake” would become more streamlined, and more foolproof—a stepping stone to a more transparent and cautious relationship with L.L.M.s and gen A.I. writ large.</p>
+<p>Surely Anthropic did not institute its watermark to discourage people from using Claude, or to make its product less appealing—so why, then, would it choose to make its automated text more obviously traceable in the first place? The company’s official announcement explained that the change was made to comply with the E.U. A.I. Act, which requires L.L.M. providers to make A.I.-generated text identifiable as such. This identification could take the form of a watermark, metadata, or a cryptographic signal—statistical signatures that allow detection systems to determine whether text, images, or audio was created or manipulated by A.I. Google Gemini, for instance, uses a watermark called SynthID in its A.I.-generated material. OpenAI currently applies detection methods only to images and audio, but, after the E.U. A.I. Act’s “transparency obligations” went into effect, the company stated that it was “working to expand provenance measures” for ChatGPT text. These A.I. companies emphasize that tracking properties like the watermark won’t be discernible to the average reader and can’t be traced to whoever prompted the L.L.M. to generate the text—unless, of course, said person attempts to publish or present the text as his own and is outed by a detection system.</p>
+<p>Anthropic’s motives, however, may not be limited to complying with the E.U. and upholding its stated values of safety and transparency. The company may, quite simply, want to make it easier for its models to verify human-written text and exclude A.I.-generated material when training its L.L.M.s, out of fear that training an A.I. model on A.I.-generated content might lead to a decline in reliability and quality. (The irony!) It also may be angling to assert “provenance”—a cherished word among A.I. providers—over their L.L.M.s’ output, establishing a sort of intellectual property over what their product creates, unique from its competitors. It’s hard not to perceive the whole identification operation as, in some ways, an advancement in A.I. surveillance—a way of tracking where a chatbot’s words go after they leave the machine, creating a Rolodex of use cases for future referral. “You know what this reminds me of?” the same addled Reddit poster wrote in his anti-watermark manifesto. “Those police operations that arrest the drug user and leave the dealer alone. Watermarking is the same thing.” A company like Anthropic may reasonably view watermarking as a harmless and sensible evolution: a boon to their training data, a legally compliant expansion of A.I. transparency, and a way to determine if something originated with its model. But, to its users, the stain of a watermark mainly forecasts a senseless form of social punishment, a tactic to tarnish anyone who dares use A.I.-generated material instead of plumbing the muck of their own mind.</p>
+<p>Some critics have argued that the watermark will prove largely ineffective for flagging anything short of blatant chatbot use. When an L.L.M. like Claude generates text, it typically makes its word choices from a range of statistically probable options. With a watermark, however, the model hews toward a more predetermined set of outcomes. These outcomes can accumulate into a statistical pattern that allows a detection system to calculate the likelihood that Claude generated a piece of text. If one were to rigorously edit, or rewrite, text that the L.L.M. spits out, the detection system may struggle to pick up the pattern, but arguably that’s a feature and not a bug—isn’t catching the most obvious abuses of using A.I. for writing the point of something like a watermark, or at least a slightly more ethical internal system than the current system of nothing?</p>
+<p>Aside from anxieties that the watermark is merely a red herring, an easy-to-evade compliance strategy, some watermark detractors fear that these statistical signatures will make chatbots worse at writing. John Gruber, a tech blogger, posited that Claude would now more readily default to watermarked words, rather than unleash the full scope of its linguistic range, which might result in lower-quality text, or in some cases unusable prose. This outcome is certainly possible if L.L.M.s begin to gravitate toward specific synonyms or phrases that hinder the explanatory prowess and precision of, say, an instruction manual or a doctor’s note—documents that are increasingly being outsourced to L.L.M.s. But many experts agree that Gruber’s concerns are overblown; Steven Murdoch, a professor of security engineering at University College London, <ref target="https://www.theguardian.com/technology/2026/aug/17/claude-watermark-ai-text-quality-worse">told the <hi rend="#i">Guardian</hi></ref> that the change “probably wouldn’t have any noticeable impact.”</p>
+<p>As L.L.M. devotees debated whether the watermark would worsen A.I.’s writing capabilities, Ben Thompson, who writes the popular tech and media newsletter “Stratechery,” bristled at the notion that A.I. could be considered an author at all. (Unfortunately, his argument wasn’t aesthetic but, rather, more technical.) He contended that L.L.M.s were “wielded by humans” and thus could not be attributed as creators of anything: “To insist on watermarking is no different than insisting that a ballpoint pen advertise itself as the author, a concept that is clearly absurd,” he wrote. It’s a breathtakingly myopic view of A.I. authorship to assume that people deploy L.L.M.s as they would a pen—an empty technological vessel adopted to transcribe conscious thought, absent of any mediation that may alter ideas, let alone language itself. Look past all the hand-wringing and false equivalences, though, and the critics of A.I.-detection systems appear to be arguing for something very simple; there are ethical and uncontroversial ways to engage with chatbots, they claim, such as copy editing or proofreading, and people who use chatbots appropriately should not have to fear public shaming or stigmatization every time they paste a passage from Claude into a word processor.</p>
+<p>Such philosophical delineations between authenticity and fraudulence, merit and duplicity, are collapsing and distorting amid our current A.I. upheaval, morphing into what tech conglomerates want us to understand as “collaboration” with their products. Although Thompson argues that L.L.M.s do not create ideas but assist humans in actualizing their preëxisting ones, thereby allowing humans to evolve in harmony alongside A.I., it is clear that most of us still care about maintaining the distinction between human work and a machine’s statistical output, or between taking pride in something that is wholly our own and doing so for something that was “assisted” or aided by an L.L.M.</p>
+<p>In his essay “Poetry and the Primitive,” the writer <ref target="https://www.newyorker.com/magazine/2008/10/20/zen-master"><hi rend="#i">Gary Snyder</hi></ref> defined poetry as “the skilled and inspired use of the voice and language to embody rare and powerful states of mind that are in immediate origin personal to the singer, but at deep levels common to all who listen.” This is why hysteria strikes every time an artist is caught using A.I.—often without disclosing their usage—and also why professors remain flabbergasted when students automate even the simplest of assignments. Writing essays, songs, stories, poems, screenplays, articles, blogs, e-mails—whatever—should not merely be a means to an end, an efficiency project evaluated on the metrics of whether it “works” or accomplishes its supposed objective; it should emerge from the parts of ourselves machines can never access. “A hand pushing a button may wield great power, but that hand will never learn what a hand can do,” Snyder wrote. “Poetry must sing or speak from authentic experience.” Anthropic’s watermark may appear to presage a future where humans and machines can honestly and ethically coexist, where people who use L.L.M.s do so in a fully pellucid manner. And maybe it will—but here’s to hoping that our stigmatization of A.I. continues to protect the dignity of our hands, which can push the button, but can also do so much more. ♦</p>
+</main>
+<comments></comments>
+</doc>
+    </div>
+  </main>
+
+  <script>
+    window.addEventListener('scroll', () => {
+      const h = document.documentElement;
+      const st = h.scrollTop || document.body.scrollTop;
+      const sh = h.scrollHeight - h.clientHeight;
+      document.getElementById('progress').style.width = ((st/sh)*100) + '%';
+    });
+
+    function setTheme(name) {
+      document.body.className = 'theme-' + name;
+      localStorage.setItem('ladder_reader_theme', name);
+      document.querySelectorAll('.theme-dot').forEach(d => d.classList.remove('active'));
+      const activeDot = document.querySelector('.theme-dot.' + name);
+      if (activeDot) activeDot.classList.add('active');
+    }
+
+    // 默认以羊皮纸 (sepia) 或用户上次记忆的主题打开
+    const savedTheme = localStorage.getItem('ladder_reader_theme') || 'sepia';
+    setTheme(savedTheme);
+
+    // 字号缩放控制与持久记忆 (以 22px 为基准)
+    let currentFSize = parseInt(localStorage.getItem('ladder_reader_fsize') || '22', 10);
+
+    function applyFontSize(sz) {
+      currentFSize = Math.max(16, Math.min(36, sz));
+      localStorage.setItem('ladder_reader_fsize', currentFSize);
+      
+      const contentElem = document.getElementById('content');
+      if (contentElem) {
+        contentElem.style.fontSize = currentFSize + 'px';
+      }
+      const allSub = document.querySelectorAll('.article-content p, .article-content li, .article-content blockquote');
+      allSub.forEach(el => {
+        el.style.fontSize = currentFSize + 'px';
+      });
+      
+      const disp = document.getElementById('fSizeDisplay');
+      if (disp) disp.innerText = currentFSize + 'px';
+    }
+
+    function resizeFont(step) {
+      applyFontSize(currentFSize + step);
+    }
+
+    applyFontSize(currentFSize);
+
+    const filePath = "D:\\Desktop\\WorkSpace\\BilingualReader\\manual_source\\NewYorker\\2026-08\\2026-08-20_The_Mark_of_the_Machine.md";
+    const openBtn = document.getElementById('openLocalBtn');
+
+    openBtn.addEventListener('click', () => {
+      openBtn.innerText = '⏳ 正在定位...';
+      fetch('/api/open-folder?path=' + encodeURIComponent(filePath))
+        .then(r => r.json())
+        .then(() => {
+          openBtn.innerText = '✅ 已在资源管理器中高亮';
+          setTimeout(() => { openBtn.innerText = '📂 打开本地文件'; }, 2500);
+        })
+        .catch(() => {
+          openBtn.innerText = '📂 打开本地文件';
+        });
+    });
+  </script>
+</body>
+</html>
