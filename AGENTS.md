@@ -13,7 +13,7 @@
 无后端、无框架，部署到 GitHub Pages。
 
 - 仓库：`Zbqhh/BilingualReader`（GitHub）
-- 当前版本：`src/core.js` 中 `export const VERSION`（当前 `2.6.14`）
+- 当前版本：`src/core.js` 中 `export const VERSION`（当前 `2.7.1`）
 - 工作树根目录：`D:\Desktop\WorkSpace\BilingualReader`
 
 ---

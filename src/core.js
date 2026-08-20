@@ -39,7 +39,7 @@ export const HELD = {
   WORDBOOK_MAX: 500,
 };
 
-export const VERSION = window.BUILD_VERSION || '2.7.0';
+export const VERSION = window.BUILD_VERSION || '2.7.1';
 export const allIssues = window.ALL_ISSUES || {};
 
 // DOM cache — populated once in main.js (ELS_BY_ID). Contents mutate; binding does not.
