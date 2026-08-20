@@ -34,6 +34,7 @@ D:\Desktop\WorkSpace\BilingualReader\
 │   ├── core.js               ← VERSION / 常量
 │   ├── highlight.js, wordbook.js, ...   ← 高亮、生词本等特性
 ├── scripts/
+│   ├── curate_article.js           ← 标准化文章采集与骨架初始化 CLI 工具
 │   ├── build_markdown_articles.py  ← 数据源 → manual_issues.json（自选文章生成器）
 │   ├── build_master_portal.py      ← 注入 window.MANUAL_ISSUES 并重写 index.html
 │   ├── functional_smoke.js         ← 冒烟测试（playwright-core + Edge）
@@ -41,9 +42,11 @@ D:\Desktop\WorkSpace\BilingualReader\
 │   └── stress_test_engine.py       ← 引擎压力测试
 ├── manual_issues.json        ← 自选文章数据（⚠️ 构建产物，被 .gitignore 忽略）
 ├── manual_assets/            ← 自选文章内联图（✅ 须纳入 git，否则线上 404）
-├── manual_translations/      ← 译文侧车 <slug>.zh.json（✅ 须纳入 git，译文持久化）
+├── manual_translations/      ← 译文侧车 <slug>.zh.json（✅ 须纳入 git，含翻译与时代背景注释）
 ├── issues/                   ← 杂志刊数据源（PDF 解析项目产出，window.ALL_ISSUES）
-├── docs/                     ← 其他文档（reviews 等）
+├── docs/
+│   ├── daily-curation-sop.md ← ⭐ 日常文章采集、翻译与背景/双关注释标准作业程序
+│   └── translation-log.md    ← 翻译工作全量状态登记表
 ├── .github/workflows/ci.yml  ← CI 流水线
 ├── _config.yml / .nojekyll    ← GitHub Pages 部署配置
 └── package.json              ← 脚本入口（见 §3）
@@ -91,10 +94,13 @@ JS 逻辑改动走 `src/*.js`（经 esbuild 打包）。
 
 ---
 
-## 4. 自选文章工作流（最常用操作）
+## 4. 自选文章工作流（日常采集与翻译）
 
-数据源（用户自行整理）：**`D:\Desktop\reading\reading data\TheAtlantic`**，按月份分子目录
-（如 `2026-08/`），每篇一个 `.md`（同名 `.html` 可并存，构建只吃 `.md`）。
+> 📖 **完整日常采集与翻译 SOP 请直接查阅**：[`docs/daily-curation-sop.md`](docs/daily-curation-sop.md)。
+> 包含多刊自动采集 CLI 工具 `scripts/curate_article.js`、4 大注释徽章（`💡 🏛️ 🧩 🌍`）规范与质量红线。
+
+数据源（支持多刊物与多月份目录）：**`manual_source/<Website>/<YYYY-MM>/`** 与 **`D:\Desktop\reading\reading data\TheAtlantic\<YYYY-MM>\`**。
+每篇一个 `.md`（同名 `.html` 可并存，构建只吃 `.md`）。
 
 > 可用环境变量 `MD_ARTICLES_ROOT` 覆盖默认数据源根目录（脚本已做 Windows 盘符 / Git-Bash POSIX 路径兼容）。
 

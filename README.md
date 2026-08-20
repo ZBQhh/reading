@@ -141,8 +141,10 @@ TheAtlantic/
 
 ## 🛠️ 维护与变更记录
 
+- **日常文章采集与翻译 SOP**：见 [`docs/daily-curation-sop.md`](docs/daily-curation-sop.md)（多刊自动抓取、段落切分、背景/双关解释框回填全流程）。
 - **开发者 / Agent 上手指南**：见 [`AGENTS.md`](AGENTS.md)（架构、三大数据源、自选文章增改流程、CI 红线、测试与推送全流程）。**后续接手的 agent 请先读此文件。**
-- **完整变更历史**：见 [`CHANGELOG.md`](CHANGELOG.md)（Keep a Changelog 规范，分版本记录，最新 v2.6.19）。
+- **自选翻译登记表**：见 [`docs/translation-log.md`](docs/translation-log.md)（28 篇全量篇目段数、图注与核验状态）。
+- **完整变更历史**：见 [`CHANGELOG.md`](CHANGELOG.md)（Keep a Changelog 规范，分版本记录，最新 v2.7.0）。
 - **历轮评审与整改执行记录**：`docs/reviews/round-1-code-review.md`（v1.0 360° 评审）/ `round-2-reaudit.md`（v2.0 复核）/ `round-3-harsh-review.md`（v2.1 整改回执）/ `round-4-final-sharp.md`（终局评测 + v2.2 勘误附录）。
 
 **构建与测试闭环**（修改数据后请依次执行）：
